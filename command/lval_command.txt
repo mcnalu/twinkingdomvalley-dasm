@@ -1,0 +1,7 @@
+load $7A00 tkv-disk/LVAL
+save lval_dasm.txt
+entry $7a00
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump
+string $7a12

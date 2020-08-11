@@ -1,0 +1,143 @@
+; Example of a 14CE calling
+; These contains the example of the very first call in the code to $14CE
+; It prints out Select select and then options for screen display.
+
+.L14B8                ; A=$98 = 152
+        BMI     L14BD ; N=1 so branch, if N=0 then it's a command eg $2D for option
+
+        JMP     L1FD9 ; Print the command
+
+.L14BD  ; Use A to point to lookup table at $0400 and store values in &70-1 and A
+        TAY          
+        LDA     L0380,Y 
+        STA     L0070   ; ?$70=?$(380+98)=$7C ; LB of command Y
+        LDA     L0400,Y
+        STA     L0071   ; ?$71=?$(400+98)=$05 ; HB of command Y
+        LDA     L0381,Y ; A=?$(381+98)=$82    ; LB of command Y+1
+        JMP     L1FEA   ; Print out the word at $057C which is SELECT in this case
+
+
+.L14CE                ; This routine loads bytes from locations immediately after the calling JSR
+                      ; Each byte corresponds to a response which begins at an address in the look
+                      ; up table $380 (LB), $400 (HB) which points to a word in the $500- table.
+        PLA           ; Pull the address for RTS off the stack and put into &60-1
+        STA     L0060 ; $0F - &60-1 and following addresses contain address which this
+        PLA           ; routine JMPs to at the end.
+        STA     L0061 ; $18
+.L14D4                ; Loop from address in &60-1 
+        INC     L0060 ; $10 Increment the return address
+        BNE     L14DA
+
+        INC     L0061
+.L14DA
+        LDY     #$00  
+        LDA     (L0060),Y ; $98 $98 $00 Load value into A
+        BEQ     L14E6     ; Branch ahead if A=0 for another inc then a JMP
+
+        JSR     L14B8     ; Deal with A<0 and A>0 - the main point of calling this $14CE routine
+
+        JMP     L14D4     ; Continue loop
+
+.L14E6              
+        INC     L0060     ; $13 Inc address again
+        BNE     L14EC     
+
+        INC     L0061
+.L14EC
+        JMP     (L0060)   ; $1813 JMP to address in &60-1 which is a bit like an RTS for this JSR
+
+...
+                         ; This prints out the word SELECT
+.L1FEA                   ; A=$82 $70=$7C $71=$05
+        SEC              ; C=1
+        SBC     L0070    ; A=$82-$7C=6
+.L1FED
+        CLC              
+        ADC     L0082    ; A=6+0=6
+        CMP     #$27     
+        BCC     L1FF7    ; A=$6<$27 so branch
+
+        JSR     L3B51 ; Prints newline and sets text colour
+
+.L1FF7
+        LDY     #$00
+        LDA     L0082   ; A=0
+        BEQ     L200D   ; Branch
+
+        LDA     (L0070),Y
+.L1FFF
+        AND     #$7F
+L2000 = L1FFF+1
+.L2001
+        JSR     L238D
+.L2004
+        BCC     L200D
+
+L2005 = L2004+1
+        INC     L0082
+        LDA     #$20
+        JSR     L3BA1
+
+.L200D
+        LDA     (L0070),Y ; A=?057C+Y=$53 [Beginning of the word SELECT]
+        INY
+        INC     L0082
+        ORA     #$00      ; Sets N=1 if A<0
+        BMI     L201B     ; No branch - we've not reached last letter (it's +128)
+
+        JSR     L2023  ; Prints out if it's a valid char as well as some other shit
+
+        BPL     L200D  ; Continue loop for next char
+.L201B
+        CMP     #$AE   ; 174 is .
+        BNE     L2021  ; Branch if it's not
+
+        STA     L0026  ; Store the 174
+.L2021
+        AND     #$7F   ; Last letter so blank bit 7 ie subtract 128
+L2022 = L2021+1
+.L2023
+        JSR     L238D ; Sets C=1 if A contains ASCII code of a letter
+
+        BCC     L2032 ; No branch
+
+        ORA     #$20  ; A=$53 OR $20=115 ie S->s : set bit 5 to make lower case 
+        BIT     L0026 ; $26=$80 so N=1 - last char with bits 5 and 7 cleared - see below
+        BPL     L2032 ; No branch so first letter of first word is CAPS
+
+        AND     #$5F  ; =1011111 so Zero bits 5 and 7 so revert A from 115 back to 53 
+.L2030                ; zero b7=>fix last letter. zero bit 5=>lowercase 
+        STA     L0026
+.L2032
+        JMP     L3BA1 ; Does JSR OSWRCH and some other stuff and does RTS
+
+.L3BA1
+        JSR     OSWRCH ; Prints S
+
+        STA     L0025  
+        PHA     ; Push X,Y,A onto stack
+        TYA
+        PHA
+        TXA
+        PHA
+        LDA     L002A ; A=0
+        BEQ     L3BBE ; Branch
+
+        JSR     L2AC0
+
+        STA     L008B
+.L3BB4
+        JSR     L2AC0
+
+        SEC
+        SBC     L008B
+        CMP     L002A
+        BCC     L3BB4
+
+.L3BBE       ; Restore registers
+        PLA
+        TAX
+        PLA
+        TAY
+        PLA
+        RTS

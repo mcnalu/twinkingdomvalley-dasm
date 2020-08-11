@@ -1,0 +1,244 @@
+L0022   = $0022
+L0025   = $0025
+L002A   = $002A
+L006F   = $006F
+L0070   = $0070
+L0071   = $0071
+L0072   = $0072
+L0073   = $0073
+L0082   = $0082
+L008B   = $008B
+L00FF   = $00FF
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L1FD9   = $1FD9
+L2282   = $2282
+L25C0   = $25C0
+L2AC0   = $2AC0
+L3400   = $3400
+L3C01   = $3C01
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $3B32
+.BeebDisStartAddr
+        JSR     L2282
+
+        JSR     L2282
+
+        JSR     L2282
+
+        BIT     L00FF
+        BMI     L3B42
+
+        JMP     L2282
+
+.L3B42
+        JSR     L2282
+
+        BMI     L3B42
+
+        LDA     #$7C
+        JSR     OSBYTE
+
+        LDA     #$7E
+        JMP     OSBYTE
+.L3B51          ; Prints newline and sets text colour based on $6F
+        TXA     ; Save X to stack
+        PHA
+        JSR     OSNEWL
+
+        LDX     L006F
+        STX     L0082
+        BEQ     L3B69 ; Branch if $6F is zero
+                ; $6F is non-zero, set text colour
+        TXA     ; A=X
+        DEX
+        ORA     #$02 ; Set bit 1 of A
+        CLC
+        ADC     #$80 ; Add $128
+.L3B63
+        JSR     OSWRCH ; So this sets the text colour
+
+        DEX
+        BNE     L3B63 ; X=0 by this point so always branches?
+
+.L3B69      ; Restore X and return
+        PLA
+        TAX
+        RTS
+.L3B6C
+        PLA           ; Store RTS return address in &72-3
+        STA     L0072
+        PLA
+        STA     L0073
+.L3B72                
+        INC     L0072 ; Add one to it
+        BNE     L3B78 
+
+        INC     L0073
+.L3B78
+        LDY     #$00 
+        LDA     (L0072),Y ; Load bytes from ($72-3)
+        BEQ     L3B84     ; Until one is zero
+                          
+        JSR     L1FD9
+
+        JMP     L3B72
+
+.L3B84
+        INC     L0072
+        BNE     L3B8A
+
+        INC     L0073
+.L3B8A
+        JMP     (L0072)
+
+        LDA     L25C0,X
+        CMP     #$C8
+        BEQ     L3BA0
+
+        LDA     L25C0
+        CMP     #$C8
+        BNE     L3BA0
+
+        LDA     L25C0,X
+        CMP     #$FF
+.L3BA0
+        RTS
+
+.L3BA1                 ; This routine prints character A and then waits for $2A centiseconds
+        JSR     OSWRCH ; Print out what's in the accumlator
+
+        STA     L0025  ; Store char $25
+        PHA            ; Save registers to stack
+        TYA
+        PHA
+        TXA
+        PHA
+        LDA     L002A  ; Text print out delay as set by *TEXT
+        BEQ     L3BBE  
+
+        JSR     L2AC0  ; Get least significant byte of system clock
+
+        STA     L008B  ; Store it - start time
+.L3BB4
+        JSR     L2AC0  ; Get it again
+
+        SEC
+        SBC     L008B  ; A=Current time-start time
+        CMP     L002A  ; Is time difference equal to $2A
+        BCC     L3BB4  ; If not repeat
+
+.L3BBE                 ; Restore registers and return
+        PLA
+        TAX
+        PLA
+        TAY
+        PLA
+        RTS
+.L3BC4               ; Takes byte code of command in the Y register
+                     ; Stores address of command text in $70-1
+        LDA     #$00
+        STA     L0071 ; ?&71=0
+        TYA
+        STA     L0070 ; ?&70=Y (Byte code of command)
+        ASL     A     ; Shift left C = bit 7
+        ROL     L0071 ; Shift left bit 0 = C
+        ASL     A     ; Repeat so A=4*Y
+        ROL     L0071 ; &71 has bit 1 set to Y bit 7 and bit 0 set to Y bit 6
+        ADC     L0070 ; A=A+&70+C=4*Y+Y+0=5*Y
+        BCC     L3BD7 ; Branch ahead if C=0
+
+        INC     L0071 ; Reflect carry in &71
+.L3BD7
+        CLC
+        ADC     L3400,Y ; Add an offset that corrects for command length
+        BCC     L3BDF
+
+        INC     L0071
+.L3BDF
+        CLC
+        ADC     #$80   ; Add 128 (needs understood together with above offset)
+        STA     L0070  ; This is the address of the command text LB
+        LDA     L0071  ; Load the HB offset from above additions. It's >=1
+        ADC     #$35   ; Add the $35 to the HB offset so >= $36
+        STA     L0071  
+        RTS
+
+        LDA     #$20
+        LDX     #$09
+.L3BEF
+        JSR     OSWRCH
+
+        DEX
+        BNE     L3BEF
+
+        RTS
+
+        PLP
+        PHA
+        EOR     L0022
+        AND     #$3A
+        BVC     L3C01
+
+.BeebDisEndAddr
+SAVE "v3B32-3BFF-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 3B32 20 82 22 20 82 22 20 82 22 24 FF 30 03 4C 82 22  -" -" -"$-0-L-" OOOOOOOOOOOOOOOO
+; 3B42 20 82 22 30 FB A9 7C 20 F4 FF A9 7E 4C F4 FF 8A  -"0--| ---~L--- OOOOOOOOOOOOOOOO
+; 3B52 48 20 E7 FF A6 6F 86 82 F0 0D 8A CA 09 02 18 69 H ---o---------i OOOOOOOOOOOOOOOO
+; 3B62 80 20 EE FF CA D0 FA 68 AA 60 68 85 72 68 85 73 - -----h-`h-rh-s OOOOOOOOOOOOOOOO
+; 3B72 E6 72 D0 02 E6 73 A0 00 B1 72 F0 06 20 D9 1F 4C -r---s---r-- --L OOOOOOOOOOOOOOOO
+; 3B82 72 3B E6 72 D0 02 E6 73 6C 72 00 BD C0 25 C9 C8 r;-r---slr---%-- OOOOOOOOOOOOOOOO
+; 3B92 F0 0C AD C0 25 C9 C8 D0 05 BD C0 25 C9 FF 60 20 ----%------%--`  OOOOOOOOOOOOOOOO
+; 3BA2 EE FF 85 25 48 98 48 8A 48 A5 2A F0 0F 20 C0 2A ---%H-H-H-*-- -* OOOOOOOOOOOOOOOO
+; 3BB2 85 8B 20 C0 2A 38 E5 8B C5 2A 90 F6 68 AA 68 A8 -- -*8---*--h-h- OOOOOOOOOOOOOOOO
+; 3BC2 68 60 A9 00 85 71 98 85 70 0A 26 71 0A 26 71 65 h`---q--p-&q-&qe OOOOOOOOOOOOOOOO
+; 3BD2 70 90 02 E6 71 18 79 00 34 90 02 E6 71 18 69 80 p---q-y-4---q-i- OOOOOOOOOOOOOOOO
+; 3BE2 85 70 A5 71 69 35 85 71 60 A9 20 A2 09 20 EE FF -p-qi5-q`- -- -- OOOOOOOOOOOOOOOO
+; 3BF2 CA D0 FA 60 44 28 22 54 48 45 22 29 3A 50 00 00 ---`D("THE"):P-- OOOOOOOOOOOOOOOU
+

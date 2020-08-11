@@ -1,0 +1,242 @@
+;  Input routines - main one is L229F.
+; NOTE: L229F returns non-obviously by pulling RTS of the stack in JSR 23A0.
+
+; vvv OUT OF SEQUENCE BUT HANDY TO HAVE HERE
+
+.L2AC0   ; returns least sig byte of system clock in A
+        LDX     #$C0
+        LDY     #$2B
+        LDA     #$01
+        JSR     OSWORD ; read system clock at put in YX
+
+        LDA     L2BC0  ; 0-255 in hundreths of a second
+        RTS
+
+; ^^^ OUT OF SEQUENCE BUT HANDY TO HAVE HERE
+        
+.L2282                ; Returns within 2.56 seconds, N flag is unset if something is in the key buffer
+        JSR     L2AC0 ; LSByte of clock: 0-255 in hundreths of a second
+
+        STA     L008B
+        DEC     L008B
+.L2289                ; Start buffer loop
+        JSR     L2AC0
+
+        CMP     L008B
+        BEQ     L229D  ; Stop looping after 256 hundreths of a second
+
+        LDA     #$80
+        LDY     #$FF
+        LDX     #$FF
+        JSR     OSBYTE ; Read input buffer; X=0 if empty
+
+        DEX
+        BMI     L2289  ; Repeat loop if buffer empty
+
+        RTS  ; returns with X = chars in buffer - 1
+
+.L229D      ; if timed out
+        TSX ; N flag can be changed by this, dunno why.
+        RTS ; Returns with stack pointer in X which seems to ensure bit 7 is set in practice
+
+.L229F
+        LDA     #$00
+        STA     L0025
+        STA     L0028
+        STA     L0082
+        LDA     #$7E   ; These OSBYTES prepare input for ESCAPE
+        JSR     OSBYTE
+
+        LDA     #$7C
+        JSR     OSBYTE
+
+        LDA     #$83   ; Yellow
+        JSR     OSWRCH
+
+        LDA     #$3F   ; The ? prompt
+        JSR     OSWRCH
+
+        BIT     L008A
+        BVS     L22E1  ; Will branch if bit 6 of $008A is set, 
+
+        LDA     #$00
+        STA     L7C01  ; dunno
+.L22C4                 ; Loop until a something appears in key buffer
+        JSR     L2282  ; N flag suggests key in buffer (but not always in theory!)
+
+        BMI     L22C4  ; branch if no key was found in buffer
+
+        LDY     #$FF
+        LDX     #$9F
+        LDA     #$81
+        JSR     OSBYTE ; read char from buffer (timeout about 5.5 minutes)
+                       ; Y=0 means a character was found and put in X
+        INY            ; Y=&FF means time out
+        BNE     L22E1  ; branch if not timed out, something in the buffer!
+                ; if timed out
+        DEY     ; Put Y back to &FF
+        STY     L008A ; $008A becomes &FF, presumably for BIT test a little before $22C4
+        JSR     OSRDCH ; read a char
+
+        JSR     L2517  ; dunno what this does
+
+        JMP     L229F  ; restart input routine
+
+.L22E1
+        LDA     #$98 ; 152 is conceal display char!
+        STA     L7C01
+        LDA     #$0A ; Set param block for OSWORD A=0, read input
+        TAY          ; XY=address of param block ie $0AC0
+        STA     L0AC1 ; MSByte for buffer
+        LDA     #$80
+        STA     L0026
+        STA     L0AC2 ; Max line length = $80=128
+        STA     L0AC4 ; Max acceptable ASCII value is 128
+        STA     L0083 ; This will contain index of matched command
+        LDA     #$00 
+        STA     L0088
+        STA     L0084
+        STA     L0AC3 ; Min acceptable ASCII value is 00
+.L2301
+        STA     L0AC0 ; LSByte for buffer ie buffer at $0A00
+        LDX     #$C0
+        JSR     OSWORD ; A=0 so read, param
+
+        BCS     L229F ; C=1 mean escape so branch back to ask for input again 
+
+        LDX     #$00  ; X points to chars in the OSWORD 0 buffer
+.L230D
+        JSR     L23A0 ; Put char X in A and RTS from $229F!
+
+        CMP     #$2A  ; Is it a *? Also carry flag set for all chars beyond * which include letters
+        BNE     L2317 ; If no then branch
+
+        JMP     L0BCA ; Deal with * special commands *SAVE etc then returns to L229F
+
+.L2317                ; Carry flag will be set here if it's a letter.
+        JSR     L238D ; Sets carry flag if it's 'A'-'Z' or if >= 'a'
+
+L2319 = L2317+2
+        BCC     L230D ; If carry clear repeat loop for next char
+
+        LDY     #$00  ; Y indexes where upper case converted chars are to be stored
+.L231E
+        AND     #$DF    ; This converts lower case char codes to upper case equivalents
+        STA     L0AC0,Y ; Store the upper case char code
+        CPY     #$3E    ; Is Y=62? This is max length of input.
+        BEQ     L2328   ; If yes branch over INY so no more bytes of memory are filled
+
+        INY
+.L2328
+        JSR     L23A0   ; Put next char X in A
+
+        JSR     L238D   ; C=1 if A is A-Z or a- (but even if it's after z! Bug?)
+
+        BCS     L231E   ; If C=1 then repeat loop for the new char in A
+
+        TYA     ; Push Y value indicating number of chars into the stack.
+        PHA     
+        LDA     #$0D    ; Put CR at last char storage location
+        STA     L0AC0,Y
+        LDA     #$FF    
+        STA     L0085
+.L233B
+        INC     L0085   ; $85 contains index of valid commands stored from $3600
+        LDY     L0085   ; Load this into Y
+        JSR     L3BC4   ; Stores address in $70 (LB) and $71 (HB) that points to valid command to check below 
+                        ; Y=0 => &71=36 and &70=0. &3600+ are chars for commands.
+        LDY     #$00
+.L2344
+        LDA     (L0070),Y ; Load a char from list of valid commands
+        BMI     L2354     ; If negative then it's the last char in the command (has 128 added to it).
+
+        CMP     #$2A      ; Is it *?
+        BEQ     L2388     ; If yes branch ahead to deal with it
+
+        CMP     L0AC0,Y   ; Compare with character of input
+        BNE     L2365     ; If not equal branch ahead
+
+        INY               ; If equal , next char please
+        BNE     L2344     ; Always branch back to do next char (Y can't get so high to INY to 0)
+
+.L2354                    ; Reached if we've matched up to the last char of valid command (or Y=0)
+        AND     #$7F      ; wipe bits 4-7 because it's likely a final char with 128 added
+        CMP     L0AC0,Y   ; Compare with character of input
+        BNE     L2365     ; Jump ahead if not equal
+                          
+        INY               ; If equal, WE HAVE A MATCH!
+        LDA     L0AC0,Y   ; Load next char of input
+        CMP     #$0D      ; Is it a CR? 
+        BNE     L233B     ; No, back to start of the loop to get continue matching chars
+
+        BEQ     L236C     ; Yes, WE'VE GOT THE WHOLE LOT so branch ahead to process
+
+.L2365
+        LDA     L0AC0,Y ; Load input char
+        CMP     #$0D    ; Is it CR?
+        BNE     L233B   ; If not, back to start of the loop
+
+.L236C                  ; We've got the whole line
+        LDY     L0084   ; &84 set to zero above so Y=0
+        LDA     L0085   ; $85 contains index of matched command stored from $3600
+        STA     L0A80,Y ; Store matched command index at &0A80+Y
+        INC     L0084   
+        CMP     #$2F    ; Is index >=47 ; Valid commands have 0-46
+        BCS     L2388   ; Branch if index >=47
+
+        BIT     L0083   ; Was initialised to &80 above
+        BPL     L2388   ; So N=1 meaning won't branch 
+
+        STA     L0083   ; Store matched command in $83
+.L237F
+        CMP     #$0E    ; Commands 0-13 are directions eg N,E,S etc
+L2380 = L237F+1
+        BCC     L2388   ; Branch to $2388 if command is a direction
+
+        LDA     #$FF
+        STA     L0A80,Y ; Store FF over where last command index was stored
+.L2388
+        PLA     ; See just after $2328. Pull number of chars off the stack
+        TAY     ; and put it back in Y
+        JMP     L230D ; Jump back to start of loop and do next char
+
+.L238D     ; Return with carry set if it's  'A-Z' or after 'a' (is leaving carry set after 'z' a bug?)
+        CMP     #$41  ; If it's >=$41 ('A') then C will be set
+        BCS     L2392 ; Branch if it might be a letter.
+
+        RTS           ; RTS if not
+
+.L2392
+        CMP     #$7B  ; If it's <=$7A ('z') then C will be clear  
+        BCC     L2397 ; Branch now we know it's probably a letter ($5B-60 are not letters)
+
+        RTS           ; RTS if not but carry will be set even though it's not a letter cos > 'z'!
+
+.L2397                ; We know the char is probably a letter
+        CMP     #$5B  ; if it's >$5A ('Z') then C will be set
+        BCS     L239D ; Branch if it's not in A-Z
+
+        SEC           ; Set the carry flag because we know it's in A-Z
+        RTS
+
+.L239D                ; We know char isn't in A-Z but is <= 'z'
+        CMP     #$61  ; Carry will be set f it's after 'a'
+        RTS
+
+.L23A0  ; Put char X from input buffer and inc X
+        BIT     L0088 ; $88 zerod just before $230D but just after $23AA it's DEC'd if there's a CR
+        BPL     L23AA ; Branch if N=0 ie $88>=0
+
+        PLA     ; If last char was a CR then pull from stack twice (PC is 2 bytes)
+        PLA     ; This will cause RTS to return to code that performed JSR $229F.
+        LDA     #$FF
+        STA     L008A
+.L23AA
+        LDA     L0A00,X ;Load char X from the OSWORD 0 input buffer
+        INX
+        CMP     #$0D    
+        BNE     L23B4   ; If not a return then RTS Z=0,C=1,N=0
+
+        DEC     L0088   ; This will cause N=1
+.L23B4
+        RTS ; If it is a return Z=1,C=1,N=1

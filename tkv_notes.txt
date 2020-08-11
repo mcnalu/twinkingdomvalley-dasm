@@ -1,0 +1,124 @@
+TKV notes
+
+=============================
+Main loop step through.
+Break is at $1451. Started game from scratch.
+Selected option 5
+Output:
+You are on a road.
+North you can see a wooden cabin.
+North east is a forest path.
+East you can see a road.
+West you can see a road.
+South (This line is incomplete. Text still being displayed to screen?)
+BREAK at $1451
+
+=======================
+TKV subroutines
+
+These are listed in order they are called after $1400 entry.
+
+L149C=NEWLINE
+Sets $006F and $0082 to zero then issues a newline.
+
+L1FC0=PRESSTAB
+Prints the Press tab... message
+Setting &7C01 to #&98 will hide it and 0 will show it.
+
+L180D=INITOPTION
+Prints Select then issues the option command.
+Plus some other stuff?
+
+L2517=?
+Performs various JSRs. Calls $3B20 which seems to just wait for 5.12s.
+
+L20EA=?
+Performs various JSRs
+
+L1451 MAIN GAME LOOP based on contents of $2AD0
+
+L0C00=?
+Draws the magenta dashes at the end/start of a turn.
+Performs various JSRs. Called several times.
+
+L24D4=?
+Performs various JSRs
+
+L1DDA=?
+Performs various JSRs
+
+=====================
+Input is collected by subroutine $229F
+
+Input is read at the OSWORD just after L2301.
+
+Loop for reading input chars starts at L230D
+
+* commands JMP to L0BCA
+
+JSR $229F is called from $0C00
+
+$3600 onwards contain recognised commands. Last letter of each is marked as
+it is stored with &80 added to its ASCII value. Code from $233B searches
+through them to try and match input.
+
+=====================
+
+String locations:
+
+$254C Mode 7 Green Press tab...
+
+=====================
+
+Storage locations:
+
+$1  contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846
+$26 Set to $80 in $22E1 block. If $26<0 then signal caps needed for new sentence start.
+$6F appears to be for setting colour, see $3B51
+$82 appears to count number of characters printed out - in a turn?
+$2A is the text print out speed as set by *TEXT
+
+$0380 - Low byte of word starts in $0500 look up table
+$0400 - High byte of word starts in $0500 look up table
+For example, if byte $98 is given to routine $14CE then:
+Location $380+98=418 contains low byte 7C
+Location $400+98=498 vontains high byte 05
+So $057C contains first letter of word SELECT
+
+$0500-$07FF - these are responses that are printed out using 14CE
+
+$0A00-  ; used as buffer OSWORD A=0
+$0AC0-4 ; used for param block for OSWORD A=0 for reading input
+        ; then later used to store upper case converted char codes of that input
+
+$L1EB1,X ; This a table of low bytes for each command index
+$L1ECF,X ; and these are high bytes. See $14A7
+
+$1F00+1
+
+$25C0 ; Used by JSR $3B8D and many other places.
+
+$27FA
+$27FB
+
+$27FE might contain total number of entries in $29B4 and $298E data tables
+$29B4 start of data table?
+$298E start of data table?
+$29B4 start of data table?
+
+$2A00-2AB0 are low bytes of addresses ie LB=$2A00+Y
+$2B00-2BB0 are high bytes of addresses ie HB=$2B00+Y
+Y can go from 0 to B0 or 0 to 176
+
+So $2C00 to $33FF is some kind of look up table used by routine at $20A7
+
+$2AD0 start of data table?
+$2BD0 start of data table?
+
+
+$2AD0-2AF5 (zeroed in $143C loop)
+
+$2BC0 contains value from hardware clock from OSWORD 1 see $2AC0
+
+$3400- Offsets for words stored from $3600
+$3600-$3B04 Words. Commands are first: directions, combat then other ones then all other words.

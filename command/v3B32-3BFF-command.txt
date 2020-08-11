@@ -1,0 +1,6 @@
+load $3B32 VALLEYR-3B32-3BFF
+save v3B32-3BFF-dasm.txt
+entry $3B32
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump

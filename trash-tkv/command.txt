@@ -1,0 +1,6 @@
+load $2000 MyCode
+save disassembly.txt
+entry $2000
+CPU 6502
+symbols BBC_OS_labels.txt
+string $201F

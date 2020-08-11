@@ -1,0 +1,27 @@
+.BeebDisStartAddr
+        JSR     L1869
+
+        JSR     L14CE
+
+        EQUB    $2A,$29
+.LABCD
+        EQUB    $94, $98, $00
+
+.L17DA
+        LDA     L001A
+        CMP     L0089
+        RTS
+        
+        JSR     L14CE
+
+        EQUB    $3D,$C5,$C6,$3E,$C7,$39,$3C,$44
+        EQUB    $C8,$87,$48,$C9,$3B,$CA,$43,$2E
+        EQUB    $5D,$4E,$CB,$CC,$CD,$87,$00
+
+        JSR     L14CE
+
+        EQUB    $3A,$DF,$E0,$2F,$E1,$E9,$CD,$87
+        EQUB    $00
+
+.L11E1
+        JSR     L20FA

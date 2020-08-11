@@ -1,0 +1,721 @@
+L0010   = $0010
+L0011   = $0011
+L0013   = $0013
+L0014   = $0014
+L0015   = $0015
+L0016   = $0016
+L0017   = $0017
+L0018   = $0018
+L0019   = $0019
+L001A   = $001A
+L001B   = $001B
+L001C   = $001C
+L0020   = $0020
+L0077   = $0077
+L007A   = $007A
+L007B   = $007B
+L0083   = $0083
+L0089   = $0089
+L008A   = $008A
+L008C   = $008C
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L124E   = $124E
+L1263   = $1263
+L1267   = $1267
+L126B   = $126B
+L126F   = $126F
+L1273   = $1273
+L1277   = $1277
+L127B   = $127B
+L127F   = $127F
+L149C   = $149C
+L14A7   = $14A7
+L14B8   = $14B8
+L14CE   = $14CE
+L163F   = $163F
+L1B6C   = $1B6C
+L1BEA   = $1BEA
+L1C88   = $1C88
+L1CCA   = $1CCA
+L1D40   = $1D40
+L20BD   = $20BD
+L20FA   = $20FA
+L229F   = $229F
+L24DD   = $24DD
+L25C0   = $25C0
+L27FE   = $27FE
+L2880   = $2880
+L28A0   = $28A0
+L2968   = $2968
+L298E   = $298E
+L29B4   = $29B4
+L2AD0   = $2AD0
+L2BD0   = $2BD0
+L3500   = $3500
+L3B51   = $3B51
+L3BEB   = $3BEB
+L3BEF   = $3BEF
+L42A0   = $42A0
+LAD16   = $AD16
+LB337   = $B337
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+; $0C00 routine is central to the game. In order, it:
+; 1. Prints the magenta dashes indicating the start of turn
+; 2. Prints out creature info
+; 3. Asks for and encodes user input in JSR $229F call
+        org     $0C00
+.BeebDisStartAddr
+        STA     L0015 ; zero at call at start of game loop
+        BPL     L0C07 ; Branches if A>=0
+
+        JMP     L0CAE
+
+.L0C07
+        JSR     L3BEB ; Prints 10 spaces
+
+        LDA     #$85  ; Magenta
+        JSR     OSWRCH
+
+        LDX     #$14
+        LDA     #$5F 
+        JSR     L3BEF ; Print 15 dashes
+
+        JSR     L3B51 ; Print newline and sets colour based on &6F
+
+        JSR     L42A0 ; Have documented this this but don't understand it yet.
+
+        LDX     #$25
+.L0C1E
+        LDA     L2AD0,X
+        AND     #$80
+        STA     L2AD0,X
+        DEX
+        BPL     L0C1E
+
+        LDX     L27FE
+        DEX
+.L0C2D
+        JSR     L0CDE
+
+        DEX
+        BNE     L0C2D
+
+        LDX     L27FE
+        DEX
+.L0C37
+        BIT     L2AD0
+        BVS     L0C75
+
+        LDA     L29B4,X
+        CMP     L0089
+        BNE     L0C75
+
+        STX     L0010
+        LDA     L008A
+        PHA
+        JSR     L20BD
+
+        BMI     L0C70
+
+        TXA
+        CLC
+        ADC     #$C8
+        TAX
+        STX     L0011
+        JSR     L1BEA
+
+        JSR     L14CE
+
+        ROL     LB337,X
+        BRK
+        EQUB    $A5
+
+        ORA     (L0020),Y
+        JMP     LAD16
+
+        CPY     #$25
+        CMP     L0011
+        BNE     L0C6D
+
+        JSR     L163F
+
+.L0C6D
+        JSR     L149C
+
+.L0C70
+        PLA
+        STA     L008A
+        LDX     L0010
+.L0C75
+        DEX
+        BNE     L0C37
+
+.L0C78
+        LDA     #$00
+        STA     L008C
+        JSR     L229F ; Get user input
+
+        CPX     #$02
+        BEQ     L0C78
+
+        LDA     L0083
+        BPL     L0C8E
+
+        JSR     L3500
+
+        LDA     L0083
+        BNE     L0C78
+
+.L0C8E
+        CMP     #$25
+        BCC     L0C98
+
+        JSR     L14A7
+
+        JMP     L0C78
+
+.L0C98
+        LDX     L27FE
+        DEX
+        LDA     #$80
+        STA     L0015
+.L0CA0
+        LDA     L29B4,X
+        CMP     L0014
+        BEQ     L0CAA
+
+        JSR     L0CD9
+
+.L0CAA
+        DEX
+        BNE     L0CA0
+
+        RTS
+
+.L0CAE
+        LDX     L27FE
+        DEX
+.L0CB2
+        LDA     L29B4,X
+        CMP     L0014
+        BNE     L0CBC
+
+        JSR     L0CD9
+
+.L0CBC
+        DEX
+        BNE     L0CB2
+
+        LDX     L27FE
+        DEX
+.L0CC3
+        LDA     L298E,X
+        BEQ     L0CD5
+
+        LDA     L2AD0,X
+        AND     #$60
+        BEQ     L0CD5
+
+        LDA     L2BD0,X
+        STA     L29B4,X
+.L0CD5
+        DEX
+        BNE     L0CC3
+
+        RTS
+
+.L0CD9
+        BIT     L2AD0
+        BVS     L0CED
+
+.L0CDE
+        LDA     L298E,X
+        BEQ     L0CED
+
+        STX     L0016
+        JSR     L0CEE
+
+        JSR     L149C
+
+        LDX     L0016
+.L0CED
+        RTS
+
+.L0CEE
+        LDA     L29B4,X
+        STA     L001A
+        LDA     L2AD0,X
+        STA     L0013
+        BIT     L0015
+        BPL     L0D01
+
+        AND     #$7F
+        STA     L2AD0,X
+.L0D01
+        LDA     L2968,X
+        STA     L001B
+        AND     #$1F
+        TAY
+        LDA     L2880,Y
+        STA     L0018
+        LDA     L28A0,Y
+        STA     L0019
+        ORA     L0018
+        BNE     L0D22
+
+        JSR     L0D8D
+
+        BEQ     L0D1F
+
+        JMP     L0E5B
+
+.L0D1F
+        JMP     L0E99
+
+.L0D22
+        JSR     L0D8D
+
+        BEQ     L0D6E
+
+        LDA     L0019
+        BEQ     L0D36
+
+        BIT     L0013
+        BPL     L0D55
+
+        JSR     L0D3D
+
+        LDA     L0010
+        BNE     L0D54
+
+.L0D36
+        JSR     L0E5B
+
+        LDA     L0010
+        BEQ     L0DB9
+
+.L0D3D
+        LDA     #$FF
+        STA     L0010
+        LDA     L001A
+        CMP     L001C
+        BEQ     L0D65
+
+        CMP     L0014
+        BNE     L0D79
+
+        LDA     L0089
+        JMP     L0D67
+
+.L0D50
+        LDA     #$00
+        STA     L0010
+.L0D54
+        RTS
+
+.L0D55
+        JSR     L0E5B
+
+        LDA     L0010
+        BNE     L0D54
+
+        JSR     L0D3D
+
+        LDA     L0010
+        BNE     L0D54
+
+        BEQ     L0DB9
+
+.L0D65
+        LDA     L0014
+.L0D67
+        CMP     L001A
+        BEQ     L0D50
+
+        JMP     L0DFF
+
+.L0D6E
+        JSR     L0E99
+
+        LDA     L0010
+        BNE     L0D54
+
+        LDA     L0019
+        BNE     L0D3D
+
+.L0D79
+        JSR     L1C88
+
+        AND     #$0F
+        STA     L0010
+        LDA     L0018
+        AND     #$0F
+        CMP     L0010
+        BCS     L0DB9
+
+.L0D88
+        LDA     #$00
+.L0D8A
+        STA     L0010
+        RTS
+
+.L0D8D
+        LDA     #$00
+        STA     L0010
+        LDX     L27FE
+        DEX
+.L0D95
+        LDA     L29B4,X
+        CMP     L001A
+        BNE     L0DB3
+
+        LDA     L2968,X
+        EOR     L001B
+        BPL     L0DB3
+
+        BIT     L2AD0
+        BVS     L0DB3
+
+        LDA     L298E,X
+        CMP     L0010
+        BCC     L0DB3
+
+        STA     L0010
+        STX     L0017
+.L0DB3
+        DEX
+        BPL     L0D95
+
+        LDA     L0010
+        RTS
+
+.L0DB9
+        LDY     L001A
+        JSR     L124E
+
+        LDA     L007A
+        BEQ     L0D8A
+
+.L0DC2
+        JSR     L1C88
+
+        AND     #$07
+        CMP     L007A
+        BCS     L0DC2
+
+        TAX
+        INX
+        JSR     L0DE2
+
+        BCS     L0DD6
+
+.L0DD2
+        LDA     #$FF
+        BNE     L0D8A
+
+.L0DD6
+        LDX     L007A
+.L0DD8
+        JSR     L0DE2
+
+        BCC     L0DD2
+
+        DEX
+        BNE     L0DD8
+
+        BEQ     L0D88
+
+.L0DE2
+        STX     L0010
+        LDY     L007B
+.L0DE6
+        DEX
+        BEQ     L0DF2
+
+        LDA     (L0077),Y
+        BPL     L0DEE
+
+        INY
+.L0DEE
+        INY
+        INY
+        BNE     L0DE6
+
+.L0DF2
+        LDA     (L0077),Y
+        AND     #$40
+        BNE     L0DFC
+
+.L0DF8
+        SEC
+.L0DF9
+        LDX     L0010
+        RTS
+
+.L0DFC
+        INY
+        LDA     (L0077),Y
+.L0DFF
+        TAX
+        LDA     L0018
+        PHA
+        TXA
+        LDY     #$03
+.L0E06
+        TAX
+        PLA
+        ASL     A
+        PHA
+        TXA
+        BCC     L0E35
+
+        CMP     L1263,Y
+        BCC     L0E17
+
+        CMP     L1273,Y
+        BCC     L0E3C
+
+.L0E17
+        CMP     L1267,Y
+        BCC     L0E21
+
+        CMP     L1277,Y
+        BCC     L0E3C
+
+.L0E21
+        CMP     L126B,Y
+        BCC     L0E2B
+
+        CMP     L127B,Y
+        BCC     L0E3C
+
+.L0E2B
+        CMP     L126F,Y
+        BCC     L0E35
+
+        CMP     L127F,Y
+        BCC     L0E3C
+
+.L0E35
+        DEY
+        BPL     L0E06
+
+        PLA
+        JMP     L0DF8
+
+.L0E3C
+        TAX
+        PLA
+        TXA
+        BIT     L0015
+        BPL     L0E58
+
+        LDX     L0016
+        STA     L2BD0,X
+        LDA     L2AD0,X
+        BIT     L0013
+        BMI     L0E53
+
+        ORA     #$20
+        BNE     L0E55
+
+.L0E53
+        ORA     #$40
+.L0E55
+        STA     L2AD0,X
+.L0E58
+        CLC
+        BCC     L0DF9
+
+.L0E5B
+        LDA     #$00
+        STA     L0010
+        LDX     #$0A
+.L0E61
+        LDA     L25C0,X
+        CMP     #$FF
+        BNE     L0E6B
+
+        LDA     L25C0
+.L0E6B
+        SEC
+        SBC     #$C8
+        CMP     L0016
+        BNE     L0E94
+
+        STX     L0011
+        LDA     L0017
+        CLC
+        ADC     #$C8
+        TAY
+        JSR     L1C88
+
+        LDX     L0011
+        CMP     #$C0
+        BCC     L0E8B
+
+        LDA     L0015
+        JSR     L1D40
+
+        JMP     L0E90
+
+.L0E8B
+        LDA     L0015
+        JSR     L1CCA
+
+.L0E90
+        LDX     L0011
+        BCC     L0ED5
+
+.L0E94
+        INX
+        CPX     #$23
+        BNE     L0E61
+
+.L0E99
+        LDA     #$00
+        STA     L0010
+        LDX     #$0A
+.L0E9F
+        LDA     L25C0,X
+        CMP     L001A
+        BNE     L0EDA
+
+        STX     L0011
+        LDA     L0016
+        ADC     #$C7
+        TAY
+        LDA     L0015
+        JSR     L1B6C
+
+        LDX     L0011
+        BCS     L0EDA
+
+        BIT     L0015
+        BPL     L0ED5
+
+        LDA     L001A
+        CMP     L0089
+        BNE     L0ED5
+
+        LDA     L0016
+        ADC     #$C7
+        TAX
+        JSR     L1BEA
+
+        LDA     #$BB
+        JSR     L14B8
+
+        LDX     L0011
+        JSR     L24DD
+
+        JSR     L20FA
+
+.L0ED5
+        LDA     #$FF
+        STA     L0010
+        RTS
+
+.L0EDA
+        INX
+        CPX     #$23
+        BNE     L0E9F
+
+        RTS
+
+.BeebDisEndAddr
+SAVE "v0C00-0EDF_dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 0C00 85 15 10 03 4C AE 0C 20 EB 3B A9 85 20 EE FF A2 ----L-- -;-- --- OOOOOOOOOOOOOOOO
+; 0C10 14 A9 5F 20 EF 3B 20 51 3B 20 A0 42 A2 25 BD D0 --_ -; Q; -B-%-- OOOOOOOOOOOOOOOO
+; 0C20 2A 29 80 9D D0 2A CA 10 F5 AE FE 27 CA 20 DE 0C *)---*-----'- -- OOOOOOOOOOOOOOOO
+; 0C30 CA D0 FA AE FE 27 CA 2C D0 2A 70 39 BD B4 29 C5 -----'-,-*p9--)- OOOOOOOOOOOOOOOO
+; 0C40 89 D0 32 86 10 A5 8A 48 20 BD 20 30 23 8A 18 69 --2----H - 0#--i OOOOOOOOOOOOOOOO
+; 0C50 C8 AA 86 11 20 EA 1B 20 CE 14 3E 37 B3 00 A5 11 ---- -- -->7---- OOOOOOOOOOOOOODO
+; 0C60 20 4C 16 AD C0 25 C5 11 D0 03 20 3F 16 20 9C 14  L---%---- ?- -- OOOOOOOOOOOOOOOO
+; 0C70 68 85 8A A6 10 CA D0 BF A9 00 85 8C 20 9F 22 E0 h----------- -"- OOOOOOOOOOOOOOOO
+; 0C80 02 F0 F5 A5 83 10 07 20 00 35 A5 83 D0 EA C9 25 ------- -5-----% OOOOOOOOOOOOOOOO
+; 0C90 90 06 20 A7 14 4C 78 0C AE FE 27 CA A9 80 85 15 -- --Lx---'----- OOOOOOOOOOOOOOOO
+; 0CA0 BD B4 29 C5 14 F0 03 20 D9 0C CA D0 F3 60 AE FE --)---- -----`-- OOOOOOOOOOOOOOOO
+; 0CB0 27 CA BD B4 29 C5 14 D0 03 20 D9 0C CA D0 F3 AE '---)---- ------ OOOOOOOOOOOOOOOO
+; 0CC0 FE 27 CA BD 8E 29 F0 0D BD D0 2A 29 60 F0 06 BD -'---)----*)`--- OOOOOOOOOOOOOOOO
+; 0CD0 D0 2B 9D B4 29 CA D0 EB 60 2C D0 2A 70 0F BD 8E -+--)---`,-*p--- OOOOOOOOOOOOOOOO
+; 0CE0 29 F0 0A 86 16 20 EE 0C 20 9C 14 A6 16 60 BD B4 )---- -- ----`-- OOOOOOOOOOOOOOOO
+; 0CF0 29 85 1A BD D0 2A 85 13 24 15 10 05 29 7F 9D D0 )----*--$---)--- OOOOOOOOOOOOOOOO
+; 0D00 2A BD 68 29 85 1B 29 1F A8 B9 80 28 85 18 B9 A0 *-h)--)----(---- OOOOOOOOOOOOOOOO
+; 0D10 28 85 19 05 18 D0 0B 20 8D 0D F0 03 4C 5B 0E 4C (------ ----L[-L OOOOOOOOOOOOOOOO
+; 0D20 99 0E 20 8D 0D F0 47 A5 19 F0 0B 24 13 10 26 20 -- ---G----$--&  OOOOOOOOOOOOOOOO
+; 0D30 3D 0D A5 10 D0 1E 20 5B 0E A5 10 F0 7C A9 FF 85 =----- [----|--- OOOOOOOOOOOOOOOO
+; 0D40 10 A5 1A C5 1C F0 1E C5 14 D0 2E A5 89 4C 67 0D ----------.--Lg- OOOOOOOOOOOOOOOO
+; 0D50 A9 00 85 10 60 20 5B 0E A5 10 D0 F8 20 3D 0D A5 ----` [----- =-- OOOOOOOOOOOOOOOO
+; 0D60 10 D0 F1 F0 54 A5 14 C5 1A F0 E5 4C FF 0D 20 99 ----T------L-- - OOOOOOOOOOOOOOOO
+; 0D70 0E A5 10 D0 DF A5 19 D0 C4 20 88 1C 29 0F 85 10 --------- --)--- OOOOOOOOOOOOOOOO
+; 0D80 A5 18 29 0F C5 10 B0 31 A9 00 85 10 60 A9 00 85 --)----1----`--- OOOOOOOOOOOOOOOO
+; 0D90 10 AE FE 27 CA BD B4 29 C5 1A D0 17 BD 68 29 45 ---'---)-----h)E OOOOOOOOOOOOOOOO
+; 0DA0 1B 10 10 2C D0 2A 70 0B BD 8E 29 C5 10 90 04 85 ---,-*p---)----- OOOOOOOOOOOOOOOO
+; 0DB0 10 86 17 CA 10 DF A5 10 60 A4 1A 20 4E 12 A5 7A --------`-- N--z OOOOOOOOOOOOOOOO
+; 0DC0 F0 C8 20 88 1C 29 07 C5 7A B0 F7 AA E8 20 E2 0D -- --)--z---- -- OOOOOOOOOOOOOOOO
+; 0DD0 B0 04 A9 FF D0 B4 A6 7A 20 E2 0D 90 F5 CA D0 F8 -------z ------- OOOOOOOOOOOOOOOO
+; 0DE0 F0 A6 86 10 A4 7B CA F0 09 B1 77 10 01 C8 C8 C8 -----{----w----- OOOOOOOOOOOOOOOO
+; 0DF0 D0 F4 B1 77 29 40 D0 04 38 A6 10 60 C8 B1 77 AA ---w)@--8--`--w- OOOOOOOOOOOOOOOO
+; 0E00 A5 18 48 8A A0 03 AA 68 0A 48 8A 90 28 D9 63 12 --H----h-H--(-c- OOOOOOOOOOOOOOOO
+; 0E10 90 05 D9 73 12 90 25 D9 67 12 90 05 D9 77 12 90 ---s--%-g----w-- OOOOOOOOOOOOOOOO
+; 0E20 1B D9 6B 12 90 05 D9 7B 12 90 11 D9 6F 12 90 05 --k----{----o--- OOOOOOOOOOOOOOOO
+; 0E30 D9 7F 12 90 07 88 10 CE 68 4C F8 0D AA 68 8A 24 --------hL---h-$ OOOOOOOOOOOOOOOO
+; 0E40 15 10 15 A6 16 9D D0 2B BD D0 2A 24 13 30 04 09 -------+--*$-0-- OOOOOOOOOOOOOOOO
+; 0E50 20 D0 02 09 40 9D D0 2A 18 90 9E A9 00 85 10 A2  ---@--*-------- OOOOOOOOOOOOOOOO
+; 0E60 0A BD C0 25 C9 FF D0 03 AD C0 25 38 E9 C8 C5 16 ---%------%8---- OOOOOOOOOOOOOOOO
+; 0E70 D0 22 86 11 A5 17 18 69 C8 A8 20 88 1C A6 11 C9 -"-----i-- ----- OOOOOOOOOOOOOOOO
+; 0E80 C0 90 08 A5 15 20 40 1D 4C 90 0E A5 15 20 CA 1C ----- @-L---- -- OOOOOOOOOOOOOOOO
+; 0E90 A6 11 90 41 E8 E0 23 D0 C8 A9 00 85 10 A2 0A BD ---A--#--------- OOOOOOOOOOOOOOOO
+; 0EA0 C0 25 C5 1A D0 34 86 11 A5 16 69 C7 A8 A5 15 20 -%---4----i----  OOOOOOOOOOOOOOOO
+; 0EB0 6C 1B A6 11 B0 24 24 15 10 1B A5 1A C5 89 D0 15 l----$$--------- OOOOOOOOOOOOOOOO
+; 0EC0 A5 16 69 C7 AA 20 EA 1B A9 BB 20 B8 14 A6 11 20 --i-- ---- ----  OOOOOOOOOOOOOOOO
+; 0ED0 DD 24 20 FA 20 A9 FF 85 10 60 E8 E0 23 D0 C0 60 -$ - ----`--#--` OOOOOOOOOOOOOOOO
+

@@ -1,0 +1,429 @@
+L0001   = $0001
+L003E   = $003E
+L0048   = $0048
+L0052   = $0052
+L0076   = $0076
+L0077   = $0077
+L0079   = $0079
+L007A   = $007A
+L007B   = $007B
+L007C   = $007C
+L007D   = $007D
+L007E   = $007E
+L007F   = $007F
+L0089   = $0089
+L008B   = $008B
+L00A5   = $00A5
+L00C9   = $00C9
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L1FD1   = $1FD1
+L1FD9   = $1FD9
+L2022   = $2022
+L242D   = $242D
+L24F6   = $24F6
+L2504   = $2504
+L25C0   = $25C0
+L27FC   = $27FC
+L2900   = $2900
+L2930   = $2930
+L2AC0   = $2AC0
+L3820   = $3820
+L394C   = $394C
+L3B3B   = $3B3B
+L3B51   = $3B51
+L3B6C   = $3B6C
+L56A1   = $56A1
+LA924   = $A924
+LABAA   = $ABAA
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $20FA
+.BeebDisStartAddr     ; Prints a . followed by newline and text colour
+        LDA     #$2F  ; $2F corresponds to word address $36DE ie byte code $AE=128+'.' 
+        JSR     L1FD9 ; Process and print
+        JMP     L3B51 ; Print newline and set text colour then return
+
+        JSR     L3B6C 
+        STY     L0048
+        BRK        
+        
+        EQUB    $A5
+
+        AND     #$1F
+        BEQ     L2122
+
+        STA     L0076
+        LDY     #$02
+.L2112
+        TYA
+        PHA
+        LDA     (L0077),Y
+        JSR     L1FD9
+
+        PLA
+        TAY
+        INY
+        DEC     L0076
+        BNE     L2112
+
+        BEQ     L2132
+
+.L2122
+        LDA     L0079
+        AND     #$07
+        CMP     #$06
+        BNE     L2135
+
+        JSR     L3B6C
+
+        LDY     L00A5
+        BRK
+.L2132
+        EQUB    $4C
+
+.L2134
+        AND     (L00C9,X)
+L2135 = L2134+1
+        BNE     L2143
+
+        JSR     L3B6C
+
+        EOR     L56A1,X
+        BRK
+        EQUB    $D0
+
+.L2143
+        CMP     #$07
+        BNE     L2151
+
+        JSR     L3B6C
+
+        LDX     L0052
+        BRK
+        EQUB    $D0
+
+.L2150
+        SBC     (L00C9,X)
+L2151 = L2150+1
+        BNE     L2193
+
+        LDX     #$A7
+        LDY     #$54
+.L2159
+        STX     L2164
+        STY     L2165
+        JSR     L3B6C
+
+        TAY
+.L2163
+        LDA     #$3A
+L2164 = L2163+1
+        AND     LABAA,Y
+        BRK
+        EQUB    $A9
+
+        STA     L007B
+        LDA     L007A
+        LSR     A
+        LSR     A
+        LSR     A
+        LSR     A
+        LSR     A
+        STA     L007A
+        BEQ     L21A3
+
+.L2179
+        LDY     L007B
+        LDA     (L0077),Y
+        BPL     L2180
+
+        INY
+.L2180
+        INY
+        INY
+        STY     L007B
+        JSR     L242D
+
+        DEC     L007A
+        BEQ     L21A3
+
+        LDA     #$39
+        JSR     L1FD9
+
+        JMP     L2179
+
+.L2193
+        CMP     #$04
+        BNE     L219D
+
+        LDX     #$5D
+        LDY     #$AC
+        BNE     L2159
+
+.L219D
+        LDX     #$AD
+        LDY     #$4E
+        BNE     L2159
+
+.L21A3
+        JSR     BeebDisStartAddr
+
+.L21A6
+        LDX     L27FC
+        DEX
+        STX     L007C
+.L21AC
+        LDA     L25C0,X
+        CMP     L0089
+        BNE     L21C4
+
+        JSR     L3B6C
+
+        EOR     L003E
+        BRK
+        EQUB    $20
+
+        CMP     LA924,X
+        JSR     L1FD9
+
+        JSR     BeebDisStartAddr
+
+.L21C4
+        DEC     L007C
+        LDX     L007C
+        BPL     L21AC
+
+        JMP     L3B51
+
+.L21CD
+        LDY     L007B
+        LDA     (L0077),Y
+        INY
+        STA     L007C
+        LDA     (L0077),Y
+        INY
+        STA     L007D
+        STY     L007B
+        RTS
+
+        JSR     BeebDisStartAddr
+
+        LDA     L0079
+        AND     #$20
+        BNE     L21A6
+
+        BIT     L0001
+        BVC     L21A6
+
+        JSR     L2504
+
+        BEQ     L21A6
+
+.L21EE
+        JSR     L21CD
+
+        LDA     L007C
+        JSR     L242D
+
+        LDA     L007C
+        BPL     L224D
+
+        LDA     #$3E
+        JSR     L1FD9
+
+        LDA     #$00
+        STA     L007E
+        LDY     L007B
+        INC     L007B
+        LDA     (L0077),Y
+        STA     L007F
+        BPL     L2255
+
+        BIT     L007C
+        BVS     L221A
+
+        JSR     L3B6C
+
+        BRK
+        EQUB    $4C
+
+.L2218
+        JSR     L2022
+
+L221A = L2218+2
+        JMP     (L3B3B)
+
+        BRK
+        EQUB    $A5
+
+        JSR     L1FD1
+
+        LDA     L007F
+        LSR     A
+        LSR     A
+        LSR     A
+        AND     #$0F
+        ORA     #$10
+        JSR     L2275
+
+        CPX     #$18
+        BCS     L2243
+
+        CPX     #$14
+        BCS     L2247
+
+.L2239
+        JSR     BeebDisStartAddr
+
+        DEC     L007A
+        BNE     L21EE
+
+        JMP     L21A6
+
+.L2243
+        BIT     L007C
+        BVC     L2239
+
+.L2247
+        JSR     L3B6C
+
+        LDA     #$AE
+        BRK
+.L224D
+        EQUB    $A5
+
+        ADC     L3820,X
+        JSR     L394C
+
+.L2255
+        LDA     #$3A
+        JSR     L1FD9
+
+        LDA     L007F
+        JSR     L1FD1
+
+        LDA     L007F
+        LSR     A
+        LSR     A
+        LSR     A
+        AND     #$0F
+        BIT     L007C
+        BVC     L226C
+
+        ORA     #$20
+.L226C
+        JSR     L2275
+
+        BIT     L007F
+        BVS     L2247
+
+        BVC     L2239
+
+.L2275
+        TAX
+        LDA     L2900,X
+        JSR     L24F6
+
+        LDA     L2930,X
+        JMP     L24F6
+
+        JSR     L2AC0
+
+        STA     L008B
+        DEC     L008B
+.L2289
+        JSR     L2AC0
+
+        CMP     L008B
+        BEQ     L229D
+
+        LDA     #$80
+        LDY     #$FF
+        LDX     #$FF
+        JSR     OSBYTE
+
+        DEX
+        BMI     L2289
+
+        RTS
+
+.L229D
+        TSX
+        RTS
+
+.BeebDisEndAddr
+SAVE "v20FA-229E-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 20FA A9 2F 20 D9 1F 4C 51 3B 20 6C 3B 84 48 00 A5 7A -/ --LQ; l;-H--z OOOOOOOOOOOOOODO
+; 210A 29 1F F0 14 85 76 A0 02 98 48 B1 77 20 D9 1F 68 )----v---H-w --h OOOOOOOOOOOOOOOO
+; 211A A8 C8 C6 76 D0 F2 F0 10 A5 79 29 07 C9 06 D0 0B ---v-----y)----- OOOOOOOOOOOOOOOO
+; 212A 20 6C 3B 44 3A A4 A5 00 4C DC 21 C9 02 D0 0A 20  l;D:---L-!----  OOOOOOOODOOOOOOO
+; 213A 6C 3B 1A 5D A1 56 00 D0 EF C9 07 D0 0A 20 6C 3B l;-]-V------- l; OOOOOOODOOOOOOOO
+; 214A 44 3B A6 52 00 D0 E1 C9 03 D0 3E A2 A7 A0 54 8E D;-R------>---T- OOOOODOOOOOOOOOO
+; 215A 64 21 8C 65 21 20 6C 3B A8 A9 3A 3A 39 AA AB 00 d!-e! l;--::9--- OOOOOOOOOOOOOOOO
+; 216A A9 02 85 7B A5 7A 4A 4A 4A 4A 4A 85 7A F0 2A A4 ---{-zJJJJJ-z-*- DOOOOOOOOOOOOOOO
+; 217A 7B B1 77 10 01 C8 C8 C8 84 7B 20 2D 24 C6 7A F0 {-w------{ -$-z- OOOOOOOOOOOOOOOO
+; 218A 18 A9 39 20 D9 1F 4C 79 21 C9 04 D0 06 A2 5D A0 --9 --Ly!-----]- OOOOOOOOOOOOOOOO
+; 219A AC D0 BC A2 AD A0 4E D0 B6 20 FA 20 AE FC 27 CA ------N-- - --'- OOOOOOOOOOOOOOOO
+; 21AA 86 7C BD C0 25 C5 89 D0 11 20 6C 3B 45 3E 00 20 -|--%---- l;E>-  OOOOOOOOOOOOOOOD
+; 21BA DD 24 A9 37 20 D9 1F 20 FA 20 C6 7C A6 7C 10 E2 -$-7 -- - -|-|-- OOOOOOOOOOOOOOOO
+; 21CA 4C 51 3B A4 7B B1 77 C8 85 7C B1 77 C8 85 7D 84 LQ;-{-w--|-w--}- OOOOOOOOOOOOOOOO
+; 21DA 7B 60 20 FA 20 A5 79 29 20 D0 C1 24 01 50 BD 20 {` - -y) --$-P-  OOOOOOOOOOOOOOOO
+; 21EA 04 25 F0 B8 20 CD 21 A5 7C 20 2D 24 A5 7C 10 53 -%-- -!-| -$-|-S OOOOOOOOOOOOOOOO
+; 21FA A9 3E 20 D9 1F A9 00 85 7E A4 7B E6 7B B1 77 85 -> -----~-{-{-w- OOOOOOOOOOOOOOOO
+; 220A 7F 10 48 24 7C 70 09 20 6C 3B 3A 3F 00 4C 20 22 --H$|p- l;:?-L " OOOOOOOOOOOOODOO
+; 221A 20 6C 3B 3B 17 00 A5 7F 20 D1 1F A5 7F 4A 4A 4A  l;;---- ----JJJ OOOOOODOOOOOOOOO
+; 222A 29 0F 09 10 20 75 22 E0 18 B0 0E E0 14 B0 0E 20 )--- u"--------  OOOOOOOOOOOOOOOO
+; 223A FA 20 C6 7A D0 AE 4C A6 21 24 7C 50 F2 20 6C 3B - -z--L-!$|P- l; OOOOOOOOOOOOOOOO
+; 224A A9 AE 00 A5 7D 20 38 20 4C 39 22 A9 3A 20 D9 1F ----} 8 L9"-: -- OOODOOOOOOOOOOOO
+; 225A A5 7F 20 D1 1F A5 7F 4A 4A 4A 29 0F 24 7C 50 02 -- ----JJJ)-$|P- OOOOOOOOOOOOOOOO
+; 226A 09 20 20 75 22 24 7F 70 D4 50 C4 AA BD 00 29 20 -  u"$-p-P----)  OOOOOOOOOOOOOOOO
+; 227A F6 24 BD 30 29 4C F6 24 20 C0 2A 85 8B C6 8B 20 -$-0)L-$ -*----  OOOOOOOOOOOOOOOO
+; 228A C0 2A C5 8B F0 0D A9 80 A0 FF A2 FF 20 F4 FF CA -*---------- --- OOOOOOOOOOOOOOOO
+; 229A 30 ED 60 BA 60 00 00 00 00 00 00 00 00 00 00 00 0-`-`----------- OOOOOUUUUUUUUUUU
+

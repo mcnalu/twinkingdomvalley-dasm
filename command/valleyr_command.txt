@@ -1,0 +1,84 @@
+load $0400 VALLEYR
+save v-ALL_dasm.txt
+CPU 6502
+symbols BBC_OS_labels.txt
+
+bytes $0400 $712
+bytes $0700 $100
+
+bytes $0c5a $4
+bytes $0ee3 $7
+bytes $0f89 $3
+bytes $0fa7 $4
+bytes $0fd8 $5
+bytes $0fee $6
+bytes $1035 $6
+bytes $108f $5
+bytes $10cb $17
+bytes $10fc $c
+bytes $1123 $1c
+bytes $114d $5
+bytes $1158 $10
+bytes $1183 $c
+bytes $11b5 $19
+bytes $11d8 $9
+bytes $11f2 $7
+bytes $1229 $7
+bytes $12f4 $4
+bytes $1306 $4
+bytes $1342 $4
+bytes $1359 $6
+bytes $1379 $4
+bytes $13a2 $3
+bytes $1554 $3
+bytes $1566 $6
+bytes $1580 $5
+bytes $159f $5
+bytes $15f9 $5
+bytes $1608 $4
+bytes $1627 $3
+bytes $1646 $4
+bytes $1668 $3
+bytes $169f $5
+bytes $16cc $6
+bytes $16dc $6
+bytes $16f1 $6
+bytes $1736 $4
+bytes $1788 $5
+bytes $179a $6
+bytes $17b5 $4
+bytes $17d6 $4
+bytes $17e5 $6
+bytes $17f2 $4
+bytes $17fa $5
+bytes $1805 $5
+bytes $1810 $3
+bytes $187d $6
+bytes $18a9 $4
+bytes $18c3 $5
+bytes $18ce $5
+bytes $18dd $6
+bytes $18fa $6
+bytes $1967 $c
+bytes $199a $6
+bytes $19c6 $5
+bytes $1a98 $4
+bytes $1ac4 $4
+bytes $1af8 $5
+bytes $1b08 $6
+bytes $1ce0 $3
+bytes $1d56 $4
+bytes $1e65 $5
+bytes $1e7e $3
+bytes $1eb0 $5
+bytes $1ebb $4
+bytes $3566 $4
+bytes $35f9 $5
+bytes $425d $3
+bytes $4281 $10
+bytes $429a $3
+bytes $42cd $1f
+
+entry $1400
+
+hexdump

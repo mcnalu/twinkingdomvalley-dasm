@@ -1,0 +1,341 @@
+L0026   = $0026
+L0070   = $0070
+L0074   = $0074
+L0075   = $0075
+L0076   = $0076
+L0077   = $0077
+L0078   = $0078
+L0079   = $0079
+L007A   = $007A
+L0082   = $0082
+L0089   = $0089
+L008A   = $008A
+L009E   = $009E
+L00A2   = $00A2
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L2102   = $2102
+L238D   = $238D
+L2476   = $2476
+L2581   = $2581
+L25C1   = $25C1
+L28EB   = $28EB
+L295F   = $295F
+L2A00   = $2A00
+L2B00   = $2B00
+L3742   = $3742
+L3B51   = $3B51
+L3B6C   = $3B6C
+L3BA1   = $3BA1
+L3BC4   = $3BC4
+L56A1   = $56A1
+L7C01   = $7C01
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $1FC0
+.BeebDisStartAddr
+        LDY     #$D6
+.L1FC2
+        LDA     L2476,Y
+        JSR     OSWRCH
+
+        INY
+        BNE     L1FC2
+
+        LDA     #$98
+        STA     L7C01
+.L1FD0
+        RTS
+
+        AND     #$07
+        TAX
+        BEQ     L1FD0
+
+        LDA     L295F,X
+.L1FD9                ; Prints a command given its byte code A>=0 (see $14B8) eg $2F (see $20AF)
+                      ; Note command is any word found at $3600-
+        CMP     #$FF  ; Branch ahead if it's &FF
+        BEQ     L2035
+
+        TAY
+        INY
+        JSR     L3BC4 ; Get address for command Y+1
+
+        LDA     L0070
+        PHA     ; Push Y+1 LB onto stack
+        DEY
+        JSR     L3BC4 ; Get address for command Y
+
+        PLA    ; Pull Y+1 LB back off stack
+.1FEA          ; On entry here has LB of word Y+1 and &70-1 address of word Y+1
+               ; This can be a command from $3600- if called was to $1FD9 or
+               ; a response word if call was to $1FEA itself with A>=0 (see $14B8)
+        SEC    
+        SBC     L0070 ; A = Y+1 address - Y address (LB) = length of commmand Y
+        CLC
+        ADC     L0082 ; $82 contains count of chars printed $L200D
+        CMP     #$27  ; 39
+        BCC     L1FF7 ; Branch if <39
+
+        JSR     L3B51 ; Prints newline and sets text colour
+
+.L1FF7
+        LDY     #$00  
+        LDA     L0082
+        BEQ     L200D ; Branch if this is first word.
+
+        LDA     (L0070),Y ; Load first letter
+        AND     #$7F      ; Set bit 7 to zero (in case it's final & only letter)
+        JSR     L238D     ; Set carry if it A-Z or a-
+
+        BCC     L200D     ; Branch if not a letter
+
+        INC     L0082     ; Increment char count
+        LDA     #$20      ; Space
+        JSR     L3BA1     ; Print space and wait for $2A centiseconds
+
+.L200D
+        LDA     (L0070),Y ; Load next char
+        INY
+        INC     L0082     ; Inc char count
+        ORA     #$00      
+        BMI     L201B     ; Branch if A<0 ie final letter in word
+
+        JSR     L2023     ; Process then print A
+
+        BPL     L200D     ; Next char
+
+.L201B                    ; Deal with final char of word
+        CMP     #$AE      ; From code $2F so 174 - 128 = 46 ie final char is .
+        BNE     L2021     ; If not . then process and print it.
+
+        STA     L0026     ; If it is a . then store 174.
+.L2021
+        AND     #$7F   ; Zero bit 7
+.L2023                 ; Process char in A then print it
+        JSR     L238D  ;  Set carry if A-Z or a-
+
+        BCC     L2032  ; Branch if C=0 which happens for a .
+                       ; It's probably a letter
+        ORA     #$20   ; OR with 32 ie set bit 5 so char is lower case
+        BIT     L0026  ; Set N=1 if $80 (this is first char printed) or we just found . (174)
+        BPL     L2032  ; If N=0 then lower case is good.
+                       ; N=1 so it's either first letter of first word or final .
+        AND     #$5F   ; Set bits 5 and 7 to zero ie make upper case (no effect on .)
+        STA     L0026  ; Store the first char with bits 5 and 7 zeroed.
+.L2032
+        JMP     L3BA1  ; Print char and RTS
+
+.L2035
+        STA     L0026
+        RTS
+
+        PHA
+        JSR     L3B6C
+
+        STY     L009E
+        BRK
+        EQUB    $68
+
+        TAX
+        LDA     L2A00,X
+        STA     L0074
+        LDA     L2B00,X
+        STA     L0075
+        LDY     #$00
+        LDA     (L0074),Y
+        AND     #$07
+        BEQ     L208D
+
+        CMP     #$01
+        BNE     L2060
+
+        JSR     L3B6C
+
+        LDY     #$00
+        RTS
+
+.L2060
+        CMP     #$03
+        BCS     L206C
+
+        JSR     L3B6C
+
+        EOR     L56A1,X
+        BRK
+        EQUB    $60
+
+.L206C
+        BNE     L2076
+
+        JSR     L3B6C
+
+        STA     (L00A2),Y
+        BRK
+        EQUB    $60
+
+.L2076
+        CMP     #$06
+        BCS     L207F
+
+        LDA     #$4E
+        JMP     L1FD9
+
+.L207F
+        BNE     L2088
+
+        JSR     L3B6C
+
+        BRK
+        EQUB    $60
+
+.L2088
+        LDA     #$52
+        JMP     L1FD9
+
+.L208D
+        INY
+        LDA     (L0074),Y
+        AND     #$1F
+        STA     L0076
+        DEC     L0076
+        LDY     #$03
+.L2098
+        TYA
+        PHA
+        LDA     (L0074),Y
+        JSR     L1FD9
+
+        PLA
+        TAY
+        INY
+        DEC     L0076
+        BNE     L2098
+
+        RTS
+
+.L20A7
+        LDA     L2A00,Y
+        STA     L0077
+        LDA     L2B00,Y
+        STA     L0078
+        LDY     #$01
+        LDA     (L0077),Y
+        STA     L007A
+        DEY
+        LDA     (L0077),Y
+        STA     L0079
+        RTS
+
+.L20BD
+        LDY     L0089
+        JSR     L20A7
+
+        STA     L008A
+        ORA     #$10
+        STA     (L0077),Y
+        BPL     L20E9
+
+        LDA     L2581
+        BNE     L20E5
+
+        LDA     L25C1
+        CMP     L0089
+        BEQ     L20E9
+
+        CMP     #$C8
+        BCC     L20E5
+
+        TAY
+        INY
+        BEQ     L20E5
+
+        LDA     L28EB,Y
+        CMP     L0089
+        BEQ     L20E9
+
+.L20E5
+        LDA     #$FF
+        STA     L008A
+.L20E9
+        RTS
+
+        JSR     L3B51
+
+        JSR     L20BD
+
+        BPL     L2102
+
+        JSR     L3B6C
+
+        SEC
+        ROL     L3742,X
+        BRK
+.BeebDisEndAddr
+SAVE "v1FC0-20F9-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 1FC0 A0 D6 B9 76 24 20 EE FF C8 D0 F7 A9 98 8D 01 7C ---v$ ---------| OOOOOOOOOOOOOOOO
+; 1FD0 60 29 07 AA F0 FA BD 5F 29 C9 FF F0 58 A8 C8 20 `)-----_)---X--  OOOOOOOOOOOOOOOO
+; 1FE0 C4 3B A5 70 48 88 20 C4 3B 68 38 E5 70 18 65 82 -;-pH- -;h8-p-e- OOOOOOOOOOOOOOOO
+; 1FF0 C9 27 90 03 20 51 3B A0 00 A5 82 F0 10 B1 70 29 -'-- Q;-------p) OOOOOOOOOOOOOOOO
+; 2000 7F 20 8D 23 90 07 E6 82 A9 20 20 A1 3B B1 70 C8 - -#-----  -;-p- OOOOOOOOOOOOOOOO
+; 2010 E6 82 09 00 30 05 20 23 20 10 F2 C9 AE D0 02 85 ----0- # ------- OOOOOOOOOOOOOOOO
+; 2020 26 29 7F 20 8D 23 90 0A 09 20 24 26 10 04 29 5F &)- -#--- $&--)_ OOOOOOOOOOOOOOOO
+; 2030 85 26 4C A1 3B 85 26 60 48 20 6C 3B 84 9E 34 00 -&L-;-&`H l;--4- OOOOOOOOOOOOOOOO
+; 2040 68 AA BD 00 2A 85 74 BD 00 2B 85 75 A0 00 B1 74 h---*-t--+-u---t DOOOOOOOOOOOOOOO
+; 2050 29 07 F0 39 C9 01 D0 08 20 6C 3B 3A 9F A0 00 60 )--9---- l;:---` OOOOOOOOOOOOOOOO
+; 2060 C9 03 B0 08 20 6C 3B 5D A1 56 00 60 D0 08 20 6C ---- l;]-V-`-- l OOOOOOOOOOODOOOO
+; 2070 3B 3A 91 A2 00 60 C9 06 B0 05 A9 4E 4C D9 1F D0 ;:---`-----NL--- OOOOODOOOOOOOOOO
+; 2080 07 20 6C 3B 3A A3 00 60 A9 52 4C D9 1F C8 B1 74 - l;:--`-RL----t OOOOOOODOOOOOOOO
+; 2090 29 1F 85 76 C6 76 A0 03 98 48 B1 74 20 D9 1F 68 )--v-v---H-t --h OOOOOOOOOOOOOOOO
+; 20A0 A8 C8 C6 76 D0 F2 60 B9 00 2A 85 77 B9 00 2B 85 ---v--`--*-w--+- OOOOOOOOOOOOOOOO
+; 20B0 78 A0 01 B1 77 85 7A 88 B1 77 85 79 60 A4 89 20 x---w-z--w-y`--  OOOOOOOOOOOOOOOO
+; 20C0 A7 20 85 8A 09 10 91 77 10 1F AD 81 25 D0 16 AD - -----w----%--- OOOOOOOOOOOOOOOO
+; 20D0 C1 25 C5 89 F0 13 C9 C8 90 0B A8 C8 F0 07 B9 EB -%-------------- OOOOOOOOOOOOOOOO
+; 20E0 28 C5 89 F0 04 A9 FF 85 8A 60 20 51 3B 20 BD 20 (--------` Q; -  OOOOOOOOOOOOOOOO
+; 20F0 10 10 20 6C 3B 38 3E 42 37 00 00 00 00 00 00 00 -- l;8>B7------- OOOOOOOOOOUUUUUU
+

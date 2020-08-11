@@ -1,0 +1,6 @@
+load $20FA VALLEYR-20FA-229E
+save v20FA-229E-dasm.txt
+entry $20FA
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump

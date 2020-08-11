@@ -1,0 +1,349 @@
+L0000   = $0000
+L0001   = $0001
+L0002   = $0002
+L0003   = $0003
+L0014   = $0014
+L001C   = $001C
+L001D   = $001D
+L0020   = $0020
+L0021   = $0021
+L0024   = $0024
+L0025   = $0025
+L0026   = $0026
+L0027   = $0027
+L002A   = $002A
+L0060   = $0060
+L0061   = $0061
+L0062   = $0062
+L0063   = $0063
+L0064   = $0064
+L0069   = $0069
+L006F   = $006F
+L0070   = $0070
+L0071   = $0071
+L0082   = $0082
+L0083   = $0083
+L0084   = $0084
+L0089   = $0089
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L0380   = $0380
+L0381   = $0381
+L0400   = $0400
+L0A7F   = $0A7F
+L0C00   = $0C00
+L180D   = $180D
+L1DDA   = $1DDA
+L1EB1   = $1EB1
+L1ECF   = $1ECF
+L1FC0   = $1FC0
+L1FD9   = $1FD9
+L1FEA   = $1FEA
+L20EA   = $20EA
+L24D4   = $24D4
+L2517   = $2517
+L257F   = $257F
+L25BF   = $25BF
+L2750   = $2750
+L277A   = $277A
+L27A4   = $27A4
+L27CE   = $27CE
+L27FA   = $27FA
+L27FB   = $27FB
+L27FC   = $27FC
+L29B4   = $29B4
+L2AD0   = $2AD0
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $1400
+.BeebDisStartAddr
+        JSR     L149C ; Prints newline plus initialises &6F and &82
+
+        LDA     #$AA  ; Lots of inialisation
+        STA     L001D
+        LDA     #$80
+        STA     L27FB
+        STA     L0003
+        STA     L0002
+        STA     L0026
+        LDA     #$02
+        STA     L0027
+        JSR     L1FC0 ; Print Press tab... message then hide it.
+
+        LDA     #$01
+        STA     L0089
+        STA     L29B4
+        LDA     #$00
+        STA     L002A
+        JSR     L180D ; Print, get and set the Select... option for pictures/long/short text
+
+        LDA     #$00  ; Zero lots of locations
+        STA     L0020
+        STA     L0021
+        STA     L0024
+        STA     L0025
+        STA     L27FA
+        STA     L0000
+        STA     L0014
+        STA     L001C
+        LDX     #$25    
+.L143C
+        STA     L2AD0,X
+        DEX
+        BPL     L143C
+
+        LDA     L0001
+        AND     #$A0
+        BEQ     L144E
+
+        JSR     L2517 ; Dunno what this does; it's called also in input routine just before $22E1
+
+        JMP     L1451
+
+.L144E
+        JSR     L20EA ; Dunno what this does
+
+.L1451                ; MAIN GAME LOOP
+        LDA     #$00
+        JSR     L0C00 ; Print magenta dashes and creature info, get user input and what else?
+
+        LDA     L0083 ; This will contain index of matched command.
+        CMP     #$0E  ; If <14 it's a direction eg N,S,E etc
+        BCS     L147F ; Branch if it's not a direction
+
+        BIT     L2AD0
+        BPL     L1474
+
+        JSR     L24D4
+
+        LDA     #$40
+        STA     L2AD0
+        ASL     A
+        JSR     L0C00
+
+.L146D                ; Code returns here if it's not a direction AND combat to complete the loop 
+        LDA     #$00
+        STA     L2AD0
+        BEQ     L1451
+
+.L1474
+        LDA     #$80
+        JSR     L0C00
+
+        JSR     L24D4
+
+        JMP     L146D
+
+.L147F                ; A non-direction command
+        CMP     #$11  ; $0E, $0F and $10 are combat commands: hit, cut, throw
+        BCS     L1491 ; Branch ahead if it's non-direction AND non-combat command
+
+        JSR     L1DDA ; Handle combat?
+
+        JSR     L149C ; Print newline and set &6F and &82 to zero
+
+        LDA     #$80
+        JSR     L0C00
+
+        JMP     L1451 ; Back to start of MAIN LOOP
+
+.L1491                ; Handle  non-direction AND non-combat command
+        JSR     L14A7 ; Performs routine based on command
+
+        LDA     #$80
+        JSR     L0C00
+
+        JMP     L146D
+
+.L149C
+        LDA     #$00
+        STA     L006F
+        STA     L0082
+        LDA     #$0D
+        JMP     OSWRCH
+
+.L14A7                  ; Index of a command will be in A on entry
+        TSX             ; Save the X register
+        STX     L0069   
+        TAX             ; Put the command index in X
+        LDA     L1EB1,X ; Set address to handle command in X from table 
+        STA     L0060
+        LDA     L1ECF,X
+        STA     L0061
+        JMP     (L0060) ; JMP to perform the command.
+
+.L14B8
+        BMI     L14BD
+
+        JMP     L1FD9
+
+.L14BD  ; Use A to point to lookup table at $0400 and store values in &70-1 and A
+        TAY
+        LDA     L0380,Y
+        STA     L0070
+        LDA     L0400,Y
+        STA     L0071
+        LDA     L0381,Y
+        JMP     L1FEA
+ 
+.L14CE                ; This routine loads bytes from locations immediately after the calling JSR
+                      ; These bytes relate to words stored in the lookup table at $0500-07FF
+        PLA           ; Pull the address for RTS off the stack and put into &60-1
+        STA     L0060 ; &60-1 and following addresses contain address which this
+        PLA           ; routine JMPs to at the end.
+        STA     L0061
+.L14D4                ; Loop from address in &60-1 
+        INC     L0060 ; Increment the return address
+        BNE     L14DA
+
+        INC     L0061
+.L14DA
+        LDY     #$00  
+        LDA     (L0060),Y ; Load value into A
+        BEQ     L14E6     ; Branch ahead if A=0 for another inc then a JMP
+
+        JSR     L14B8     ; Deal with A<0 and A>0 - the main point of calling this $14CE routine
+
+        JMP     L14D4     ; Continue loop
+
+.L14E6              
+        INC     L0060     ; Inc address again
+        BNE     L14EC     
+
+        INC     L0061
+.L14EC
+        JMP     (L0060)   ; JMP to address in &60-1 which is a bit like an RTS for this JSR
+
+.L14EF        
+        STA     L0061
+        LDA     #$00
+        STA     L0060
+        LDX     L27FC
+.L14F8
+        LDA     L25BF,X
+        CMP     L0061
+        BNE     L152B
+
+        LDA     #$00
+        STA     L0062
+        LDA     L257F,X
+        TAY
+        LDA     L2750,Y
+        JSR     L152F
+
+        LDA     L277A,Y
+        JSR     L152F
+
+        LDA     L27A4,Y
+        JSR     L152F
+
+        LDA     L27CE,Y
+        JSR     L152F
+
+        LDA     L0060
+        CMP     L0062
+        BCS     L152B
+
+        LDA     L0062
+        STA     L0060
+        STX     L0063
+.L152B
+        DEX
+        BNE     L14F8
+
+        RTS
+
+.L152F
+        BEQ     L1547
+
+        STA     L0064
+        TXA
+        PHA
+        LDX     L0084
+        BEQ     L1545
+
+.L1539
+        LDA     L0A7F,X
+        CMP     L0064
+        BNE     L1542
+
+        INC     L0062
+.L1542
+        DEX
+        BNE     L1539
+
+.L1545
+        PLA
+        TAX
+.L1547
+        RTS
+
+.BeebDisEndAddr
+SAVE "v1400-1547_dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 1400 20 9C 14 A9 AA 85 1D A9 80 8D FB 27 85 03 85 02  ----------'---- OOOOOOOOOOOOOOOO
+; 1410 85 26 A9 02 85 27 20 C0 1F A9 01 85 89 8D B4 29 -&---' --------) OOOOOOOOOOOOOOOO
+; 1420 A9 00 85 2A 20 0D 18 A9 00 85 20 85 21 85 24 85 ---* ----- -!-$- OOOOOOOOOOOOOOOO
+; 1430 25 8D FA 27 85 00 85 14 85 1C A2 25 9D D0 2A CA %--'-------%--*- OOOOOOOOOOOOOOOO
+; 1440 10 FA A5 01 29 A0 F0 06 20 17 25 4C 51 14 20 EA ----)--- -%LQ- - OOOOOOOOOOOOOOOO
+; 1450 20 A9 00 20 00 0C A5 83 C9 0E B0 23 2C D0 2A 10  -- -------#,-*- OOOOOOOOOOOOOOOO
+; 1460 13 20 D4 24 A9 40 8D D0 2A 0A 20 00 0C A9 00 8D - -$-@--*- ----- OOOOOOOOOOOOOOOO
+; 1470 D0 2A F0 DD A9 80 20 00 0C 20 D4 24 4C 6D 14 C9 -*---- -- -$Lm-- OOOOOOOOOOOOOOOO
+; 1480 11 B0 0E 20 DA 1D 20 9C 14 A9 80 20 00 0C 4C 51 --- -- ---- --LQ OOOOOOOOOOOOOOOO
+; 1490 14 20 A7 14 A9 80 20 00 0C 4C 6D 14 A9 00 85 6F - ---- --Lm----o OOOOOOOOOOOOOOOO
+; 14A0 85 82 A9 0D 4C EE FF BA 86 69 AA BD B1 1E 85 60 ----L----i-----` OOOOOOOOOOOOOOOO
+; 14B0 BD CF 1E 85 61 6C 60 00 30 03 4C D9 1F A8 B9 80 ----al`-0-L----- OOOOOOOOOOOOOOOO
+; 14C0 03 85 70 B9 00 04 85 71 B9 81 03 4C EA 1F 68 85 --p----q---L--h- OOOOOOOOOOOOOOOO
+; 14D0 60 68 85 61 E6 60 D0 02 E6 61 A0 00 B1 60 F0 06 `h-a-`---a---`-- OOOOOOOOOOOOOOOO
+; 14E0 20 B8 14 4C D4 14 E6 60 D0 02 E6 61 6C 60 00 85  --L---`---al`-- OOOOOOOOOOOOOOOO
+; 14F0 61 A9 00 85 60 AE FC 27 BD BF 25 C5 61 D0 2C A9 a---`--'--%-a-,- OOOOOOOOOOOOOOOO
+; 1500 00 85 62 BD 7F 25 A8 B9 50 27 20 2F 15 B9 7A 27 --b--%--P' /--z' OOOOOOOOOOOOOOOO
+; 1510 20 2F 15 B9 A4 27 20 2F 15 B9 CE 27 20 2F 15 A5  /---' /---' /-- OOOOOOOOOOOOOOOO
+; 1520 60 C5 62 B0 06 A5 62 85 60 86 63 CA D0 CA 60 F0 `-b---b-`-c---`- OOOOOOOOOOOOOOOO
+; 1530 16 85 64 8A 48 A6 84 F0 0C BD 7F 0A C5 64 D0 02 --d-H--------d-- OOOOOOOOOOOOOOOO
+; 1540 E6 62 CA D0 F4 68 AA 60 00 00 00 00 00 00 00 00 -b---h-`-------- OOOOOOOOUUUUUUUU
+

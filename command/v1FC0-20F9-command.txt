@@ -1,0 +1,6 @@
+load $1FC0 VALLEYR-1FC0-20F9
+save v1FC0-20F9-dasm.txt
+entry $1FC0
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump

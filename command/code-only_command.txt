@@ -1,0 +1,158 @@
+load $0B16 VALLEYR-0B16-57FF
+save vcode-only-dasm.txt
+entry $0B16
+CPU 6502
+symbols BBC_OS_labels.txt
+
+entry $1400
+
+byte $0bf0 $11
+entry pc
+byte $0c5a $4
+entry pc
+byte $0ee3 $7
+entry pc
+byte $0f89 $3
+entry pc
+byte $0fa7 $4
+entry pc
+byte $0fd8 $5
+entry pc
+byte $0fee $6
+entry pc
+byte $1035 $6
+entry pc
+byte $108f $5
+entry pc
+byte $10cb $17
+entry pc
+byte $10fc $c
+entry pc
+byte $1123 $1c
+entry pc
+byte $114d $5
+entry pc
+byte $1158 $10
+entry pc
+byte $1183 $c
+entry pc
+byte $11b5 $19
+entry pc
+byte $11d8 $9
+entry pc
+byte $11f2 $7
+entry pc
+byte $1229 $7
+entry pc
+byte $12f4 $4
+entry pc
+byte $1306 $4
+entry pc
+byte $1342 $4
+entry pc
+byte $1359 $6
+entry pc
+byte $1379 $4
+entry pc
+byte $13a2 $3
+entry pc
+byte $1554 $3
+entry pc
+byte $1566 $6
+entry pc
+byte $1580 $5
+entry pc
+byte $159f $5
+entry pc
+byte $15f9 $5
+entry pc
+byte $1608 $4
+entry pc
+byte $1627 $3
+entry pc
+byte $1646 $4
+entry pc
+byte $1668 $3
+entry pc
+byte $169f $5
+entry pc
+byte $16cc $6
+entry pc
+byte $16dc $6
+entry pc
+byte $16f1 $6
+entry pc
+byte $1736 $4
+entry pc
+byte $1788 $5
+entry pc
+byte $179a $6
+entry pc
+byte $17b5 $4
+entry pc
+byte $17d6 $4
+entry pc
+byte $17e5 $6
+entry pc
+byte $17f2 $4
+entry pc
+byte $17fa $5
+entry pc
+byte $1805 $5
+entry pc
+byte $1810 $3
+entry pc
+byte $187d $6
+entry pc
+byte $18a9 $4
+entry pc
+byte $18c3 $5
+entry pc
+byte $18ce $5
+entry pc
+byte $18dd $6
+entry pc
+byte $18fa $6
+entry pc
+byte $1967 $c
+entry pc
+byte $199a $6
+entry pc
+byte $19c6 $5
+entry pc
+byte $1a98 $4
+entry pc
+byte $1ac4 $4
+entry pc
+byte $1af8 $5
+entry pc
+byte $1b08 $6
+entry pc
+byte $1ce0 $3
+entry pc
+byte $1d56 $4
+entry pc
+byte $1e65 $5
+entry pc
+byte $1e7e $3
+entry pc
+byte $1eb0 $5
+entry pc
+byte $1ebb $4
+entry pc
+byte $3566 $4
+entry pc
+byte $35f9 $5
+entry pc
+byte $425d $3
+entry pc
+byte $4281 $10
+entry pc
+byte $429a $3
+entry pc
+byte $42cd $1f
+entry pc
+
+string $3600 $532
+
+hexdump

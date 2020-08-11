@@ -1,0 +1,248 @@
+L0070   = $0070
+L0071   = $0071
+L0072   = $0072
+L0073   = $0073
+L0074   = $0074
+L0075   = $0075
+L0076   = $0076
+L0077   = $0077
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+		      ; This code occupies $7A00 to $7B00
+        org     $7A00
+.BeebDisStartAddr
+        LDX     #$12
+        LDY     #$7A
+        JSR     OSCLI ; Execute EQUS below, loads code into $1100 to $7900
+
+        LDA     #$8C
+        JSR     OSBYTE ; *TAPE (not sure why)
+
+        JSR     L7AD3  ; Copy page $78 to $10
+
+        JMP     L7A1C  ; JMP over string data
+
+        EQUS    "L.VALLEY?"
+
+        EQUB    $0D
+
+.L7A1C
+        LDA     #$0F
+        JSR     OSBYTE  ; flush buffer
+
+        JSR     L7A9A   ; display instruction text
+                        ; following sets up copy from $1000-13FF to $0400-07FF
+        LDA     #$00
+        STA     L0070
+        STA     L0072
+        STA     L0074
+        LDA     #$10
+        STA     L0071 ; &70-71 $10 start page of source
+        LDA     #$04
+        STA     L0073 ; &72-73 $04 start page of destination
+        LDA     #$14
+        STA     L0075 ; &74-75 $14 end page of source (excluded)
+        LDA     #$D2
+        STA     L0076
+        LDA     #$7A
+        STA     L0077 ; &76-77 $7AD2 location of an RTS
+        JSR     L7A76 ; do copy
+                      ; following sets up copy from $7000-77FF to $0C00-13FF
+        LDA     #$00
+        STA     L0070
+        STA     L0072
+        STA     L0074
+        LDA     #$70
+        STA     L0071
+        LDA     #$0C
+        STA     L0073
+        LDA     #$78
+        STA     L0075
+        JSR     L7A76
+                      ; following sets up copy from $5E00-5EFF to $0B00-0BFF
+        LDA     #$00
+        STA     L0070
+        STA     L0072
+        STA     L0074
+        LDA     #$5E
+        STA     L0071
+        LDA     #$0B
+        STA     L0073
+        LDA     #$5F
+        STA     L0075
+        LDA     #$00
+        STA     L0076 
+        LDA     #$14
+        STA     L0077 ; &76-77 $1400 location of start of TKV main code
+.L7A76                   ; memory copy routine
+        LDY     #$00
+.L7A78
+        LDA     L0070
+        CMP     L0074
+        BNE     L7A87
+
+        LDA     L0071    ; current page of source
+        CMP     L0075    ; end page of course (end page excluded)
+        BNE     L7A87
+                         ; will reach here when $70-71 = $74-75
+        JMP     (L0076)  ; On first two calls $7AD2 is RTS but third is $1400
+
+.L7A87
+        LDA     (L0070),Y
+        STA     (L0072),Y
+        INC     L0070    ; next byte of source
+        BNE     L7A91
+
+        INC     L0071   ; next page of source
+.L7A91
+        INC     L0072   ; next byte of destination
+        BNE     L7A78
+
+        INC     L0073   ; next page of destination
+        JMP     L7A78
+                        ; Display 5 pages of instruction text
+.L7A9A
+        LDA     #$16
+        JSR     OSWRCH
+
+        LDA     #$07
+        JSR     OSWRCH  ; MODE 7
+
+        LDA     #$60
+        STA     L0071
+        LDA     #$00
+        STA     L0070  ; $70-71 contains $6000
+        LDA     #$05
+        STA     L0072  ; $72 contains $05 - page counter
+        LDY     #$00
+.L7AB2
+        LDX     #$19
+.L7AB4
+        JSR     OSNEWL
+
+.L7AB7
+        LDA     (L0070),Y ; Load a character
+        INY
+        BNE     L7ABE     ; Branch if on same page
+
+        INC     L0071     ; or no branch to increment page
+.L7ABE
+        CMP     #$0D      
+        BEQ     L7AC8     ; Branch if it's a carriage return
+
+        JSR     OSWRCH
+
+        JMP     L7AB7
+
+.L7AC8                    ; CR found
+        DEX
+        BNE     L7AB4     ; if X>0 then branch back to newline
+
+        JSR     OSRDCH    ; wait for a key to be pressed
+
+        DEC     L0072     ; dec page counter
+        BNE     L7AB2     ; branch if there's another page
+
+        RTS
+                      ; Copies page $78 to $11
+.L7AD3
+        LDA     #$00
+        STA     L0070
+        LDA     #$78
+        STA     L0071 ; $70-1 contains address $7800 
+        LDA     #$00
+        STA     L0072
+        LDA     #$10
+        STA     L0073 ; $72-3 contains address $1000
+        LDX     #$01  ; X=1 for $7800 to $1000
+        LDY     #$00  ; Y specifies which byte to copy
+.L7AE7
+        LDA     (L0070),Y ; A=$7800+Y for X=1
+        STA     (L0072),Y ; $1000+Y=A for X=1
+        DEY
+        BNE     L7AE7     ; Repeat until Y=0 so as to copy 256 bytes
+
+        INC     L0071     ; Increment $78 to $79
+        INC     L0073     ; Increment $10 to $11
+        DEX
+        BMI     L7AFB     ; branch if X<0 but this will never happen
+
+        BNE     L7AE7     ; X must be zero here so never branches. Pointless instruction!
+
+        LDY     #$00      ; sets Z flag
+        BNE     L7AE7     ; Z flag set so we're done
+
+.L7AFB
+        RTS
+
+        BRK
+        EQUB    $00
+
+        BRK
+        EQUB    $00
+
+.BeebDisEndAddr
+SAVE "lval_dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 7A00 A2 12 A0 7A 20 F7 FF A9 8C 20 F4 FF 20 D3 7A 4C ---z ---- -- -zL OOOOOOOOOOOOOOOO
+; 7A10 1C 7A 4C 2E 56 41 4C 4C 45 59 3F 0D A9 0F 20 F4 -zL.VALLEY?--- - OODDDDDDDDDDOOOO
+; 7A20 FF 20 9A 7A A9 00 85 70 85 72 85 74 A9 10 85 71 - -z---p-r-t---q OOOOOOOOOOOOOOOO
+; 7A30 A9 04 85 73 A9 14 85 75 A9 D2 85 76 A9 7A 85 77 ---s---u---v-z-w OOOOOOOOOOOOOOOO
+; 7A40 20 76 7A A9 00 85 70 85 72 85 74 A9 70 85 71 A9  vz---p-r-t-p-q- OOOOOOOOOOOOOOOO
+; 7A50 0C 85 73 A9 78 85 75 20 76 7A A9 00 85 70 85 72 --s-x-u vz---p-r OOOOOOOOOOOOOOOO
+; 7A60 85 74 A9 5E 85 71 A9 0B 85 73 A9 5F 85 75 A9 00 -t-^-q---s-_-u-- OOOOOOOOOOOOOOOO
+; 7A70 85 76 A9 14 85 77 A0 00 A5 70 C5 74 D0 09 A5 71 -v---w---p-t---q OOOOOOOOOOOOOOOO
+; 7A80 C5 75 D0 03 6C 76 00 B1 70 91 72 E6 70 D0 02 E6 -u--lv--p-r-p--- OOOOOOOOOOOOOOOO
+; 7A90 71 E6 72 D0 E3 E6 73 4C 78 7A A9 16 20 EE FF A9 q-r---sLxz-- --- OOOOOOOOOOOOOOOO
+; 7AA0 07 20 EE FF A9 60 85 71 A9 00 85 70 A9 05 85 72 - ---`-q---p---r OOOOOOOOOOOOOOOO
+; 7AB0 A0 00 A2 19 20 E7 FF B1 70 C8 D0 02 E6 71 C9 0D ---- ---p----q-- OOOOOOOOOOOOOOOO
+; 7AC0 F0 06 20 EE FF 4C B7 7A CA D0 E9 20 E0 FF C6 72 -- --L-z--- ---r OOOOOOOOOOOOOOOO
+; 7AD0 D0 E0 60 A9 00 85 70 A9 78 85 71 A9 00 85 72 A9 --`---p-x-q---r- OOOOOOOOOOOOOOOO
+; 7AE0 10 85 73 A2 01 A0 00 B1 70 91 72 88 D0 F9 E6 71 --s-----p-r----q OOOOOOOOOOOOOOOO
+; 7AF0 E6 73 CA 30 06 D0 F0 A0 00 D0 EC 60 00 00 00 00 -s-0-------`---- OOOOOOOOOOOOODOD
+

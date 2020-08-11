@@ -1,0 +1,9 @@
+load $180D VALLEYR-180D-18FF
+save v180D-18FF-dasm.txt
+entry $180D
+byte $1810 3
+entry pc
+CPU 6502
+
+symbols BBC_OS_labels.txt
+hexdump

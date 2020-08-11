@@ -1,0 +1,47 @@
+TKV memory map
+
+LOADING
+
+CHAIN "TWIN"
+$1900-2320
+
+CHAIN "TITLE"
+$0900-0C00
+
+*R.LVAL
+$7A00-7B00
+
+LVAL does the following:
+
+1. *L.VALLEY
+$1100-7900
+
+2. Displays instruction text that isn't used again
+$6000-6FFF
+
+3. Copies these pages (inclusive):
+$78 to $10 - data?
+$10-13 to $04-07 - $11-13 incomplete words: verbs and descriptions
+$70-77 to $0C-13 - first few pages look like code, but data in later pages?
+$5E to $0B - data?
+(page $5F is zeros)
+
+4. JMPs to code at $1400
+
+So final page map is:
+<$04 not used
+$04-07 TKV
+$08-0A NOT USED
+$0B-13 TKV
+$14-5D TKV with executable code at $1400
+>=$5E wiped when MODE 2 entered for drawing pictures.
+
+4+9+74 pages = 87 * 256 bytes = 22,272 bytes
+
+Pages from $04 to $5D = $59 + 1 pages = 90 pages = 23,040  bytes
+
+VALLEYR has above structure with zeros for NOT USED and is 23,040 bytes.
+
+CODE AREAS
+$1400 to $1547 all looks like code.
+>$1547 looks like it isn't code.

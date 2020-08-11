@@ -1,0 +1,43 @@
+load $17D0 VALLEYR-17D0-1910
+save v17D0-1910-dasm.txt
+entry $17D0
+
+byte $17D6 4
+entry pc
+
+byte $17E5 6
+entry pc
+
+byte $17F2 4
+entry pc
+
+byte $17FA 5
+entry pc
+
+byte $1805 5
+entry pc
+
+byte $1810 3
+entry pc
+
+byte $187D 6
+entry pc
+
+byte $18A9 4
+entry pc
+
+byte $18C3 5
+entry pc
+
+byte $18CE 5
+entry pc
+
+byte $18DD 6
+entry pc
+
+byte $18FA 6
+entry pc
+
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump
