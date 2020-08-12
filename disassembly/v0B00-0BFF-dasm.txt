@@ -1,0 +1,142 @@
+;       Manually copied from processed-code-only.txt
+.L0B12
+        TXA          ; Save X onto stack
+        PHA
+        LDY     #$00
+.L0B16                ; Loop Y from $0 to $FF
+        TYA           ; Put Y in A
+        AND     #$07  ; zero all but lowest three bits
+        STA     L0032 ; Lowest three bits of Y
+        LDA     #$C7  ; 199
+        SBC     L0032 ; $C7-?$32-1 (carry set?)
+        STA     L0031 ; A number from 192 to 199 or 191 to 198
+        LDA     #$7E  ; 126
+        SBC     #$00  ; 0-126 (carry not set)
+        STA     L0032 ; 
+        LDA     #$00
+        STA     L0033
+        TYA
+        AND     #$F8
+        LSR     A
+        LSR     A
+        LSR     A
+        STA     L0030
+        LSR     A
+        ROR     L0033
+        LSR     A
+        ROR     L0033
+        CLC
+        ADC     L0030
+        STA     L0030
+        LDA     L0031
+        SEC
+        SBC     L0033
+        STA     L0900,Y
+        LDA     L0032
+        SBC     L0030
+        STA     L0A00,Y
+        INY
+        BNE     L0B16
+
+        PLA           ; Restore X
+        TAX
+        JMP     L3C00
+
+.L0B55
+        TSX
+        STX     L002F
+        LDA     #$00
+        LDX     #$11
+.L0B5C
+        STA     L70EE,X
+        DEX
+        BPL     L0B5C
+
+        LDA     #$90
+        STA     L70FC
+        LDX     #$FD
+        JSR     L0B97
+
+        TSX
+        INX
+        STX     L70F8
+        LDX     #$00
+        STX     L70FC
+        INX
+        STX     L70F9
+        INX
+        STX     L70FD
+        LDX     #$F9
+        JSR     L0B97
+
+        LDA     #$1F
+        STA     L70F9
+        LDA     #$43
+        STA     L70FD
+        LDA     #$00
+        STA     L70F8
+        STA     L70FC
+        LDX     #$F5
+.L0B97
+        LDA     L70F8
+        STA     L70F0
+        LDA     L70F9
+        STA     L70F1
+        LDA     #$00
+.L0BA5
+        STX     L70EE
+        LDX     #$0B
+        STX     L70EF
+        LDX     #$EE
+        LDY     #$70
+        JMP     OSFILE
+
+.L0BB4
+        LDX     #$FD
+        JSR     L0BC3
+
+        LDX     L002F
+        TXS
+        LDX     #$F9
+        JSR     L0BC3
+
+        LDX     #$F5
+.L0BC3
+        LDA     #$FF
+        STA     L70F4
+        BNE     L0BA5
+
+.L0BCA
+        JSR     L23A0
+
+        JSR     L238D
+
+        BCC     L0BDB
+
+        AND     #$DF
+        CMP     #$53
+        BNE     L0BDE
+
+        JSR     L0B55
+
+.L0BDB
+        JMP     L229F
+
+.L0BDE
+        CMP     #$4C
+        BNE     L0BE5
+
+        JSR     L0BB4
+
+.L0BE5
+        CMP     #$54
+        BNE     L0BDB
+
+        JSR     L356D
+
+        JMP     L0BDB
+
+        BPL     L0C01
+
+        EQUB    $10,$10,$10,$10,$10,$64,$61,$74
+        EQUB    $0D,$73,$74,$6B,$0D,$7A,$70,$0D

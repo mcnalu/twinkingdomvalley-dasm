@@ -1,0 +1,27 @@
+load $23B5 machinecode/VALLEYR-23B5-2549
+save v23B5-2549-dasm.txt
+entry $23B5
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump
+
+byte $2427 $4
+entry pc
+byte $2481 $7
+entry pc
+byte $248e $6
+entry pc
+byte $249c $6
+entry pc
+byte $24a8 $7
+entry pc
+byte $24b7 $6
+entry pc
+byte $24c3 $4
+entry pc
+byte $24cd $6
+entry pc
+byte $2539 $6
+entry pc
+
+
