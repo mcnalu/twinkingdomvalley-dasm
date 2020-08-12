@@ -9,7 +9,7 @@ V="machinecode/VALLEYR"
 #Offset is where VALLEY
 OFFSET=0400
 
-START=0B16
+START=0B00
 END=57FF
 
 B=$V-$START-$END
@@ -20,8 +20,8 @@ LEN=`echo "obase=10;ibase=16;$END-$START+1" | bc`
 dd if=$V bs=1 skip=$SKIP count=$LEN > $B
 
 #Write command file for BeebDis
-NAME="v$START-$END"
-D="$NAME-command.txt"
+#NAME="v$START-$END"
+#D="$NAME-command.txt"
 
 # echo "load \$$START $B" > $D
 # echo "save $NAME-dasm.txt" >> $D

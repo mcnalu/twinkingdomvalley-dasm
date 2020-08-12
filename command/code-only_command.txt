@@ -1,13 +1,16 @@
-load $0B16 VALLEYR-0B16-57FF
+load $0B00 machinecode/VALLEYR-0B00-57FF
 save vcode-only-dasm.txt
-entry $0B16
 CPU 6502
 symbols BBC_OS_labels.txt
 
 entry $1400
 
+byte $0B00 $12
+entry pc
+
 byte $0bf0 $11
 entry pc
+
 byte $0c5a $4
 entry pc
 byte $0ee3 $7
@@ -153,6 +156,55 @@ entry pc
 byte $42cd $1f
 entry pc
 
-string $3600 $532
+byte $203c $4
+entry pc
+byte $205b $4
+entry pc
+byte $2067 $4
+entry pc
+byte $2071 $4
+entry pc
+byte $2084 $3
+entry pc
+byte $20f5 $5
+entry pc
+byte $2105 $3
+entry pc
+byte $212d $5
+entry pc
+byte $213c $5
+entry pc
+byte $214a $5
+entry pc
+byte $2162 $8
+entry pc
+byte $21b6 $3
+entry pc
+byte $2214 $3
+entry pc
+byte $221d $3
+entry pc
+byte $224a $3
+entry pc
+byte $2427 $4
+entry pc
+byte $2481 $7
+entry pc
+byte $248e $6
+entry pc
+byte $249c $6
+entry pc
+byte $24a8 $7
+entry pc
+byte $24b7 $6
+entry pc
+byte $24c3 $4
+entry pc
+byte $24cd $6
+entry pc
+byte $2539 $6
+entry pc
+
+string $3600 $520
 
 hexdump

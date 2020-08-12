@@ -135,15 +135,15 @@ OSCLI   = $FFF7
         DEX
         BPL     L143C
 
-        LDA     L0001
-        AND     #$A0
-        BEQ     L144E
+        LDA     L0001 ; Load option for display/desc
+        AND     #$A0  ; zero unless A has bits 1 and 3 set
+        BEQ     L144E ; Branches for options 5,6 i.e. never draw
 
-        JSR     L2517 ; Dunno what this does; it's called also in input routine just before $22E1
+        JSR     L2517 ; Drawing routine called also in input routine just before $22E1
 
         JMP     L1451
 
-.L144E
+.L144E                ; Gets here only if draw wasn't just done
         JSR     L20EA ; Dunno what this does
 
 .L1451                ; MAIN GAME LOOP

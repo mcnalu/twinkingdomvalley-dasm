@@ -81,74 +81,81 @@ OSWORD  = $FFF1
 OSBYTE  = $FFF4
 OSCLI   = $FFF7
 
+vvv Inserted manually.
+.L20EA
+        JSR     L3B51 ; Prints newline and sets text colour based on $6F
+
+        JSR     L20BD ; Sets up info including in $8A based on player's location in $89.
+^^^ Inserted manually.
+        
+        BPL     L2102 ; If A>=0 then branch ahead
+                      ; If A<0
+
         org     $20FA
 .BeebDisStartAddr     ; Prints a . followed by newline and text colour
         LDA     #$2F  ; $2F corresponds to word address $36DE ie byte code $AE=128+'.' 
         JSR     L1FD9 ; Process and print
         JMP     L3B51 ; Print newline and set text colour then return
 
-        JSR     L3B6C 
-        STY     L0048
-        BRK        
+.L2102
+        JSR     L3B6C ; Print "YOU ARE" - This is usual result of a move I think.
+        YOU ARE      
         
-        EQUB    $A5
+.L2108
+        LDA     L007A ; This contains the second byte from the location block
+        AND     #$1F  ; Clear all but bits 0-8 so value is now 0-31
+        BEQ     L2122 ; If zero branch ahead as there's nothing to print out.
 
-        AND     #$1F
-        BEQ     L2122
-
-        STA     L0076
-        LDY     #$02
+        STA     L0076 ; If non-zero store in $76
+        LDY     #$02  ; Y=2
 .L2112
-        TYA
+        TYA           ; Save Y to stack
         PHA
-        LDA     (L0077),Y
-        JSR     L1FD9
+        LDA     (L0077),Y ; Load third byte from location block
+        JSR     L1FD9     ; Print it out.
 
-        PLA
-        TAY
-        INY
-        DEC     L0076
-        BNE     L2112
+        PLA               ; Get Y from previously saved value on stack
+        TAY               
+        INY               ; Inc Y
+        DEC     L0076     ; DEC $76
+        BNE     L2112     ; If $76!=0 loop back to print next word
 
-        BEQ     L2132
+        BEQ     L2132     ; Will always branch ahead
 
-.L2122
+.L2122                    ; Are we in the sloping maze?
         LDA     L0079
         AND     #$07
         CMP     #$06
-        BNE     L2135
-
+        BNE     L2135     ; Branch if no
+                          ; Yes
         JSR     L3B6C
+        IN A SLOPING MAZE
 
-        LDY     L00A5
-        BRK
 .L2132
-        EQUB    $4C
+        JMP     L21DC
 
-.L2134
-        AND     (L00C9,X)
-L2135 = L2134+1
+.L2135
+        CMP     #$02
         BNE     L2143
 
         JSR     L3B6C
+        ON THE CANYON FLOOR
 
-        EOR     L56A1,X
-        BRK
-        EQUB    $D0
+.L2141
+        BNE     L2132
 
 .L2143
         CMP     #$07
         BNE     L2151
 
         JSR     L3B6C
+        IN AN ARID DESERT
 
-        LDX     L0052
-        BRK
-        EQUB    $D0
+.L214F
+        BNE     L2132
 
-.L2150
-        SBC     (L00C9,X)
-L2151 = L2150+1
+.L2151
+        CMP     #$03
         BNE     L2193
 
         LDX     #$A7
@@ -157,15 +164,12 @@ L2151 = L2150+1
         STX     L2164
         STY     L2165
         JSR     L3B6C
+        WANDERING THROUGH
+        A
+        A , PATHS LEAD
 
-        TAY
-.L2163
-        LDA     #$3A
-L2164 = L2163+1
-        AND     LABAA,Y
-        BRK
-        EQUB    $A9
-
+.L216A
+        LDA     #$02
         STA     L007B
         LDA     L007A
         LSR     A
@@ -210,27 +214,27 @@ L2164 = L2163+1
         BNE     L2159
 
 .L21A3
-        JSR     BeebDisStartAddr
+        JSR     L20FA ; Print . and newline
 
-.L21A6
-        LDX     L27FC
+.L21A6                ; We branch here if long desc is needed
+        LDX     L27FC ; Number of objects
         DEX
         STX     L007C
 .L21AC
-        LDA     L25C0,X
-        CMP     L0089
-        BNE     L21C4
-
+        LDA     L25C0,X ; Load location of object X
+        CMP     L0089   ; Compare with player location
+        BNE     L21C4   ; If not equal jump ahead
+                        ; If equal 
         JSR     L3B6C
+        THERE IS
 
-        EOR     L003E
-        BRK
-        EQUB    $20
+.L21B9
+        JSR     L24DD   ; print out info about object eg a small holdall
 
-        CMP     LA924,X
+        LDA     #$37    ; print here
         JSR     L1FD9
 
-        JSR     BeebDisStartAddr
+        JSR     L20FA   ; full stop and new line
 
 .L21C4
         DEC     L007C
@@ -250,16 +254,17 @@ L2164 = L2163+1
         STY     L007B
         RTS
 
-        JSR     BeebDisStartAddr
+.L21DC
+        JSR     L20FA ; Prints newline and sets text colour
 
-        LDA     L0079
-        AND     #$20
-        BNE     L21A6
+        LDA     L0079 ; Load location byte
+        AND     #$20  
+        BNE     L21A6 ; Branch if bit 5 is set
+                      ; We're somewhere where bit 5 is set
+        BIT     L0001 ; $1 is draw/desc option
+        BVC     L21A6 ; Branch if bit 6 is not set ie give long description
 
-        BIT     L0001
-        BVC     L21A6
-
-        JSR     L2504
+        JSR     L2504 
 
         BEQ     L21A6
 

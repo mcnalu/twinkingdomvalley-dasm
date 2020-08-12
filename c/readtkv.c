@@ -6,6 +6,10 @@
 #define MAXWORD 100
 #define MAXLINE 1000
 
+#define NOTHING 0
+#define L14CE 1
+#define L3B6C 2
+
 //The start address of TKV code in BBC's memory 
 long start;
 //ALL other addresses have start subtracted from them in this code.
@@ -19,16 +23,16 @@ char c[FILESIZE];
 long getword(char *word,long address);
 long getwordaddress(long code);
 long getcommandaddress(long code);
-long printwords(char *line, char *s);
-void createbytelines();
+long printwords(char *line, char *s, int type);
+void createbytelines(char b1, char b2, char b3);
 void processdasm();
 int processline(char *line, int found);
 
 void dotests();
 
-int main() {
+int main(int argc, char *argv[]) {
   fprintf(stderr,"Opening binary file...\n");
-  FILE *fp = fopen("../VALLEYR","r");
+  FILE *fp = fopen("../machinecode/VALLEYR","r");
 
   int n;
   start = strtol("0400",NULL,16);
@@ -40,9 +44,24 @@ int main() {
   fclose(fp);  
   fprintf(stderr,"...closed.\n");
 
-  dotests();
-  //createbytelines();
-  //processdasm();
+  if(argc>1){
+    char codes[MAXLINE];
+    char *ss;
+    char words[MAXLINE];
+    int i=0;
+    ss=codes;
+    for(i=1;i<argc;i++){
+      sprintf(ss,"%s ",argv[i]);
+      ss+=4;
+    }
+    printwords(words,codes,L3B6C);
+    printf("%s is %s\n",codes,words);
+  } else {
+  //dotests();
+  //createbytelines(32,108,59);
+  //createbytelines(32,-50,20);
+  processdasm();
+  }
   return 0;
 }
 
@@ -58,7 +77,8 @@ void dotests(){
   printf("Address for code &98 is %04x\n",start+getwordaddress(strtol("98",NULL,16)));
   printf("Address for code &1A is %04x\n",start+getcommandaddress(strtol("1A",NULL,16)));
   char *teststr="$2A,$29,$94,$00";
-  printwords(line,teststr);
+  printwords(line,teststr,L14CE);   //This is the right routine for this string
+  //printwords(line,teststr,L3B6C); //This is the wrong routine for this string
   printf("|%s| gives |%s|\n",teststr,line);
 }
 
@@ -106,7 +126,8 @@ long getword(char *w, long address){
 }
 
 //Turns codes terminated by $00 into words eg $98 $2D $00
-long printwords(char *line, char *s){
+//type is either L14CE or L3B6C
+long printwords(char *line, char *s, int type){
   long i=0, linepos=0, l;
   char b[3];
   do {
@@ -123,7 +144,7 @@ long printwords(char *line, char *s){
       if(linepos>0){
 	line[linepos-1]=' ';
       }
-      if(l<128){
+      if(type==L3B6C || l<128){
 	linepos+=getword(line+linepos,getcommandaddress(l));	
       } else if(l<256){
 	linepos+=getword(line+linepos,getwordaddress(l));		
@@ -135,11 +156,12 @@ long printwords(char *line, char *s){
   return l;
 }
 
-//Finds all lines with JSR 14CE and outputs byte lines for use with BeebDis
-void createbytelines(){
+//Finds all lines with JSR $XXXX and outputs byte lines for use with BeebDis
+//b1=32 and b2 is the low byte and b3 the high byte of address in two complement
+void createbytelines(char b1, char b2, char b3){
   long i=0,j;
   do{
-    if(c[i]==32 && c[i+1]==-50 && c[i+2]==20){//JSR 14CE
+    if(c[i]==b1 && c[i+1]==b2 && c[i+2]==b3){//JSR 14CE
       j=0;
       i+=3;
       printf("byte $%04x ",start+i);
@@ -175,20 +197,27 @@ void processdasm(){
 
 //Process an individual line for processdasm
 int processline(char *line, int found){
-  char *jsr="JSR     L14CE";
+  char *jsr1="JSR     L14CE";
+  char *jsr2="JSR     L3B6C";  
   char nuline[MAXLINE];
   int ret=-1;
   if(found==0){
-    if(strstr(line,jsr)==NULL)
-      return 0;
+    if(strstr(line,jsr1)!=NULL)
+      return L14CE;
+    else if (strstr(line,jsr2)!=NULL)
+      return L3B6C;
     else
-      return 1;
+      return NOTHING;
   } else {
     char *ss=strchr(line,'$');
     if(ss!=NULL){
-      ret=printwords(nuline,ss);
+      ret=printwords(nuline,ss,found);
       printf("        %s\n",nuline);
     }
   }
-  return ret;
+  if(ret==0){//$00 was found on this line so end the conversion
+    return NOTHING;
+  } else {  //Still ore to do so return found for use in next call
+    return found;
+  }
 }

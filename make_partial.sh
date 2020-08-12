@@ -9,8 +9,8 @@ V="machinecode/VALLEYR"
 #Offset is where VALLEY
 OFFSET=0400
 
-START=0B12
-END=57FF
+START=23B5
+END=2549
 
 B=$V-$START-$END
 

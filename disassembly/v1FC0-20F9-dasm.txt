@@ -257,64 +257,69 @@ OSCLI   = $FFF7
 
         RTS
 
-.L20A7
-        LDA     L2A00,Y
-        STA     L0077
+.L20A7                  ; Uses player location to put address for that location in $78-9
+                        ; First two bytes for that location loaded into $79 and $7A.
+                        ; On entry, Y is set to the player's location.
+                        ; On exit, A=?$79
+                        ; Loads two bytes into $79-A from address in
+                        ; $2A00/2B00 table indexed by Y which is stored in $77-8              
+        LDA     L2A00,Y ; Load address from lookup table using Y into $77-8
+        STA     L0077   ; $2A00/2B00 table contains addresses from $2C00 to $33FF
         LDA     L2B00,Y
-        STA     L0078
-        LDY     #$01
-        LDA     (L0077),Y
-        STA     L007A
-        DEY
-        LDA     (L0077),Y
+        STA     L0078   ; $77-8 now contains address of info for player's location.
+        LDY     #$01      ; Y=1
+        LDA     (L0077),Y ;Load byte from ($77)+1 and store in $7A
+        STA     L007A     
+        DEY               ; Y=0
+        LDA     (L0077),Y ; Load byte from ($77) and store in $79
         STA     L0079
         RTS
 
-.L20BD
-        LDY     L0089
+.L20BD                  ; Sets up info in various address based on player's location in $89.
+                        ; First byte in location block ($2C00 table) has bit 4 set=> visited
+                        ; $8A set to value of second byte.
+        LDY     L0089   ; Load the player's location into Y
         JSR     L20A7
-
-        STA     L008A
-        ORA     #$10
-        STA     (L0077),Y
-        BPL     L20E9
-
+                        ; Y=0 now, A will be same as in $79
+        STA     L008A   ; This will be same as byte in $79
+        ORA     #$10    ; Set bit 4 of A - this means player has visited it
+        STA     (L0077),Y ; Y=0 so we are storing value from here back there with bit 4 set
+        BPL     L20E9 ; Branch to RTS if A>=0
+                      ; If A<0 carry on 
         LDA     L2581
-        BNE     L20E5
-
+        BNE     L20E5 ; Branch if A=$2581 non-zero to store $FF in $8A and return
+                      ; If A=0 carry on
         LDA     L25C1
-        CMP     L0089
-        BEQ     L20E9
+        CMP     L0089 
+        BEQ     L20E9 ; Branch to RTS if $25C1=$89
 
-        CMP     #$C8
-        BCC     L20E5
+        CMP     #$C8  ;  $89=$C8=200
+        BCC     L20E5  ; Branch if ?$25C1<$C8=200 to store $FF in $8A and return
 
-        TAY
-        INY
-        BEQ     L20E5
+        TAY           ; Transfer A=?$25C1 to Y
+        INY           ; Increment Y
+        BEQ     L20E5 ; Branch if Y=0 to store $FF in $8A and return
 
-        LDA     L28EB,Y
-        CMP     L0089
-        BEQ     L20E9
+        LDA     L28EB,Y ; A=?$(28EB+Y)
+        CMP     L0089   ; Store in $89
+        BEQ     L20E9   ; Branch if $89=0 to RTS
 
 .L20E5
-        LDA     #$FF
-        STA     L008A
+        LDA     #$FF  
+        STA     L008A   ; $89=FF
 .L20E9
         RTS
+.L20EA                ; Updates and prints out location information based on player's location.
+        JSR     L3B51 ; Prints newline and sets text colour based on $6F
 
-        JSR     L3B51
+        JSR     L20BD ; Sets up info including in $8A based on player's location in $89.
+        
+        
+        BPL     L2102 ; If A>=0 then branch ahead
+                      ; If A<0
 
-        JSR     L20BD
-
-        BPL     L2102
-
-        JSR     L3B6C
-
-        SEC
-        ROL     L3742,X
-        BRK
-.BeebDisEndAddr
+                      ; NOTE this routine $20EA continues into 20FA.
+.BeebDisEndAddr 
 SAVE "v1FC0-20F9-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
 
 

@@ -61,7 +61,26 @@ OSWRCH  = $FFEE
 OSWORD  = $FFF1
 OSBYTE  = $FFF4
 OSCLI   = $FFF7
+                      ;vvv Inserted manually
 
+.L3B20
+        JSR     L3B23
+
+.L3B23                ; Waits for 2.56s
+        JSR     L2AC0 ; returns least sig bute of clock in A - 0 to 255 centiseconds
+
+        STA     L008B ; Store
+        DEC     L008B ; Decrement
+.L3B2A
+        JSR     L2AC0 ; Get new time
+
+        CMP     L008B ; Is new time same as stored ie 2.56 seconds have elapsed 
+        BNE     L3B2A ; If not keep looping
+
+        RTS
+
+.L3B32
+                      ;^^^ Inserted manually
         org     $3B32
 .BeebDisStartAddr
         JSR     L2282
@@ -115,7 +134,7 @@ OSCLI   = $FFF7
         PLA
         STA     L0073
 .L3B72                
-        INC     L0072 ; Add one to it
+        INC     L0072 ; Add one to it so we JMP back to calling routine after bytes
         BNE     L3B78 
 
         INC     L0073
@@ -124,9 +143,9 @@ OSCLI   = $FFF7
         LDA     (L0072),Y ; Load bytes from ($72-3)
         BEQ     L3B84     ; Until one is zero
                           
-        JSR     L1FD9
+        JSR     L1FD9     ; Print command word
 
-        JMP     L3B72
+        JMP     L3B72     ; Load next byte
 
 .L3B84
         INC     L0072

@@ -72,10 +72,13 @@ $254C Mode 7 Green Press tab...
 
 Storage locations:
 
-$1  contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846
+$1  contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846 and below
 $26 Set to $80 in $22E1 block. If $26<0 then signal caps needed for new sentence start.
 $6F appears to be for setting colour, see $3B51
 $82 appears to count number of characters printed out - in a turn?
+$89 is the player's current location, eg 00 is cabin. Used in routine $20BD
+$8A is set to value of first byte in address $89 points to. Set in routine $20BD
+$8B sees to count down at a rate of once every couple of seconds, 2.56s?
 $2A is the text print out speed as set by *TEXT
 
 $0380 - Low byte of word starts in $0500 look up table
@@ -87,10 +90,15 @@ So $057C contains first letter of word SELECT
 
 $0500-$07FF - these are responses that are printed out using 14CE
 
+$0900 - start of lookup tables - perhaps LB of addresses? See 0B12
+$0A00 - start of lookup tables - perhaps HB of addresses? See 0B12
+
 $0A00-  ; used as buffer OSWORD A=0
 $0AC0-4 ; used for param block for OSWORD A=0 for reading input
         ; then later used to store upper case converted char codes of that input
 
+$17CA-F ; Codes for options 1-6 for draw/desc: 60 20 C0 80 40 00
+        
 $L1EB1,X ; This a table of low bytes for each command index
 $L1ECF,X ; and these are high bytes. See $14A7
 
@@ -106,10 +114,10 @@ $29B4 start of data table?
 $298E start of data table?
 $29B4 start of data table?
 
+$Y is set to the player location $89 for these:
 $2A00-2AB0 are low bytes of addresses ie LB=$2A00+Y
 $2B00-2BB0 are high bytes of addresses ie HB=$2B00+Y
-Y can go from 0 to B0 or 0 to 176
-
+From values in $2B00 table, seems Y can go from 0 to B0 or 0 to 176.
 So $2C00 to $33FF is some kind of look up table used by routine at $20A7
 
 $2AD0 start of data table?

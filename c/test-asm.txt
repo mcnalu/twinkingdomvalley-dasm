@@ -25,3 +25,16 @@
 
 .L11E1
         JSR     L20FA
+
+.L2038
+        PHA
+.L2039
+        JSR     L3B6C
+
+        EQUB    $84,$9E,$34,$00
+
+.L2040
+        PLA
+        TAX
+        
+        
