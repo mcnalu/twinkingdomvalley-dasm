@@ -11,7 +11,8 @@ $1FD9 Prints command word stored in $3600 table
 $1FEA Continues $1FD9 but if entered here it can print word from response table $500
 $20A7 Loads two bytes into $79-A based on Y from address in $2A00/2B00 table put in $77-8
 $20BD Sets up info in various addresses including $8A based on player's location in $89.
-$20EA Sets up info and prints out descriptions based on player's location.
+$20EA Sets up info and prints out description and objects based on player's location.
+L24DD Print out info about object eg a small holdall
 $20FA Prints a . followed by newline and text colour
 $229F collects input
 $238D If A is in A-Z or a- then returns with carry set.

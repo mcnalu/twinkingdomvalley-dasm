@@ -82,7 +82,7 @@ OSBYTE  = $FFF4
 OSCLI   = $FFF7
 
 vvv Inserted manually.
-.L20EA
+.L20EA  ; Sets up info and prints out description and objects based on player's location.
         JSR     L3B51 ; Prints newline and sets text colour based on $6F
 
         JSR     L20BD ; Sets up info including in $8A based on player's location in $89.
@@ -216,11 +216,11 @@ vvv Inserted manually.
 .L21A3
         JSR     L20FA ; Print . and newline
 
-.L21A6                ; We branch here if long desc is needed
+.L21A6                ; Print object info. We branch here if long desc is NOT needed.
         LDX     L27FC ; Number of objects
         DEX
-        STX     L007C
-.L21AC
+        STX     L007C ; $7C is object index
+.L21AC                  ; Start of object loop
         LDA     L25C0,X ; Load location of object X
         CMP     L0089   ; Compare with player location
         BNE     L21C4   ; If not equal jump ahead
@@ -237,11 +237,11 @@ vvv Inserted manually.
         JSR     L20FA   ; full stop and new line
 
 .L21C4
-        DEC     L007C
-        LDX     L007C
-        BPL     L21AC
+        DEC     L007C   ; Dec object index
+        LDX     L007C   ; X= object index
+        BPL     L21AC   ; While X>=0 repeat loop
 
-        JMP     L3B51
+        JMP     L3B51   ; Objects done. Print new line and RTS.
 
 .L21CD
         LDY     L007B
@@ -262,7 +262,7 @@ vvv Inserted manually.
         BNE     L21A6 ; Branch if bit 5 is set
                       ; We're somewhere where bit 5 is set
         BIT     L0001 ; $1 is draw/desc option
-        BVC     L21A6 ; Branch if bit 6 is not set ie give long description
+        BVC     L21A6 ; Branch if bit 6 is not set ie don't give long description
 
         JSR     L2504 
 

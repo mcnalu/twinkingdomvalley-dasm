@@ -309,7 +309,9 @@ OSCLI   = $FFF7
         STA     L008A   ; $89=FF
 .L20E9
         RTS
-.L20EA                ; Updates and prints out location information based on player's location.
+        
+        ; NOTE for 20EA see the next file as this fragment of the routine is copied there.
+.L20EA  ; Sets up info and prints out description and objects based on player's location.
         JSR     L3B51 ; Prints newline and sets text colour based on $6F
 
         JSR     L20BD ; Sets up info including in $8A based on player's location in $89.

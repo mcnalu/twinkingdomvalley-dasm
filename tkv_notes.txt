@@ -104,11 +104,15 @@ $L1ECF,X ; and these are high bytes. See $14A7
 
 $1F00+1
 
-$25C0 ; Table of NPC locations. Used at $21AC and JSR $3B8D and many other places.
+$2580 ; Table of object codes. Eg $2580 is $14 for holdall
+$2750 ; First word of object description eg A
+$277A ; Second word eg SMALL
+$27A4 ; Final word eg HOLDALL. NOTE: A zero for any word=>no more words.
+$25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other places.
 
 $27FA
 $27FB
-$27FC ; Number of NPCs
+$27FC ; Number of objects
 
 $27FE might contain total number of entries in $29B4 and $298E data tables
 $29B4 start of data table?

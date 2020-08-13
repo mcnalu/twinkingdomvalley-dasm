@@ -302,9 +302,9 @@ OSCLI   = $FFF7
         JSR     L20FA
 
         JMP     L3B51
-.L24DD                  ; Info about objects
-        LDA     L2580,X ; eg X=0=>$14
-        TAX
+.L24DD                  ; Print info about objects
+        LDA     L2580,X ; Lookup code for object X eg X=0=>$14
+        TAX             ; X=code for the object now to look up follow words.
         LDA     L2750,X ; eg $2764=>$3A is A
         JSR     L24F6
 
@@ -318,7 +318,7 @@ OSCLI   = $FFF7
 .L24F6                ; Prints out a word
         BEQ     L24D3 ; If A=0 then RTS
 
-        JMP     L1FD9 ; Print the word
+        JMP     L1FD9 ; Print the word and RTS
 
 .L24FB
         LDY     L0089
