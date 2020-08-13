@@ -13,8 +13,9 @@
 //The start address of TKV code in BBC's memory 
 long start;
 //ALL other addresses have start subtracted from them in this code.
-long lbtable;
-long hbtable;
+long lbwordtable,hbwordtable;
+long lbloctable,hbloctable;
+
 long offsettable;
 
 //TKV code as re-ordered into BBC's memory at very start of game.
@@ -23,10 +24,16 @@ char c[FILESIZE];
 long getword(char *word,long address);
 long getwordaddress(long code);
 long getcommandaddress(long code);
+long getlocationaddress(long code);
+long getaddressfromtable(long tablelb, long tablehb,long code);
 long printwords(char *line, char *s, int type);
 void createbytelines(char b1, char b2, char b3);
 void processdasm();
 int processline(char *line, int found);
+long fixnegbyte(long byte);
+
+void convertcodes2words(int argc, char *argv[]);
+void describelocation(int argc, char *argv[]);
 
 void dotests();
 
@@ -36,33 +43,65 @@ int main(int argc, char *argv[]) {
 
   int n;
   start = strtol("0400",NULL,16);
-  lbtable = strtol("0380",NULL,16)-start;
-  hbtable = strtol("0400",NULL,16)-start;  
+  lbwordtable = strtol("0380",NULL,16)-start;
+  hbwordtable = strtol("0400",NULL,16)-start;  
   offsettable = strtol("3400",NULL,16)-start;
+  lbloctable = strtol("2A00",NULL,16)-start;
+  hbloctable = strtol("2B00",NULL,16)-start; 
 
   n = fread(c,1,FILESIZE,fp);
   fclose(fp);  
   fprintf(stderr,"...closed.\n");
 
   if(argc>1){
-    char codes[MAXLINE];
-    char *ss;
-    char words[MAXLINE];
-    int i=0;
-    ss=codes;
-    for(i=1;i<argc;i++){
-      sprintf(ss,"%s ",argv[i]);
-      ss+=4;
+    if(strstr(argv[1],"words")!=NULL){
+      convertcodes2words(argc,argv);
+    } else if(strstr(argv[1],"location")!=NULL){
+      describelocation(argc,argv);
+    } else if(strstr(argv[1],"dotests")!=NULL){
+      dotests();
     }
-    printwords(words,codes,L3B6C);
-    printf("%s is %s\n",codes,words);
   } else {
-  //dotests();
   //createbytelines(32,108,59);
   //createbytelines(32,-50,20);
   processdasm();
   }
   return 0;
+}
+
+void convertcodes2words(int argc, char *argv[]){
+    char codes[MAXLINE];
+    char *ss;
+    char words[MAXLINE];
+    int i=0;
+    ss=codes;
+    for(i=2;i<argc;i++){
+      sprintf(ss,"%s ",argv[i]);
+      ss+=4;
+    }
+    printwords(words,codes,L3B6C);
+    printf("%s is %s\n",codes,words);
+}
+
+void describelocation(int argc, char *argv[]){
+  char *arg2 = argv[2];
+  long location=strtol(arg2+1,NULL,16); //Skip 1st char $ in 2nd argument
+  long addr = getlocationaddress(location);
+  printf("location %s is at address %04x\n",argv[2],addr+start);
+  long b79=fixnegbyte(c[addr]);
+  long b7A=fixnegbyte(c[addr+1]);
+  long nwords=b7A&0x1F;
+  int i;
+  int linepos=0;
+  char line[MAXLINE];  
+  printf("b79=%02x, b7A=%02x, b7A AND $1F=%02x\n",b79,b7A,nwords);
+  for(i=0;i<nwords;i++){
+    long l =fixnegbyte(c[addr+2+i]);
+    linepos+=getword(line+linepos,getcommandaddress(l));
+    if(i<nwords-1)
+      line[linepos-1]=' ';
+  }
+  printf("|%s|\n",line);
 }
 
 //Performs some tests
@@ -82,28 +121,40 @@ void dotests(){
   printf("|%s| gives |%s|\n",teststr,line);
 }
 
-//Gets the address for a code <128 which corresponds to the command table
+//Gets the address for a code <128 which corresponds to the command table via 14CE
 long getwordaddress(long code){
+  return getaddressfromtable(lbwordtable,hbwordtable,code);
+}
+
+//Gets the address for a code <128 which corresponds to the command table via 14CE
+long getlocationaddress(long code){
+  return getaddressfromtable(lbloctable,hbloctable,code);
+}
+
+long getaddressfromtable(long lbtable, long hbtable, long code){
   char a[5];
   long lb=c[lbtable+code];
   long hb=c[hbtable+code];
-  if(hb<0)
-    hb+=256;
-  if(lb<0)
-    lb+=256;
+  hb=fixnegbyte(hb);
+  lb=fixnegbyte(lb);
   //printf("%d %d\n",lbtable+code,lb);
   sprintf(a,"%02x%02x",hb,lb);
-  //printf("%s\n",a);
-  return strtol(a,NULL,16)-start;
+  printf("%s\n",a);
+  return strtol(a,NULL,16)-start;  
+}
+
+long fixnegbyte(long byte){
+  if(byte<0)
+    return byte+256;
+  else
+    return byte;
 }
 
 //Gets the address for a code >=128 which corresponds to the word table
 long getcommandaddress(long code){
   long add=5*code;
-  long offset = c[offsettable+code];
-  if(offset<0) {
-    offset+=256;
-  }
+  long offset = fixnegbyte(c[offsettable+code]);
+ 
   add += strtol("3500",NULL,16)+offset+128;
   //printf("Address is %04x and offset was %d\n",add,offset);
   return add-start;
