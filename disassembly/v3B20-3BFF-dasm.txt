@@ -154,17 +154,17 @@ OSCLI   = $FFF7
         INC     L0073
 .L3B8A
         JMP     (L0072)
+.L3B8D                  ; Checks if object's X location is special I think
+        LDA     L25C0,X ; Load location of object X
+        CMP     #$C8    ; This isn't a valid location
+        BEQ     L3BA0   ; RTS
 
-        LDA     L25C0,X
+        LDA     L25C0   ; Load location of X=0 ie holdall
         CMP     #$C8
-        BEQ     L3BA0
+        BNE     L3BA0   ; RTS
 
-        LDA     L25C0
-        CMP     #$C8
-        BNE     L3BA0
-
-        LDA     L25C0,X
-        CMP     #$FF
+        LDA     L25C0,X 
+        CMP     #$FF    ; Not a valid location, destroyed?
 .L3BA0
         RTS
 

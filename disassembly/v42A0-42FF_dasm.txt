@@ -109,60 +109,51 @@ OSCLI   = $FFF7
 
         org     $42A0
 .BeebDisStartAddr
-        LDA     L0089 ; What's in here?
-        CMP     #$93  ; 147
+        LDA     L0089 ; Player's location
+        CMP     #$93  ; 147 - In a small cave in the west mountains
         BNE     L42BC ; Branch if A!=147
-                      ; If A=147
-        LDX     #$2B  ; X=43
-        JSR     L3B8D ; Checks $25C0 and +43 for value C8 
+                      ; If A=147, do the small cave thang!
+        LDX     #$2B  ; X=43 which isn't a normal object
+        JSR     L3B8D ; Checks if $(25C0+2B), a special object, is in a special location 
 
-        BNE     L42BF ; Branch if value !=200 and !=255
-
+        BNE     L42BF ; Branch if something special about object/location, but dunno what
+                      ; If not special...
         JSR     L24FB ; Load info from look up table using $89 store results in $7A-B
 
-        LDY     L007B
-        LDA     #$C8
-        STA     (L0077),Y
+        LDY     L007B ; This points to 2 bytes past the end of the location description bytes
+        LDA     #$C8  
+        STA     (L0077),Y ; Store $C8=200 in location block
         INY
         INY
-        LDA     #$47
+        LDA     #$47      ; Store $47 two bytes further
         STA     (L0077),Y
 .L42BC                  
         JMP     L0F03 ; Don't know what this does but a flashing message is printed after $0F86!
 
 .L42BF
-        JSR     L24FB ; Described above
+        JSR     L24FB ; Load info from look up table using $89 store results in $7A-B
 
-        LDY     L007B
+        LDY     L007B ; Points to two bytes past end of description bytes in player location block
         LDA     (L0077),Y
-        CMP     #$C8
-        BEQ     L42BC
+        CMP     #$C8  ; Is $C8 stored there - this gets set in $42A0
+        BEQ     L42BC ; If so branch to end of $42A0 for JMP out
+                      ; If not...
+        JSR     L14CE
+        THE DEEP MAGICAL VOICE OF THE KEEPER OF
+        THE MOUNTAINS SAYS , YOU MAY PASS EAST
+        IF YOU
+        PROVE YOURSELF W BY BRINGING THE TREASURE CHEST
+        OF THE
+        DESERT KING
+        
 
-        JSR     L14CE ; This loads bytes from following addresses and handles RTS
-                      ; Following is a look up table used by JSR $14CE
-        EOR     L9951,X
-        INC     L006B,X
-        EOR     L6B53,X
-        EOR     LE354,X
-        AND     LF787,Y
-        SED
-        STA     L0087,X
-.L42DF
-        SBC     LFBFA,Y
-L42E0 = L42DF+1
-        BVC     L42E0
+.L42EC
+        JSR     L20FA ; Print . and newline
 
-        EOR     L6867,X
-        EOR     L4F52,X
-        BRK
-        EQUB    $20
+        JMP     L0F03
 
-        JSR     L034C
-
-        ASL     L000E,X
-        PHP
-        BIT     L00B9
-        STA     LBFBD,Y
+        ; $42F2 to $42FF looks like junk 
+        
 .BeebDisEndAddr
 SAVE "v-42A0-42FF_dasm.bin",BeebDisStartAddr,BeebDisEndAddr
 

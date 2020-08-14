@@ -257,7 +257,7 @@ OSCLI   = $FFF7
 
         RTS
 
-.L20A7                  ; Uses player location to put address for that location in $78-9
+.L20A7                  ; Puts address for a location specified by Y in $78-9
                         ; First two bytes for that location loaded into $79 and $7A.
                         ; On entry, Y is set to the player's location.
                         ; On exit, A=?$79

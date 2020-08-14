@@ -301,7 +301,7 @@ OSCLI   = $FFF7
 
         JSR     L20FA
 
-        JMP     L3B51
+        JMP     L3B51l
 .L24DD                  ; Print info about objects
         LDA     L2580,X ; Lookup code for object X eg X=0=>$14
         TAX             ; X=code for the object now to look up follow words.
@@ -320,25 +320,25 @@ OSCLI   = $FFF7
 
         JMP     L1FD9 ; Print the word and RTS
 
-.L24FB
-        LDY     L0089
-        JSR     L20A7
+.L24FB                ; Processes and puts bytes from player location block in &7A-7B
+        LDY     L0089 
+        JSR     L20A7 ; Load info on player's location
 
-        LDA     L007A
+        LDA     L007A ; Second byte from loation block
         STA     L0087
 .L2504
-        LDA     L007A
-        AND     #$1F
+        LDA     L007A 
+        AND     #$1F  ; Wipe bits 5,6,7
         CLC
-        ADC     #$02
-        STA     L007B
-        LDA     L007A
+        ADC     #$02  ; Add 2
+        STA     L007B ; Store in &7B
+        LDA     L007A 
         LSR     A
         LSR     A
         LSR     A
         LSR     A
         LSR     A
-        STA     L007A
+        STA     L007A ; Slide bits 5,6,7 to 0,1,2
         RTS
 
 .L2517

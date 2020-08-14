@@ -9,8 +9,8 @@ V="machinecode/VALLEYR"
 #Offset is where VALLEY
 OFFSET=0400
 
-START=23B5
-END=2549
+START=0EE0
+END=124F
 
 B=$V-$START-$END
 
@@ -30,4 +30,4 @@ echo "CPU 6502" >> $D
 echo "symbols BBC_OS_labels.txt" >> $D
 echo "hexdump" >> $D
 
-# ./BeebDis $D
+#./BeebDis $D

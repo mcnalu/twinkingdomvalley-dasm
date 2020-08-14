@@ -90,6 +90,10 @@ So $057C contains first letter of word SELECT
 
 $0500-$07FF - these are responses that are printed out using 14CE
 
+NOTE: $07D3 should point to word WORTHY in message in small cave about
+the treasure chest but the O and R bytes are set to FF. Error in reading
+disk?
+
 $0900 - start of lookup tables - perhaps LB of addresses? See 0B12
 $0A00 - start of lookup tables - perhaps HB of addresses? See 0B12
 
@@ -97,6 +101,9 @@ $0A00-  ; used as buffer OSWORD A=0
 $0AC0-4 ; used for param block for OSWORD A=0 for reading input
         ; then later used to store upper case converted char codes of that input
 
+$1283   ; Lookup table used in $0F14
+$1289   ; Lookup table used in $0F14
+        
 $17CA-F ; Codes for options 1-6 for draw/desc: 60 20 C0 80 40 00
         
 $L1EB1,X ; This a table of low bytes for each command index
