@@ -78,12 +78,16 @@ void convertcodes2words(int argc, char *argv[]){
     char *ss;
     char words[MAXLINE];
     int i=0;
+    int type=L3B6C;
     ss=codes;
     for(i=2;i<argc;i++){
       sprintf(ss,"%s ",argv[i]);
       ss+=4;
     }
-    printwords(words,codes,L3B6C);
+    
+    if(strstr(argv[1],"words1")!=NULL)
+      type=L14CE;
+    printwords(words,codes,type);
     printf("%s is %s\n",codes,words);
 }
 
