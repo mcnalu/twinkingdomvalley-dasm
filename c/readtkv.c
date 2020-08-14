@@ -31,9 +31,11 @@ void createbytelines(char b1, char b2, char b3);
 void processdasm();
 int processline(char *line, int found);
 long fixnegbyte(long byte);
+long getbyte(char *addrs,long y);
 
 void convertcodes2words(int argc, char *argv[]);
 void describelocation(int argc, char *argv[]);
+void describeobject(char *scode);
 
 void dotests();
 
@@ -58,6 +60,8 @@ int main(int argc, char *argv[]) {
       convertcodes2words(argc,argv);
     } else if(strstr(argv[1],"location")!=NULL){
       describelocation(argc,argv);
+    } else if(strstr(argv[1],"object")!=NULL){
+      describeobject(argv[2]);
     } else if(strstr(argv[1],"dotests")!=NULL){
       dotests();
     }
@@ -102,6 +106,37 @@ void describelocation(int argc, char *argv[]){
       line[linepos-1]=' ';
   }
   printf("|%s|\n",line);
+}
+
+void describeobject(char *scode){
+  long code=strtol(scode+1,NULL,16);
+  long loc = getbyte("25C0",code);
+  long lu = getbyte("2580",code);
+  char addrs[3][5]={"2750","277A","27A4"};
+  int  i;
+  int linepos=0;
+  char line[MAXLINE];
+  
+  printf("%s\n",scode);
+  if(code<0 || code>=42){
+    printf("There are only 42 objects so index must be 0-41 or $0-29.\n");
+    return;
+  }
+  
+  for(i=0;i<3;i++){
+    long w = getbyte(addrs[i],lu);
+    if(w==0)
+      break;
+    linepos+=getword(line+linepos,getcommandaddress(w));
+    if(i<2)
+      line[linepos-1]=' ';
+  }
+  printf("Object %02xL\nLookup code %02x\nLocation %02x\n|%s|\n",code,lu,loc,line);
+}
+
+long getbyte(char *tableaddr, long y){
+  long table = strtol(tableaddr,NULL,16)-start;
+  return fixnegbyte(c[table+y]);
 }
 
 //Performs some tests
