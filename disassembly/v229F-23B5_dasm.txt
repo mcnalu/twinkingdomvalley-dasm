@@ -60,7 +60,7 @@
         BVS     L22E1  ; Will branch if bit 6 of $008A is set, 
 
         LDA     #$00
-        STA     L7C01  ; dunno
+        STA     L7C01  ; Reveal the PRESS TAB message
 .L22C4                 ; Loop until a something appears in key buffer
         JSR     L2282  ; N flag suggests key in buffer (but not always in theory!)
 
@@ -78,12 +78,12 @@
         STY     L008A ; $008A becomes &FF, presumably for BIT test a little before $22C4
         JSR     OSRDCH ; read a char
 
-        JSR     L2517  ; dunno what this does
+        JSR     L2517  ; dunno what this does though I thought it drew the picture. Puzzled.
 
         JMP     L229F  ; restart input routine
 
 .L22E1
-        LDA     #$98 ; 152 is conceal display char!
+        LDA     #$98 ; 152 is conceal display char. Hide PRESS TAB.
         STA     L7C01
         LDA     #$0A ; Set param block for OSWORD A=0, read input
         TAY          ; XY=address of param block ie $0AC0

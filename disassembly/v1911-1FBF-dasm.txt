@@ -633,7 +633,7 @@ L1A3A = L1A39+1
                         ; Object is being dropped or thrown?
         BIT     L0073   
         BMI     L1BC4   ; Branch if bit 7 of $73 is set
-
+ 
         CLC
         RTS
 
@@ -842,17 +842,19 @@ L1A3A = L1A39+1
         LDA     L001D
         RTS
 
-.L1C9E                
-        STX     L0061 ; ?$61=X
-        STA     L0060 ; ?$60=A
-        JSR     L1C88 ; Dunno
+.L1C9E                ; Calculates damage for attack, only throws?
+                      ; On entry Y= max damage, A = max rnd subtraction from damage
+                      ; Damage =  Y - RND AND A, W is weapon obj code
+        STX     L0061 ; ?$61=X=Index of attack target, see $1D62
+        STA     L0060 ; ?$60=A=Max for rnd damage subtraction see $1D62 (throw), $1CEB (melee)
+        JSR     L1C88 ; A= random byte
 
-        AND     L0060
-        STA     L0060
+        AND     L0060 ; A=A AND ?$60 so Random number <$60 ?
+        STA     L0060 
         SEC
-        TYA
-        SBC     L0060
-        LDX     L0061
+        TYA           ; A=Y, Max weapon damage, see $1D62 (throw), $1CEB (melee)
+        SBC     L0060 ; A=A-?$60, this value of A must be the damage see $1C02
+        LDX     L0061 ; X=index of attack target
         JMP     L1C02
 
 .L1CB2
@@ -863,31 +865,31 @@ L1A3A = L1A39+1
         STA     L006F ; $6F=2
         JMP     L3B51 ; Print newline change colour to green
 
-.L1CBE
+.L1CBE                ; Flags character Y has done an attack by setting entry in $2A08 table to $80
         LDX     L0067 ; X=Code for object
-        LDY     L006A ; Y=index of object location
+        LDY     L006A ; Y=index of object location, carried so +$C8
         LDA     #$80  ; 
-        STA     L2A08,Y ; Set entry in this table to 128
+        STA     L2A08,Y ; Note: $2A08+$C8=$2AD0
         RTS
 
 .L1CC8
         CLC
         RTS
-.L1CCA
-        JSR     L1D20 ; Loads info about object into various places
+.L1CCA                ; Handles melee attack, outcome and print result
+        JSR     L1D20 ; Loads info about object into various places, C=0 if attack possible
 
-        BCS     L1D3F ; RTS
-
+        BCS     L1D3F ; Branch if no attack to RTS
+        
 .L1CCF
-        BIT     L0064
+        BIT     L0064 ; $64 set to value in $15 in $D20
         BPL     L1D3F ; RTS
 
-        JSR     L17DA ; Is ?$1A=?$89
+        JSR     L17DA ; Is player at action?
 
-        BNE     L1CEB ; Branch if no
-                      ; ?$1A=?$89
-        LDX     L0066
-        JSR     L1C74
+        BNE     L1CEB ; Branch if not, don't print out
+                      ; Player present
+        LDX     L0066 ; Index of attacked character
+        JSR     L1C74 ; Prints character description and IS
 
         JSR     L14CE
         HIT WITH
@@ -899,48 +901,49 @@ L1A3A = L1A39+1
         JSR     L1CB2 ; Print . newline and change colour to green 
 
 .L1CEB
-        JSR     L1CBE ; Stores $80 into $2A00 table
-
+        JSR     L1CBE ; Stores $80 into $2A00 table to flag this character has done attack
+                      ; On return X=code for object
         LDA     L26FC,X
-        TAY             ; Y=A
-        LDA     L2726,X
-        LDX     L0066   ; Set near $0E6B but don't understand what it means
-        JSR     L1C9E
+        TAY             ; Y=?$(26FC+X) ; Max melee damage
+        LDA     L2726,X ; A=?$(2726+X) ; Max for random subtraction from max damage
+        LDX     L0066   ; X=The victim of attack
+        JSR     L1C9E   ; Process damage and print consequences
 
-        JSR     L1C88
+        JSR     L1C88   ; A=RND
 
-        CMP     #$D2
-        BCS     L1D0B
-
-        LDA     L0067
-        CMP     #$16
-        BNE     L1CC8
-
-        DEC     L0027
-        BPL     L1CC8
-
+        CMP     #$D2    ; 210 
+        BCS     L1D0B   ; Branch with about 20% chance
+                        ; Continue with 80% chance
+        LDA     L0067   ; A=code for object
+        CMP     #$16    ; LONG WOODEN STAFF
+        BNE     L1CC8   ; If it's not staff then branch to CLC and RTS
+                        ; It is the staff
+        DEC     L0027   ; Initialised to 2 at game start
+        BPL     L1CC8   ; Branch if ?$27>=0 to CLC and RTS
+                        ; If ?$27<0 staff drops.
 .L1D0B
-        JSR     L17DA
+        JSR     L17DA   ; Is player at this location?
 
-        BNE     L1D71
+        BNE     L1D71   ; If not branch past print out
 
-        LDX     L0065
-        JSR     L24DD
+        LDX     L0065   ; Object index
+        JSR     L24DD   ; Print object description
 
-        LDA     #$B4
-        JSR     L14B8
+        LDA     #$B4    ; 
+        JSR     L14B8   ; Print DROPS
 
-        JSR     L20FA
+        JSR     L20FA   ; Print . and newline
 
-        JMP     L1D71
+        JMP     L1D71   ; Handle weapon breakage
 
 .L1D20  ; See $1D40 for A,X,Y values. Loads info about object into various places as follows:
         ; $64 contains A on entry
-        ; $65 contains X on entry, index of object
-        ; $66 contains Y on entry
+        ; $65 contains X on entry, index of object, a weapon I think
+        ; $66 contains Y on entry, the victim+C8
         ; $67 contains code for object
         ; $6A contains index of location for object
-        ; On return C=1 if weapon damage (I think) >=0 health of carrier
+        ; On return C=1 if weapon strength required >= health of carrier
+        ; C=0 means weapon attack can go ahead
         STA     L0064 ; ?$64=A
         LDA     L25C0,X ; A=location of object X, it will be carried
         STY     L0066   ; ?$66=Y, this is index of hostile to carrier of X
@@ -954,77 +957,79 @@ L1A3A = L1A39+1
         STX     L0065   ; ?$65=X object index
         TAX             ; X=A the code for object
         STX     L0067   ; $67=code for object
-        LDA     L262A,X ; A=some property of object index by object code in X - its damage?
+        LDA     L262A,X ; A=some property of object index by object code in X - required strength?
         CMP     L28C6,Y ; Compare with health of carrier of the object (note $28C6+$C8=$298E, health table)
         STY     L006A   ; ?6A = Y the location index of the object
 .L1D3F
         RTS
 
-.L1D40  ; A=$15
+.L1D40  ; Handle if combat occurs and throwing of weapon, damage calc and weapon breakage
+        ; and prints result.
+        ; A=?$15
         ; X=index of weapon carried by character in outer loop
         ; Y=index of most healthy hostile in same location plus C8
         JSR     L1D20 ; Loads info about object into various places as follows:
        
         BCS     L1D3F ; Branch to RTS if C=1, wielder of weapon too weak?
-                      ; C=0 so attack!
+                      ; C=0 so proceed with attack!
 .L1D45
-        BIT     L0064
-        BPL     L1D3F
+        BIT     L0064 ; This was set to ?$15
+        BPL     L1D3F ; Branch to RTS
 
-        JSR     L17DA
+        JSR     L17DA ; Is player where action is?
+        BNE     L1D62 ; Branch ahead if not
 
-        BNE     L1D62
-
-        LDX     L0065
-        JSR     L24DD
+        LDX     L0065 ; Index of object, a weapon
+        JSR     L24DD ; Print description of object
 
         JSR     L14CE
         IS THROWN AT
 
-.L1D5A
+.L1D5A                ; The most healthy hostile
         LDX     L0066
-        JSR     L1BEA
+        JSR     L1BEA ; Print description of character
 
-        JSR     L1CB2
+        JSR     L1CB2 ; Print . chance colour to green.
 
 .L1D62
-        JSR     L1CBE
+        JSR     L1CBE ; Stores $80 in $2AD0+(Y-$C8) is object location. X is code for object.
 
-        LDA     L26A8,X
-        TAY
-        LDA     L26D2,X
-        LDX     L0066
-        JSR     L1C9E
+        LDA     L26A8,X ; A=some property of object
+        TAY             ; Y=A
+        LDA     L26D2,X ; A=some property of object
+        LDX     L0066   ; Index of most healthy hostile, target of attack
+        JSR     L1C9E   ; Calculates damage and prints out result
 
-.L1D71
-        JSR     L1C88
+.L1D71                  ; Handles weather weapon breaks
+        JSR     L1C88   ; A=random number
 
-        LDX     L0067
-        AND     L267E,X
+        LDX     L0067   ; Object code
+        AND     L267E,X ; Following handles whether weapon breaks
         LDY     L001A
         CMP     L267E,X
-        BEQ     L1D87
-
+        BEQ     L1D87   ; Branch if weapon breaks
+                        ; Weapon is fine
 .L1D80
-        LDA     L0064
-        LDX     L0065
-        JMP     L1B6C
+        LDA     L0064 ; A=$15
+        LDX     L0065 ; X=index of object
+        JMP     L1B6C ; Transfers object to the location Y=$1A and RTS
 
-.L1D87
+.L1D87                ; Handle weapon breakage
+                      ; Y contains a location 
         CPY     L0089
-        BNE     L1D98
+        BNE     L1D98 ; Branch if not the player location
 
-        LDX     L0065
-        JSR     L24DD
+        LDX     L0065 ; Object index
+        JSR     L24DD ; Print description of object
 
-        LDA     #$B6
+        LDA     #$B6  ; Print BREAKS
         JSR     L14B8
 
-        JSR     L20FA
+        JSR     L20FA ; Print . and newline
 
 .L1D98
-        LDY     #$C7
-        BNE     L1D80
+        LDY     #$C7 ; Y=$C7 - this location means broken weapon
+        BNE     L1D80 ; Branch to $1D80 always where broken weapon is "transferred" to location $C7
 
 .L1D9C
         STA     L0061
@@ -1220,8 +1225,6 @@ L1E19 = L1E17+2
 
 .L1EAD
         JSR     L14CE
-0638
-063f
         YOUR REQUEST IS REFUSED
 
 .L1EB5

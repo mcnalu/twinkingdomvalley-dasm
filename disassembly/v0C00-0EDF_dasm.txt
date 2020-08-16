@@ -129,82 +129,82 @@ OSCLI   = $FFF7
 
         JSR     L42A0 ; Sets the new player location and draws and prints info.
 
-        LDX     #$25  ; 39
-.L0C1E                ; Loop from $2AF5 down to $2AD0
+        LDX     #$25  ; 39 is total number of characters, dead or alive.
+.L0C1E                ; Loop from $2AF5 down to $2AD0. Used to signal info on the characters.
         LDA     L2AD0,X
         AND     #$80  ; Blank all but bit 7
         STA     L2AD0,X
         DEX
         BPL     L0C1E ; Loop branch
 
-        LDX     L27FE ; X=?$27FE is number entries in $29B4 and $298E tables
+        LDX     L27FE ; $27FE is number of characters but why is $25 hard coded above?
         DEX
-.L0C2D                ; Outer loop through all characters
+.L0C2D                ; Outer loop through all characters except player X=0
         JSR     L0CDE ; Handles object transfer, combat etc and print messages re WEAK, DYING & DEATH
 
         DEX
-        BNE     L0C2D ; Continue outer loop of characters
+        BNE     L0C2D ; Continue outer loop of characters, excluding player ie X=0
 
-        LDX     L27FE
+        LDX     L27FE ; X=number of characters
         DEX
-.L0C37
-        BIT     L2AD0
-        BVS     L0C75
+.L0C37                ; Start loop over characters to see who is here with the player
+        BIT     L2AD0 
+        BVS     L0C75 ; Branch if player has bit 6 set? Gets set in $0E3C
 
-        LDA     L29B4,X
-        CMP     L0089
-        BNE     L0C75
+        LDA     L29B4,X ; A = location of character X
+        CMP     L0089   ; Player location
+        BNE     L0C75   ; If not the same branch forward
+                        ; character X and player in same place
+        STX     L0010   ; ?$10=X index of character
+        LDA     L008A   ; $8A about to be set in $20BD
+        PHA             ; Save it on the stack. What else is it used for?
+        JSR     L20BD   ; Setup info based on player's location
 
-        STX     L0010
-        LDA     L008A
-        PHA
-        JSR     L20BD
+        BMI     L0C70   ; Branch if negative which means it is dark at player's location
 
-        BMI     L0C70
-
-        TXA
-        CLC
-        ADC     #$C8
-        TAX
-        STX     L0011
-        JSR     L1BEA
+        TXA             ; A=index of NPC
+        CLC                
+        ADC     #$C8    ; Add $C8 to make a carry location
+        TAX             ; X = carry location of NPC
+        STX     L0011   ; $11 stores carry location of NPC
+        JSR     L1BEA   ; Print description of NPC
 
         JSR     L14CE
         IS HERE WITH
 
 .L0C5E
-        LDA     L0011
-        JSR     L164C
+        LDA     L0011   ; A=carry location of this NPC
+        JSR     L164C   ; Print what the NPC is carrying or NOTHING
 
-        LDA     L25C0
-        CMP     L0011
-        BNE     L0C6D
-
-        JSR     L163F
+        LDA     L25C0   ; Load location of holdall
+        CMP     L0011   ; Is it being carried by this NPC
+        BNE     L0C6D   ; Branch if not
+                      ; This NPC has the holdall
+        JSR     L163F ; Print out the holdall and its contents
 
 .L0C6D
-        JSR     L149C
+        JSR     L149C ; Reset colour to white print newline
 
 .L0C70
-        PLA
-        STA     L008A
-        LDX     L0010
+        PLA           ; Pull value of stack, it's the index of the character
+        STA     L008A ; $8A contains index of the character
+        LDX     L0010 ; $10 also contains index of the character
 .L0C75
-        DEX
-        BNE     L0C37
+        DEX           ; Decrement
+        BNE     L0C37 ; Branch back to continue loop
 
 .L0C78
         LDA     #$00
-        STA     L008C
+        STA     L008C ; ?$8C=0
         JSR     L229F ; Get user input
 
         CPX     #$02
-        BEQ     L0C78
+        BEQ     L0C78 ; Branch back to get input again if X=2 ie only return was pressed
 
-        LDA     L0083
-        BPL     L0C8E
-
-        JSR     L3500
+        LDA     L0083 ; Index of matched command
+        BPL     L0C8E ; Branch if A>=0, something was matched
+                      ; A<0 means nothing matched,
+        JSR     L3500 ; 
 
         LDA     L0083
         BNE     L0C78
@@ -276,7 +276,7 @@ OSCLI   = $FFF7
         BEQ     L0CED ; If health is zero this character is dead so RTS
             
         STX     L0016 ; ?$16=X ie index of character in outer loop
-        JSR     L0CEE ; Loads stuff from lookup tables and stores in zero page
+        JSR     L0CEE ; Check, perform and print combat and picking up for character X
 
         JSR     L149C ; prints newline
 
@@ -284,16 +284,16 @@ OSCLI   = $FFF7
 .L0CED
         RTS
 
-.L0CEE  ; Check for interactions with character X
+.L0CEE  ; Check, perform and print combat and picking up for character X
         LDA     L29B4,X ; Location of character X.
         STA     L001A   ; Store potential location of an interaction.
-        LDA     L2AD0,X ; ?
+        LDA     L2AD0,X ; Set to $80 if this character has performed an attack already this turn
         STA     L0013
         BIT     L0015 
         BPL     L0D01
 
-        AND     #$7F
-        STA     L2AD0,X
+        AND     #$7F    ; Zero bit 7 
+        STA     L2AD0,X ; and store it back
 .L0D01
         LDA     L2968,X ; If bit 7 set hostile to player, lower bits specify class.
         STA     L001B
@@ -304,16 +304,16 @@ OSCLI   = $FFF7
         LDA     L28A0,Y
         STA     L0019
         ORA     L0018
-        BNE     L0D22 ; branch if one or both of $18 and $19 are zero
+        BNE     L0D22 ; branch if one or both of $18 and $19 are zero in all bits
                       ; non-zero
-        JSR     L0D8D ; Sets $10 and uses lookup tables
-                      ; A=?$10=greatest health amongst hostil characters
+        JSR     L0D8D ; Inner loop through characters to find any hostiles at same location
+                      ; A=?$10=greatest health amongst hostile characters
         BEQ     L0D1F ; Branch if A=0 ie no hostiles
                       ; There are hostiles 
-        JMP     L0E5B ; Loop through all weapons
+        JMP     L0E5B ; Handle combat, consequences, picking up of weapons and printing
 
-.L0D1F             
-        JMP     L0E99
+.L0D1F                ; No hostiles
+        JMP     L0E99 ; Handle picking up of weapons
 
 .L0D22
         JSR     L0D8D
@@ -572,11 +572,11 @@ OSCLI   = $FFF7
         CLC
         BCC     L0DF9
 
-.L0E5B
+.L0E5B                  ; Handle combat and picking up of weapons
         LDA     #$00
         STA     L0010   ; ?$10=0
         LDX     #$0A    ; X=$A
-.L0E61                  ; Loop through objects from $0A to $23 ie weapons
+.L0E61                  ; Loop through objects from $0A to $23 ie weapons for possible attack
         LDA     L25C0,X ; Load location of object X
         CMP     #$FF    ; 
         BNE     L0E6B   ; Branch if not in holdall
@@ -597,32 +597,32 @@ OSCLI   = $FFF7
 
         LDX     L0011   ; Load object index back into X
         CMP     #$C0    
-        BCC     L0E8B   ; Branch if random byte A<$C0, 80% chance
-                        ; If A>=$C0, 20% chance
-        LDA     L0015   ; ?
-        JSR     L1D40   ; 
+        BCC     L0E8B   ; Branch if random byte A<$C0, 80% chance - melee attack?
+                        ; If A>=$C0, 20% chance - throw attack?
+        LDA     L0015   ; 
+        JSR     L1D40   ; Handle throw attack, outcome and print result
 
-        JMP     L0E90
+        JMP     L0E90   ; Branch ahead with C=0 so will go to $0ED5 and RTS
 
-.L0E8B
-        LDA     L0015
-        JSR     L1CCA  
+.L0E8B                  
+        LDA     L0015   ; A=?$15
+        JSR     L1CCA   ; Handle melee attack, outcome and print result
 
-.L0E90                ; Handles transfer of object and prints results eg An elf takes an axe
+.L0E90                ; Handles picking up of objects eg An elf takes an axe
                       ; On entry $16 contains destination minus $C7
-        LDX     L0011 ; X=?$11
-        BCC     L0ED5 ; Branch to ?$10=$FF then RTS 
+        LDX     L0011 ; X=?$11 the object index
+        BCC     L0ED5 ; C=0 means weapon attack possible so branch to ?$10=$FF then RTS 
 
 .L0E94
         INX           ; Inc X
-        CPX     #$23  ; Is it $23=35
-        BNE     L0E61 ; Branch if X isn't $23 - dunno what this branch does, holdall related?
-                      ; If X is 23
+        CPX     #$23  ; Is it $23=35? <$23 are weapons, >= aren't
+        BNE     L0E61 ; Branch to continue loop if object is still a weapon
+                      ; No more weapons to check
 .L0E99
         LDA     #$00
         STA     L0010 ; ?$10=0
         LDX     #$0A  ; X=$A ie the flint
-.L0E9F
+.L0E9F                ; Loop through weapons again to see if one is picked up
         LDA     L25C0,X 
         CMP     L001A 
         BNE     L0EDA ; Branch if location isn't ?$1A. Will keep doing this until X=$23
@@ -640,7 +640,7 @@ OSCLI   = $FFF7
         BIT     L0015
         BPL     L0ED5 ; Branch to ?$10=&FF and RTS
 
-        LDA     L001A
+        LDA     L001A ; Don't print out if player isn't there
         CMP     L0089
         BNE     L0ED5 ; Branch to ?$10=&FF and RTS
 
@@ -664,8 +664,8 @@ OSCLI   = $FFF7
 
 .L0EDA
         INX
-        CPX     #$23  ; $23 is beer!
-        BNE     L0E9F ; Loop back if X<$23
+        CPX     #$23  ; $23 is beer! <$23 is a weapon (and >=$0A)
+        BNE     L0E9F ; Loop back if X<$23 to continue loop for pick up search
 
         RTS
 

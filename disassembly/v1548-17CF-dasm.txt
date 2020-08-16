@@ -1,0 +1,576 @@
+L0001   = $0001
+L0003   = $0003
+L0011   = $0011
+L0026   = $0026
+L0060   = $0060
+L0062   = $0062
+L0063   = $0063
+L0064   = $0064
+L0065   = $0065
+L006C   = $006C
+L006D   = $006D
+L006E   = $006E
+L006F   = $006F
+L0077   = $0077
+L007A   = $007A
+L007B   = $007B
+L0083   = $0083
+L0089   = $0089
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L14B8   = $14B8
+L14CE   = $14CE
+L14EF   = $14EF
+L1B6C   = $1B6C
+L1BEA   = $1BEA
+L1E6A   = $1E6A
+L20FA   = $20FA
+L229F   = $229F
+L24DD   = $24DD
+L24FB   = $24FB
+L2581   = $2581
+L25C0   = $25C0
+L27FB   = $27FB
+L27FC   = $27FC
+L28E0   = $28E0
+L29DA   = $29DA
+L3B51   = $3B51
+L3B8D   = $3B8D
+L80C0   = $80C0
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $1548
+.BeebDisStartAddr
+        LDA     L0089
+        JSR     L14EF
+
+        LDA     L0060
+        BNE     L156F
+
+        JSR     L14CE
+        TAKE WHAT
+
+.L1557
+        JSR     L229F
+
+        LDA     L0089
+        JSR     L14EF
+
+        LDA     L0060
+        BNE     L156F
+
+        JSR     L14CE
+        I CAN'T SEE ANY HERE
+
+.L156C
+        JMP     L1E6A
+
+.L156F
+        LDX     L0063
+        DEX
+        LDY     #$C8
+        TYA
+        JSR     L1B6C
+
+        BCC     L157D
+
+        JMP     L1597
+
+.L157D
+        JSR     L14CE
+        I HAVE IT NOW
+
+.L1585
+        JMP     L20FA
+
+        CLC
+        ADC     L29DA
+        BCS     L1597
+
+        CMP     L28E0
+        BCS     L1597
+
+        STA     L29DA
+        RTS
+
+.L1597
+        LDX     #$C8
+        JSR     L1BEA
+
+        JSR     L14CE
+        CAN'T CARRY ANY MORE
+
+.L15A4
+        JMP     L1E6A
+
+.L15A7
+        LDA     L006E
+        JSR     L14EF
+
+        LDA     L0060
+        STA     L006C
+        LDA     L0063
+        STA     L006D
+        LDA     L25C0
+        CMP     L006E
+        BNE     L15C9
+
+        LDA     #$FF
+        JSR     L14EF
+
+        LDA     L006C
+        CMP     L0060
+        BCS     L15C9
+
+        LDA     L0060
+.L15C8
+        RTS
+
+.L15C9
+        LDA     L006D
+        STA     L0063
+        LDA     L006C
+        STA     L0060
+        RTS
+
+.L15D2
+        LDA     #$01
+        CLC
+        ADC     #$C7
+        STA     L006E
+        JSR     L15A7
+
+        BNE     L15C8
+
+        LDA     L0083
+        JSR     L14B8
+
+        LDA     #$80
+        JSR     L14B8
+
+        JSR     L229F
+
+        JSR     L15A7
+
+        BNE     L15C8
+
+        LDA     L006E
+        CMP     #$C8
+        BNE     L1601
+
+        JSR     L14CE
+        YOU HAVEN'T GOT THAT
+
+.L15FE
+        JMP     L1E6A
+
+.L1601
+        TAX
+        JSR     L1BEA
+
+        JSR     L14CE
+        HASN'T GOT THAT
+
+.L160C
+        JMP     L1E6A
+
+        JSR     L15D2
+
+        LDX     L0063
+        DEX
+        LDY     L0089
+        LDA     #$FF
+        JSR     L1B6C
+
+        LDA     #$8C
+.L161E                ; Print word and newline
+        JSR     L14B8 ; Print word in A 
+
+        JMP     L20FA ; Print . and newline
+
+.L1624
+        JSR     L14CE
+        YOU HAVE
+
+.L162A
+        LDA     #$C8
+        JMP     L164C
+
+        JSR     L1624
+
+        LDA     L25C0
+        CMP     #$C8
+        BNE     L163C
+
+        JSR     L163F
+
+.L163C
+        JMP     L3B51
+
+.L163F
+        LDA     #$02  ; Colour green
+        STA     L006F
+        JSR     L14CE 
+        A HOLDALL CONTAINING
+
+.L164A
+        LDA     #$FF  ; This is the carry location of the holdall
+        
+.L164C                ; Print what the NPC is carrying or NOTHING
+                      ; A=carry location of a character of interest
+        STA     L0064 ; store in $64
+        LDA     #$00 
+        STA     L0062 ; zero $62
+        LDX     L27FC ; X=number of objects
+        DEX
+        STX     L0063 ; X=number of objects-1
+.L1658
+        LDA     L25C0,X ; Load location of object X
+        CMP     L0064   ; Is it being carried by the character?
+        BNE     L1681   ; Branch if not 
+                        ; This object is being carried by the character
+        BIT     L0062   
+        BMI     L1679   ; Branch if bit 7 of $62 is set ie this isn't first pass
+                        ; bit isn't set so it's the first pass through loop so print THE FOLLOWING
+        DEC     L0062   ; Starts loop as zero so will be negative for all but first pass
+        JSR     L14CE
+        THE FOLLOWING
+
+.L166B
+        LDA     #$80    ; Set $26< to indicate caps needed
+        STA     L0026
+        LDA     L006F   ; Set colour to green
+        CLC
+        ADC     #$02
+        STA     L006F
+        JSR     L3B51
+
+.L1679                  
+        LDX     L0063  ; X=Index of current object
+        JSR     L24DD  ; Print info about object X
+
+        JSR     L20FA  ; Full stop and newline
+
+.L1681
+        DEC     L0063  ; Dec object index
+        LDX     L0063  ; X=?$63
+        BNE     L1658  ; Keep going in loop but bail when X=0 ie the player
+
+        BIT     L0062  
+        BMI     L1697  ; Branch if $62 has bit 7 set ie at least one object was carried
+                       ; Nothing was carried by NPC
+        LDA     L25C0  ; A=location of holdall
+        CMP     L0064  ; Compare with carry location of this character
+        BEQ     L1697  ; Branch if this NPC is carrying the holdall
+
+        LDA     #$8F   ; The word NOTHING
+        JSR     L161E  ; Print it then . and newline 
+
+.L1697
+        LDA     #$00   ; Reset colour to white
+        STA     L006F
+        RTS
+
+.L169C
+        JSR     L14CE
+        YOUR LAMP IS EMPTY
+
+.L16A4
+        JMP     L20FA
+
+        LDX     #$01
+        JSR     L3B8D
+
+        BNE     L16D4
+
+        LDA     L2581
+        BEQ     L16E9
+
+        LDX     #$0A
+        JSR     L3B8D
+
+        BNE     L16E5
+
+        LDA     L27FB
+        BEQ     L169C
+
+        LDA     #$00
+        STA     L2581
+        LDA     #$1A
+.L16C6
+        STA     L16D0
+        JSR     L14CE
+        THE LAMP IS NOW
+        ON
+
+.L16D2
+        BNE     L16E2
+
+.L16D4
+        LDA     #$5A
+.L16D6
+        STA     L16E0
+        JSR     L14CE
+        YOU DON'T HAVE A
+        LAMP
+
+.L16E2
+        JMP     L20FA
+
+.L16E5
+        LDA     #$33
+        BNE     L16D6
+
+.L16E9
+        LDA     #$1A
+.L16EB
+        STA     L16F5
+        JSR     L14CE
+        YOUR LAMP IS ALREADY
+        ON
+
+.L16F7
+        BNE     L16E2
+
+        LDX     #$01
+        JSR     L3B8D
+
+        BNE     L16D4
+
+        LDA     L2581
+        BNE     L170E
+
+        LDA     #$01
+        STA     L2581
+        LDA     #$1B
+        BNE     L16C6
+
+.L170E
+        LDA     #$1B
+        BNE     L16EB
+
+.L1712
+        JSR     L24FB
+
+        LDX     L007A
+        BEQ     L1733
+
+        LDY     L007B
+.L171B
+        LDA     (L0077),Y
+        STA     L0062
+        BPL     L172E
+
+        INY
+        INY
+        LDA     (L0077),Y
+        STA     L0063
+        BPL     L172F
+
+        LDA     L0062
+        AND     #$40
+        RTS
+
+.L172E
+        INY
+.L172F
+        INY
+        DEX
+        BNE     L171B
+
+.L1733
+        JSR     L14CE
+        NOTHING HERE LOCKS
+
+.L173A
+        JMP     L1E6A
+
+.L173D
+        ORA     (L0011,X)
+        ORA     #$19
+        ORA     L0003
+        ORA     (L0001,X)
+.L1745
+        STA     L0064
+        LDA     L0063
+        AND     #$07
+        TAX
+        LDA     L173D,X
+        STA     L0065
+        LDA     #$01
+        STA     L0060
+        LDX     #$02
+.L1757
+        JSR     L3B8D
+
+        BNE     L1790
+
+        LDA     L0060
+        AND     L0065
+        BEQ     L1790
+
+        DEY
+        DEY
+        LDA     L0062
+        EOR     #$40
+        STA     (L0077),Y
+        INY
+        LDA     L0089
+        PHA
+        LDA     (L0077),Y
+        STA     L0089
+        JSR     L1712
+
+        DEY
+        DEY
+        LDA     L0062
+        EOR     #$40
+        STA     (L0077),Y
+        PLA
+        STA     L0089
+        LDA     L0064
+        STA     L178B
+        JSR     L14CE
+        IT IS NOW
+        OPEN
+
+.L178D
+        JMP     L20FA
+
+.L1790
+        ASL     L0060
+        INX
+        CPX     #$07
+        BCC     L1757
+
+        JSR     L14CE
+        YOU DON'T HAVE THE KEY
+
+.L17A0
+        JMP     L20FA
+
+        JSR     L1712
+
+        BNE     L17AD
+
+        LDA     #$17
+        JMP     L1745
+
+.L17AD
+        LDA     #$17
+.L17AF
+        STA     L17B7
+        JSR     L14CE
+        IT'S ALREADY
+        OPEN
+
+.L17B9
+        JMP     L20FA
+
+        JSR     L1712
+
+        BEQ     L17C6
+
+        LDA     #$3F
+        JMP     L1745
+
+.L17C6
+        LDA     #$3F
+        BNE     L17AF
+
+        RTS
+
+        JSR     L80C0
+
+        RTI
+
+        BRK
+.BeebDisEndAddr
+SAVE "command/v1548-17CF-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 1548 A5 89 20 EF 14 A5 60 D0 1E 20 CE 14 12 80 00 20 -- ---`-- -----  OOOOOOOOOOOODDDO
+; 1558 9F 22 A5 89 20 EF 14 A5 60 D0 0C 20 CE 14 81 36 -"-- ---`-- ---6 OOOOOOOOOOOOOODD
+; 1568 34 82 37 00 4C 6A 1E A6 63 CA A0 C8 98 20 6C 1B 4-7-Lj--c---- l- DDDDOOOOOOOOOOOO
+; 1578 90 03 4C 97 15 20 CE 14 81 83 38 84 00 4C FA 20 --L-- ----8--L-  OOOOOOOODDDDDOOO
+; 1588 18 6D DA 29 B0 09 CD E0 28 B0 04 8D DA 29 60 A2 -m-)----(----)`- OOOOOOOOOOOOOOOO
+; 1598 C8 20 EA 1B 20 CE 14 36 85 82 86 00 4C 6A 1E A5 - -- --6----Lj-- OOOOOOODDDDDOOOO
+; 15A8 6E 20 EF 14 A5 60 85 6C A5 63 85 6D AD C0 25 C5 n ---`-l-c-m--%- OOOOOOOOOOOOOOOO
+; 15B8 6E D0 0E A9 FF 20 EF 14 A5 6C C5 60 B0 03 A5 60 n---- ---l-`---` OOOOOOOOOOOOOOOO
+; 15C8 60 A5 6D 85 63 A5 6C 85 60 60 A9 01 18 69 C7 85 `-m-c-l-``---i-- OOOOOOOOOOOOOOOO
+; 15D8 6E 20 A7 15 D0 EA A5 83 20 B8 14 A9 80 20 B8 14 n ------ ---- -- OOOOOOOOOOOOOOOO
+; 15E8 20 9F 22 20 A7 15 D0 D8 A5 6E C9 C8 D0 0B 20 CE  -" -----n---- - OOOOOOOOOOOOOOOO
+; 15F8 14 87 88 89 8A 00 4C 6A 1E AA 20 EA 1B 20 CE 14 ------Lj-- -- -- ODDDDDOOOOOOOOOO
+; 1608 8B 89 8A 00 4C 6A 1E 20 D2 15 A6 63 CA A4 89 A9 ----Lj- ---c---- DDDDOOOOOOOOOOOO
+; 1618 FF 20 6C 1B A9 8C 20 B8 14 4C FA 20 20 CE 14 87 - l--- --L-  --- OOOOOOOOOOOOOOOD
+; 1628 83 00 A9 C8 4C 4C 16 20 24 16 AD C0 25 C9 C8 D0 ----LL- $---%--- DDOOOOOOOOOOOOOO
+; 1638 03 20 3F 16 4C 51 3B A9 02 85 6F 20 CE 14 3A 76 - ?-LQ;---o --:v OOOOOOOOOOOOOODD
+; 1648 8D 00 A9 FF 85 64 A9 00 85 62 AE FC 27 CA 86 63 -----d---b--'--c DDOOOOOOOOOOOOOO
+; 1658 BD C0 25 C5 64 D0 22 24 62 30 16 C6 62 20 CE 14 --%-d-"$b0--b -- OOOOOOOOOOOOOOOO
+; 1668 5D 8E 00 A9 80 85 26 A5 6F 18 69 02 85 6F 20 51 ]-----&-o-i--o Q DDDOOOOOOOOOOOOO
+; 1678 3B A6 63 20 DD 24 20 FA 20 C6 63 A6 63 D0 D1 24 ;-c -$ - -c-c--$ OOOOOOOOOOOOOOOO
+; 1688 62 30 0C AD C0 25 C5 64 F0 05 A9 8F 20 1E 16 A9 b0---%-d---- --- OOOOOOOOOOOOOOOO
+; 1698 00 85 6F 60 20 CE 14 3D 5A 3E 1F 00 4C FA 20 A2 --o` --=Z>--L- - OOOOOOODDDDDOOOO
+; 16A8 01 20 8D 3B D0 26 AD 81 25 F0 36 A2 0A 20 8D 3B - -;-&--%-6-- -; OOOOOOOOOOOOOOOO
+; 16B8 D0 2B AD FB 27 F0 DD A9 00 8D 81 25 A9 1A 8D D0 -+--'------%---- OOOOOOOOOOOOOOOO
+; 16C8 16 20 CE 14 5D 5A 3E 84 1A 00 D0 0E A9 5A 8D E0 - --]Z>------Z-- OOOODDDDDDOOOOOO
+; 16D8 16 20 CE 14 87 90 83 3A 5A 00 4C FA 20 A9 33 D0 - -----:Z-L- -3- OOOODDDDDDOOOOOO
+; 16E8 ED A9 1A 8D F5 16 20 CE 14 3D 5A 3E 91 1A 00 D0 ------ --=Z>---- OOOOOOOOODDDDDDO
+; 16F8 E9 A2 01 20 8D 3B D0 D4 AD 81 25 D0 09 A9 01 8D --- -;----%----- OOOOOOOOOOOOOOOO
+; 1708 81 25 A9 1B D0 B8 A9 1B D0 D9 20 FB 24 A6 7A F0 -%-------- -$-z- OOOOOOOOOOOOOOOO
+; 1718 1A A4 7B B1 77 85 62 10 0D C8 C8 B1 77 85 63 10 --{-w-b-----w-c- OOOOOOOOOOOOOOOO
+; 1728 06 A5 62 29 40 60 C8 C8 CA D0 E8 20 CE 14 8F 37 --b)@`----- ---7 OOOOOOOOOOOOOODD
+; 1738 92 00 4C 6A 1E 01 11 09 19 05 03 01 01 85 64 A5 --Lj----------d- DDOOOOOOOOOOOOOO
+; 1748 63 29 07 AA BD 3D 17 85 65 A9 01 85 60 A2 02 20 c)---=--e---`--  OOOOOOOOOOOOOOOO
+; 1758 8D 3B D0 34 A5 60 25 65 F0 2E 88 88 A5 62 49 40 -;-4-`%e-.---bI@ OOOOOOOOOOOOOOOO
+; 1768 91 77 C8 A5 89 48 B1 77 85 89 20 12 17 88 88 A5 -w---H-w-- ----- OOOOOOOOOOOOOOOO
+; 1778 62 49 40 91 77 68 85 89 A5 64 8D 8B 17 20 CE 14 bI@-wh---d--- -- OOOOOOOOOOOOOOOO
+; 1788 38 3E 84 17 00 4C FA 20 06 60 E8 E0 07 90 C0 20 8>---L- -`-----  DDDDDOOOOOOOOOOO
+; 1798 CE 14 87 90 83 5D 32 00 4C FA 20 20 12 17 D0 05 -----]2-L-  ---- OODDDDDDOOOOOOOO
+; 17A8 A9 17 4C 45 17 A9 17 8D B7 17 20 CE 14 93 91 17 --LE------ ----- OOOOOOOOOOOOODDD
+; 17B8 00 4C FA 20 20 12 17 F0 05 A9 3F 4C 45 17 A9 3F -L-  -----?LE--? DOOOOOOOOOOOOOOO
+; 17C8 D0 E5 60 20 C0 80 40 00 00 00 00 00 00 00 00 00 --` --@--------- OOOOOOOOUUUUUUUU
+

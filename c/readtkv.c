@@ -125,6 +125,12 @@ void describeobject(char *scode){
   long code=strtol(scode+1,NULL,16);
   long loc = getbyte("25C0",code);
   long lu = getbyte("2580",code);
+  long requiredstr = getbyte("262A",code);
+  long weapondur = getbyte("267E",code);
+  long meldamagernd = getbyte("2726",code);
+  long meldamagemax = getbyte("26FC",code);
+  long thrdamagernd = getbyte("26D2",code);
+  long thrdamagemax = getbyte("26A8",code);
   long size = getbyte("2600",lu);
   char addrs[NOBJWORDS][5]={"2750","277A","27A4","27CE"};
   int  i;
@@ -147,7 +153,12 @@ void describeobject(char *scode){
     if(i<NOBJWORDS-1)
       line[linepos-1]=' ';
   }
-  printf("Object %02x\nLookup code %02x\nLocation %02x\nSize %02x\n|%s|\n",code,lu,loc,size,line);
+  printf("Object %02x\nLookup code %02x\nLocation %02x\nSize %02x\n",code,lu,loc,size);
+  printf("Required strength %02x\n",requiredstr);
+  printf("Weapon durability %02x\n",weapondur);
+  printf("Throw damage: max %02x, rnd sub %02x\n",thrdamagemax,thrdamagernd);  
+  printf("Melee damage: max %02x, rnd sub %02x\n",meldamagemax,meldamagernd);  
+  printf("|%s|\n",line);
 }
 
 void describenpc(char *scode){

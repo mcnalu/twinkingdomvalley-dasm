@@ -71,8 +71,7 @@ OSCLI   = $FFF7
         JSR     L1869
 
         JSR     L14CE
-
-        EQUB    $2A,$29,$94,$00
+        DRAW PICTURE ALWAYS
 
 .L17DA                ; compares $1A with $89
         LDA     L001A

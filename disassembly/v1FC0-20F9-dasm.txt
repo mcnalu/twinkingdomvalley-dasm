@@ -257,10 +257,10 @@ OSCLI   = $FFF7
 
         RTS
 
-.L20A7                  ; Puts address for a location specified by Y in $78-9
-                        ; First two bytes for that location loaded into $79 and $7A.
+.L20A7                  ; Puts address for a location block for Y in $77-8
+                        ; First two bytes of that location block are loaded into $79 and $7A.
                         ; On entry, Y is set to the player's location.
-                        ; On exit, A=?$79
+                        ; On exit, A=?$79 and Y=0 
                         ; Loads two bytes into $79-A from address in
                         ; $2A00/2B00 table indexed by Y which is stored in $77-8              
         LDA     L2A00,Y ; Load address from lookup table using Y into $77-8
@@ -279,35 +279,35 @@ OSCLI   = $FFF7
                         ; First byte in location block ($2C00 table) has bit 4 set=> visited
                         ; $8A set to value of second byte.
         LDY     L0089   ; Load the player's location into Y
-        JSR     L20A7
+        JSR     L20A7   ; Address of location block in $77-8; its first two bytes in $79-A
                         ; Y=0 now, A will be same as in $79
         STA     L008A   ; This will be same as byte in $79
         ORA     #$10    ; Set bit 4 of A - this means player has visited it
         STA     (L0077),Y ; Y=0 so we are storing value from here back there with bit 4 set
-        BPL     L20E9 ; Branch to RTS if A>=0
-                      ; If A<0 carry on 
-        LDA     L2581
+        BPL     L20E9 ; Branch to RTS if A>=0, a light location?
+                      ; If A<0 carry on, a dark location?
+        LDA     L2581 ; A=code for lamp, starts as 01 but does it change when lit?
         BNE     L20E5 ; Branch if A=$2581 non-zero to store $FF in $8A and return
                       ; If A=0 carry on
-        LDA     L25C1
-        CMP     L0089 
-        BEQ     L20E9 ; Branch to RTS if $25C1=$89
-
-        CMP     #$C8  ;  $89=$C8=200
-        BCC     L20E5  ; Branch if ?$25C1<$C8=200 to store $FF in $8A and return
-
-        TAY           ; Transfer A=?$25C1 to Y
+        LDA     L25C1 ; A=location of lamp
+        CMP     L0089 ;
+        BEQ     L20E9 ; Branch to RTS if lamp is in on ground at player's location
+                      ; Lamp is not on ground at player's location
+        CMP     #$C8  ; Location which means carried by player
+        BCC     L20E5 ; Branch if lamp is not carried by player
+                      ; Lamp is carried by player
+        TAY           ; Y=location of lamp
         INY           ; Increment Y
-        BEQ     L20E5 ; Branch if Y=0 to store $FF in $8A and return
-
-        LDA     L28EB,Y ; A=?$(28EB+Y)
-        CMP     L0089   ; Store in $89
+        BEQ     L20E5 ; Branch if location of lamp was $FF ie in holdall
+                      ; Lamp carried by player but not in holdall
+        LDA     L28EB,Y ; A=?$28EB (cos Y=0) 
+        CMP     L0089   ; Is it same as player's location $89
         BEQ     L20E9   ; Branch if $89=0 to RTS
 
-.L20E5
+.L20E5  ; Branches here if it's dark I think
         LDA     #$FF  
-        STA     L008A   ; $89=FF
-.L20E9
+        STA     L008A   ; ?$8A=FF
+.L20E9  ; Branches here if it's light I think
         RTS
         
         ; NOTE for 20EA see the next file as this fragment of the routine is copied there.

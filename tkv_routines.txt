@@ -2,7 +2,9 @@ TKV subroutines
 
 $0BCA deal with * commands
 $0C00 Draws magenta dashes for turn start and calls $229F for input +?
+$0CEE  Check, perform and print combat and picking up for character X
 $0D8D Inner loop through characters to find any hostiles at same location.
+$0E5B Handle combat and picking up of weapons
 $0F03 Prints out various events like lamp flickers, you are dry, witch casts spell
 $12EE Prints out score and strength
 $1303 Prints out score
@@ -10,6 +12,7 @@ $1400 Main entry point
 $14CE Prints output sequence related to actions encoded as bytes immediately after JSR $14CE
 $149C zeroes $6F (implies text colour) and $82 (char count) and prints newline
 $1624 Prints out inventory
+$164C Print what the NPC is carrying or NOTHING
 $180D Prints select and issues the option command + ?
 $19FA Prints out Bye_Bye and enters infinite input loop on death
 $1B6C Handles transfer of object
@@ -18,8 +21,10 @@ $1BC1 Handle transfer of an object updating amount carried if given
 $1BEA Print three words describing NPC; X specifies the character
 $1C02 Prints that a character is WEAK or DYING or DEAD
 $1C74 Prints three words describing character specified by X and IS
-$1C88 Puts a pseudo random number in A?
+$1C88 Puts a pseudo random byte in A?
+$1C9E Calculates damage for throw attack
 $1D20 Loads info about object specified by index in X into various memory location
+$1D40 Handle if combat occurs and throwing of weapon, damage calc and weapon breakage and prints result.
 $1FC0 write the Press Tab message then hides it
 $1FD9 Prints command word stored in $3600 table
 $1FEA Continues $1FD9 but if entered here it can print word from response table $500

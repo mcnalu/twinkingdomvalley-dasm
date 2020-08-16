@@ -74,13 +74,14 @@ Storage locations:
 
 $1 contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846 and below
 $2 is players thirst, see $0FC2 and after for getting dry type messages
-$21 Set to $80 if princess recognises you cos you have amulet or  $40 if not, see $1192 and after
+$21 Set to $80 if princess recognises you cos you have amulet or  $40 if not, see $1192 and after 
 $26 Set to $80 in $22E1 block. If $26<0 then signal caps needed for new sentence start.
+$27 Set to $2 near start at $1400. Once negative staff drops 80% of the time it's used.
 $62 is where damage is stored, see $1C02
 $6F appears to be for setting colour, see $3B51
 $82 appears to count number of characters printed out - in a turn?
 $89 is the player's current location, eg 00 is cabin. Used in routine $20BD
-$8A is set to value of first byte in address $89 points to. Set in routine $20BD
+$8A is set to value of first byte in address $89 points to. Set in routine $20BD. Might have a use elsewhere though as it gets saved onto stack prior to $2089 call in just after $0C37.
 $8B sees to count down at a rate of once every couple of seconds, 2.56s?
 $2A is the text print out speed as set by *TEXT
 
@@ -121,10 +122,16 @@ $25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other pl
       ; Does $C8+X mean NPC X has it for X>0?
       ; $FF means it is in holdall
       ; $C7 is the initial location of the silver key
-$2600 ; Table of object sizes? - NOTE use object code as index
-$262A ; Table of unknown object property see $1D2E - I think it's weapon damage.
-$26FC ; Table indexed by object index
-$2726 ; Table indexed by object index
+      ; $C7 means the object doesn't exist eg after a weapon breaks, see $1D87
+    
+      ; + indicates indexed by object code
++$2600 ; Table of object sizes? - NOTE use object code as index
++$262A ; Table of required strengths see $1C9E.
++$267E ; Table of weapon durability see $1D71
++$26A8 ; Max throw damage of weapon see $1D62 
++$26D2 ; Max throw rnd subtraction from max weapon damage, see $1D62
++$26FC ; Max melee damage of weapon see $1CEB
++$2726 ; Max melee rnd subtraction from max weapon damage, see $1CEB
 $2750 ; First word of object description eg A
 $277A ; Second word eg SMALL
 $27A4 ; Final word eg HOLDALL. NOTE: A zero for any word=>no more words.
@@ -142,6 +149,9 @@ $2860 Table with third NPC word
 
 $2880 Dunno but indexed by character class like $2820 see $0D01
 $28A0 Dunno but indexed by character class like $2820 see $0D01
+
+$28EB is loaded in $20BD but I don't know what it means
+
 *Each instance of an NPC has an index X 
 *$2968 start of data table. This identifies char class. Bit 7=1 means hostile. AND &7F=> index in $2820/40/60/80/A0 tables
 *$298E start of data table. This gives health of the character.
@@ -160,11 +170,12 @@ From values in $2B00 table, seems Y can go from 0 to B0 or 0 to 176.
 Note also that routine $1CBE stores stuff in the $2A00 table.
 So $2C00 to $33FF is some kind of look up table used by routine at $20A7
 
-*$2AD0 start of data table? Bits 0-6 of these bytes are zeroed in $0C1E
+$2A08 is really $2AD0 cos of +$C8
+*$2AD0 Bit 7 is set when this character done an attack. Bits 0-6 of these bytes are zeroed in $0C1E
 $2BD0 start of data table?
 
 
-$2AD0-2AF5 (zeroed in $143C loop)
+$2AD0-2AF5 - zeroed in $143C loop, bits 0-6 wiped in $0C1E, bit 7 zeroed in $0CEE
 
 $2BC0 contains value from hardware clock from OSWORD 1 see $2AC0
 

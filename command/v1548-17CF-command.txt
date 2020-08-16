@@ -1,0 +1,40 @@
+load $1548 machinecode/VALLEYR-1548-17CF
+save v1548-17CF-dasm.txt
+entry $1548
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump
+byte $1554 $3
+entry pc
+byte $1566 $6
+entry pc
+byte $1580 $5
+entry pc
+byte $159f $5
+entry pc
+byte $15f9 $5
+entry pc
+byte $1608 $4
+entry pc
+byte $1627 $3
+entry pc
+byte $1646 $4
+entry pc
+byte $1668 $3
+entry pc
+byte $169f $5
+entry pc
+byte $16cc $6
+entry pc
+byte $16dc $6
+entry pc
+byte $16f1 $6
+entry pc
+byte $1736 $4
+entry pc
+byte $1788 $5
+entry pc
+byte $179a $6
+entry pc
+byte $17b5 $4
+entry pc

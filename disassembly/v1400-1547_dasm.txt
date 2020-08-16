@@ -102,7 +102,7 @@ OSCLI   = $FFF7
 .BeebDisStartAddr
         JSR     L149C ; Prints newline plus initialises &6F and &82
 
-        LDA     #$AA  ; Lots of inialisation
+        LDA     #$AA  ; Lots of initialisation
         STA     L001D
         LDA     #$80
         STA     L27FB
@@ -198,7 +198,7 @@ OSCLI   = $FFF7
 
         JMP     L146D
 
-.L149C
+.L149C                 ; Sets colour to white and prints newline
         LDA     #$00
         STA     L006F
         STA     L0082
@@ -216,9 +216,9 @@ OSCLI   = $FFF7
         JMP     (L0060) ; JMP to perform the command.
 
 .L14B8
-        BMI     L14BD
+        BMI     L14BD ; If negative use $040 table
 
-        JMP     L1FD9
+        JMP     L1FD9 ; use $3600 table
 
 .L14BD  ; Use A to point to lookup table at $0400 and store values in &70-1 and A
         TAY
