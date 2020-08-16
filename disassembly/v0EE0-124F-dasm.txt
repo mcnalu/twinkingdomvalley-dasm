@@ -1,0 +1,697 @@
+L0002   = $0002
+L0004   = $0004
+L0014   = $0014
+L0017   = $0017
+L001A   = $001A
+L001B   = $001B
+L001C   = $001C
+L0020   = $0020
+L0021   = $0021
+L0024   = $0024
+L0062   = $0062
+L0077   = $0077
+L007B   = $007B
+L0089   = $0089
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L0D8D   = $0D8D
+L125A   = $125A
+L1283   = $1283
+L1289   = $1289
+L133D   = $133D
+L14B8   = $14B8
+L14CE   = $14CE
+L19D7   = $19D7
+L1B6C   = $1B6C
+L1BEA   = $1BEA
+L1C02   = $1C02
+L1C9E   = $1C9E
+L1F28   = $1F28
+L20FA   = $20FA
+L245A   = $245A
+L257F   = $257F
+L2581   = $2581
+L25BF   = $25BF
+L25C1   = $25C1
+L25C5   = $25C5
+L25C8   = $25C8
+L25E8   = $25E8
+L25E9   = $25E9
+L2654   = $2654
+L27FB   = $27FB
+L27FC   = $27FC
+L27FE   = $27FE
+L2800   = $2800
+L2801   = $2801
+L28C0   = $28C0
+L2967   = $2967
+L296A   = $296A
+L2978   = $2978
+L298D   = $298D
+L2990   = $2990
+L2997   = $2997
+L29B6   = $29B6
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $0EE0
+.BeebDisStartAddr
+        JSR     L14CE
+        YOU SCRAMBLE OUT OF THE WATER
+
+.L0EEA
+        JSR     L20FA
+
+.L0EED
+        LDY     #$64
+        LDA     #$3F
+.L0EF1
+        LDX     L0089 
+        STX     L001A ; Store player location in $1A
+        LDX     #$C8  ; Load 200
+        JMP     L1C9E ; Dunno
+
+.L0EFA
+        LDX     #$C8
+        LDY     L0089
+        STY     L001A
+        JMP     L1C02
+
+.L0F03  ; Prints out various events like lamp flickers, you are dry, witch casts spell
+        LDA     L0089 ; Load player location
+        CMP     #$33  ; DIVING DOWN A DANGEROUS FALL
+        BNE     L0F23 ; Branch if it isn't
+                      ; If it is...
+        LDY     #$BE
+        LDA     #$7F
+        JSR     L0EF1 ; Dunno
+
+        LDY     #$05
+        LDA     L0014
+.L0F14                  ; Looks for ?$14 in $1283+Y for Y=4 to ?
+        DEY
+        CMP     L1283,Y
+        BNE     L0F14
+                        ; Y set to where ?$14 was found
+        LDA     L1289,Y ; Load value into A
+        JSR     L245A   ; Sets ?$89=A ie new player location
+
+        JMP     L0F4A
+
+.L0F23
+        CMP     #$37
+        BNE     L0F32
+
+        JSR     L0EED
+
+        LDA     #$1A
+        JSR     L245A
+
+        JMP     L0F36
+
+.L0F32
+        CMP     #$1A
+        BNE     L0F3E
+
+.L0F36
+        JSR     BeebDisStartAddr
+
+        LDA     #$1B
+        JMP     L0F47
+
+.L0F3E
+        CMP     #$32
+        BNE     L0F4A
+
+        JSR     BeebDisStartAddr
+
+        LDA     L0014
+.L0F47
+        JSR     L245A
+
+.L0F4A                  ; Arrives here if location doesn't match any CMPs above
+        LDX     L27FE
+.L0F4D
+        LDA     L2967,X
+        AND     #$1F
+        TAY
+        LDA     L298D,X
+        BEQ     L0F67
+
+        CLC
+        ADC     L28C0,Y
+        CMP     L2800,Y
+        BCC     L0F64
+
+        LDA     L2800,Y
+.L0F64
+        STA     L298D,X
+.L0F67
+        DEX
+        BNE     L0F4D
+
+        LDA     L2581
+        BNE     L0FAE
+
+        DEC     L27FB
+        LDA     L27FB
+        BEQ     L0F9F
+
+        CMP     #$14
+        BNE     L0FAE
+
+        LDA     L25C1 ; The lamp
+        CMP     #$C8  ; C8 means the player has it.
+        BEQ     L0F86 
+
+        CMP     L0089 ; The lamp is where the player is
+        BNE     L0FAE
+
+.L0F86
+        JSR     L14CE
+        YOUR LAMP
+
+.L0F8C
+        LDA     #$88   ; Flashy text!
+        JSR     OSWRCH
+
+        LDA     #$BE   ; Print out flickers
+        JSR     L14B8 
+
+        JMP     L0FAB
+
+        JSR     L20FA
+
+        JMP     L0FAE
+
+.L0F9F
+        LDA     #$01
+        STA     L2581
+        JSR     L14CE
+        YOUR LAMP DIES
+
+.L0FAB
+        JSR     L20FA
+
+.L0FAE
+        LDA     L0089
+        BPL     L0FB6
+
+        CMP     #$85
+        BCC     L0FBE
+
+.L0FB6
+        CMP     #$20
+        BCC     L0FC2
+
+        CMP     #$30
+        BCS     L0FC2
+
+.L0FBE
+        LDA     #$07
+        BNE     L0FC4
+
+.L0FC2
+        LDA     #$01
+.L0FC4
+        STA     L0062
+        CMP     L0002
+        BCS     L0FE3
+
+        LDA     L0002
+        SEC
+        SBC     L0062
+        STA     L0002
+        CMP     #$28
+        BCS     L0FFE
+
+        JSR     L14CE
+        YOU ARE VERY DRY
+
+.L0FDD
+        JSR     L20FA
+
+        JMP     L0FFE
+
+.L0FE3
+        LDA     L0002
+        BEQ     L0FF7
+
+        LDA     #$00
+        STA     L0002
+        JSR     L14CE
+        YOU ARE ILL WITH THIRST
+
+.L0FF4
+        JSR     L20FA
+
+.L0FF7
+        LDA     L0062
+        ASL     A
+        ASL     A
+        JSR     L0EFA
+
+.L0FFE
+        LDA     L0014
+        STA     L001C
+        LDA     L0089
+        STA     L0014
+        CMP     #$78
+        BNE     L1046
+
+        LDA     L25C8
+        CMP     #$D8
+        BNE     L1025
+
+        LDA     L25C5
+        CMP     #$D8
+        BNE     L1022
+
+        LDX     #$05
+        JSR     L133D
+
+        LDA     #$08
+        STA     L2978
+.L1022
+        JMP     L104A
+
+.L1025
+        BIT     L0004
+        BMI     L102D
+
+        DEC     L0004
+        BMI     L104A
+
+.L102D
+        LDX     #$D8
+        JSR     L1BEA
+
+        JSR     L14CE
+        CASTS A SPELL ON YOU
+
+.L103B
+        JSR     L20FA
+
+        LDA     #$3C
+        JSR     L0EFA
+
+        JMP     L104A
+
+.L1046
+        LDA     #$00
+        STA     L0004
+.L104A
+        LDA     L296A
+        CMP     #$01
+        BEQ     L1074
+
+        LDA     L29B6
+        CMP     #$89
+        BNE     L1074
+
+        CMP     L0014
+        BNE     L1069
+
+        LDX     #$CA
+        JSR     L1BEA
+
+        LDA     #$C3
+        JSR     L14B8
+
+        JSR     L20FA
+
+.L1069
+        LDA     #$01
+        STA     L296A
+        LDA     L2801
+        STA     L2990
+.L1074
+        LDA     L2997
+        BEQ     L10A4
+
+        LDA     #$4E
+        STA     L001A
+        LDA     #$89
+        STA     L001B
+        JSR     L0D8D
+
+        BEQ     L10A4
+
+        LDA     L0089
+        CMP     #$4E
+        BNE     L1097
+
+        JSR     L14CE
+0677
+        FLAMES FILL THE ROOM
+
+.L1094
+        JSR     L20FA
+
+.L1097
+        LDA     L0017
+        CLC
+        ADC     #$C8
+        TAX
+        LDY     #$5A
+        LDA     #$1F
+        JSR     L1C9E
+
+.L10A4
+        LDA     L0089
+        CMP     #$A9
+        BNE     L1118
+
+        LDX     L27FC
+.L10AD
+        LDA     L25BF,X
+        CMP     #$E2
+        BNE     L1113
+
+        LDA     L257F,X
+        TAY
+        LDA     L2654,Y
+        CMP     #$1E
+        BCC     L10F1
+
+        DEX
+        LDY     #$B0
+        TYA
+        JSR     L1B6C
+
+        INC     L0020
+        JSR     L14CE
+        YOUR GENEROUS GIFT IS ACCEPTED , AND IN
+        RETURN YOU ARE GIVEN AN AMULET TO HELP
+        THE FOREST KING'S PEOPLE RECOGNISE YOU
+
+.L10E2
+        JSR     L20FA
+
+        LDX     #$28
+        LDY     #$C8
+        TYA
+        JSR     L1B6C
+
+        LDA     #$35
+        BNE     L110D
+
+.L10F1
+        DEX
+        LDY     #$6F
+        LDA     #$80
+        JSR     L1B6C
+
+.L10F9
+        JSR     L14CE
+        YOU ARE TOLD THAT YOU ARE A VAGABOND
+        WITHOUT ANY RESPECT
+
+.L1108
+        JSR     L20FA
+
+        LDA     #$6F
+.L110D
+        JSR     L245A
+
+        JMP     L1192
+
+.L1113
+        DEX
+        BNE     L10AD
+
+        BEQ     L10F9
+
+.L1118
+        CMP     #$6D
+        BNE     L1192
+
+        LDA     L0020
+        BNE     L1146
+
+        JSR     L14CE
+
+        THE FOREST KING'S PERSONAL GUARD ARREST YOU FOR
+        TRESPASSING AND DEMAND A SUITABLE PAYMENT , TO
+        SHOW RESPECT FOR THE KING , IN RETURN
+        FOR YOUR FREEDOM
+
+.L113F
+        JSR     L20FA
+
+        LDA     #$A9
+        BNE     L110D
+
+.L1146
+        BIT     L0021
+        BMI     L1155
+
+        JSR     L14CE
+        YOU ARE WELCOME HERE
+
+.L1152
+        JMP     L118F
+
+.L1155
+        JSR     L14CE
+        YOU ARE HONOURED AND GIVEN A SILVER KEY
+        . IT IS INDEED A GENEROUS GIFT
+
+.L1168
+        JSR     L20FA
+
+        LSR     L0021
+        LDY     #$C8
+        TYA
+        LDX     #$04
+        JSR     L1B6C
+
+        BCC     L1192
+
+        LDX     #$04
+        LDY     #$6D
+        LDA     #$FF
+        JSR     L1B6C
+
+        JSR     L14CE
+        IT DROPS TO THE FLOOR , BECAUSE YOUR
+        HANDS ARE FULL
+
+.L118F
+        JSR     L20FA
+
+.L1192
+        LDA     L0021
+        BNE     L11E4
+
+        LDY     #$A8
+        JSR     L124E
+
+        LDY     L007B
+        LDA     (L0077),Y
+        AND     #$40
+        BEQ     L11E4
+
+        LDA     L0020
+        BEQ     L11D1
+
+        LDA     L25E8
+        CMP     #$C8
+        BNE     L11D1
+
+        LDA     #$80
+        STA     L0021
+        JSR     L14CE
+        A PRINCESS FLEES . SHE RECOGNISES YOU BY
+        YOUR AMULET AND SAYS THAT HER FATHER ,
+        THE FOREST KING , WILL REWARD YOU HANDSOMELY
+        
+
+.L11CE
+        JMP     L11E1
+
+.L11D1
+        LDA     #$40
+        STA     L0021
+        JSR     L14CE
+        A PRINCESS FLEES . SHE DOESN'T RECOGNISE YOU
+        
+
+.L11E1
+        JSR     L20FA
+
+.L11E4
+        LDX     L25C1
+        INX
+        BNE     L1207
+
+        LDA     L2581
+        BNE     L1207
+
+        JSR     L14CE
+076d
+0677
+        THE HOLDALL IS ENGULFED IN FLAMES
+
+.L11F9
+        JSR     L20FA
+
+        JSR     L19D7
+
+        LDA     #$C7
+        TAY
+        LDX     #$00
+        JSR     L1B6C
+
+.L1207
+        LDA     L0089
+        CMP     #$29
+        BEQ     L1211
+
+        CMP     #$4D
+        BNE     L1213
+
+.L1211
+        STA     L0024
+.L1213
+        CMP     #$28
+        BNE     L1241
+
+        CMP     L001C
+        BEQ     L124D
+
+        LDA     L0024
+        BEQ     L1241
+
+        LDA     L25E9
+        CMP     #$C8
+        BEQ     L1241
+
+        JSR     L14CE
+        YOU SEE THE DRAW BRIDGE CLOSE
+
+.L1230
+        JSR     L20FA
+
+        JSR     L125A
+
+        LDA     #$32
+        STA     (L0077),Y
+        LDA     #$0C
+        STA     L1F28
+        BNE     L124D
+
+.L1241
+        JSR     L125A
+
+        LDA     #$29
+        STA     (L0077),Y
+        LDA     #$0B
+        STA     L1F28
+.L124D
+        RTS
+
+.L124E
+        LDA     L0089
+.BeebDisEndAddr
+SAVE "command/v0EE0-124F-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 0EE0 20 CE 14 87 BC BD 6B 5D 6C 00 20 FA 20 A0 64 A9  -----k]l- - -d- OOODDDDDDDOOOOOO
+; 0EF0 3F A6 89 86 1A A2 C8 4C 9E 1C A2 C8 A4 89 84 1A ?------L-------- OOOOOOOOOOOOOOOO
+; 0F00 4C 02 1C A5 89 C9 33 D0 1A A0 BE A9 7F 20 F1 0E L-----3------ -- OOOOOOOOOOOOOOOO
+; 0F10 A0 05 A5 14 88 D9 83 12 D0 FA B9 89 12 20 5A 24 ------------- Z$ OOOOOOOOOOOOOOOO
+; 0F20 4C 4A 0F C9 37 D0 0B 20 ED 0E A9 1A 20 5A 24 4C LJ--7-- ---- Z$L OOOOOOOOOOOOOOOO
+; 0F30 36 0F C9 1A D0 08 20 E0 0E A9 1B 4C 47 0F C9 32 6----- ----LG--2 OOOOOOOOOOOOOOOO
+; 0F40 D0 08 20 E0 0E A5 14 20 5A 24 AE FE 27 BD 67 29 -- ---- Z$--'-g) OOOOOOOOOOOOOOOO
+; 0F50 29 1F A8 BD 8D 29 F0 0F 18 79 C0 28 D9 00 28 90 )----)---y-(--(- OOOOOOOOOOOOOOOO
+; 0F60 03 B9 00 28 9D 8D 29 CA D0 E3 AD 81 25 D0 3F CE ---(--)-----%-?- OOOOOOOOOOOOOOOO
+; 0F70 FB 27 AD FB 27 F0 28 C9 14 D0 33 AD C1 25 C9 C8 -'--'-(---3--%-- OOOOOOOOOOOOOOOO
+; 0F80 F0 04 C5 89 D0 28 20 CE 14 3D 5A 00 A9 88 20 EE -----( --=Z--- - OOOOOOOOODDDOOOO
+; 0F90 FF A9 BE 20 B8 14 4C AB 0F 20 FA 20 4C AE 0F A9 --- --L-- - L--- OOOOOOOOOOOOOOOO
+; 0FA0 01 8D 81 25 20 CE 14 3D 5A BF 00 20 FA 20 A5 89 ---% --=Z-- - -- OOOOOOODDDDOOOOO
+; 0FB0 10 04 C9 85 90 08 C9 20 90 08 C9 30 B0 04 A9 07 ------- ---0---- OOOOOOOOOOOOOOOO
+; 0FC0 D0 02 A9 01 85 62 C5 02 B0 19 A5 02 38 E5 62 85 -----b------8-b- OOOOOOOOOOOOOOOO
+; 0FD0 02 C9 28 B0 29 20 CE 14 87 48 4A 4B 00 20 FA 20 --(-) ---HJK- -  OOOOOOOODDDDDOOO
+; 0FE0 4C FE 0F A5 02 F0 10 A9 00 85 02 20 CE 14 87 48 L---------- ---H OOOOOOOOOOOOOODD
+; 0FF0 35 B3 C0 00 20 FA 20 A5 62 0A 0A 20 FA 0E A5 14 5--- - -b-- ---- DDDDOOOOOOOOOOOO
+; 1000 85 1C A5 89 85 14 C9 78 D0 3C AD C8 25 C9 D8 D0 -------x-<--%--- OOOOOOOOOOOOOOOO
+; 1010 14 AD C5 25 C9 D8 D0 0A A2 05 20 3D 13 A9 08 8D ---%------ =---- OOOOOOOOOOOOOOOO
+; 1020 78 29 4C 4A 10 24 04 30 04 C6 04 30 1D A2 D8 20 x)LJ-$-0---0---  OOOOOOOOOOOOOOOO
+; 1030 EA 1B 20 CE 14 C1 3A C2 1A 87 00 20 FA 20 A9 3C -- ---:---- - -< OOOOODDDDDDOOOOO
+; 1040 20 FA 0E 4C 4A 10 A9 00 85 04 AD 6A 29 C9 01 F0  --LJ------j)--- OOOOOOOOOOOOOOOO
+; 1050 23 AD B6 29 C9 89 D0 1C C5 14 D0 0D A2 CA 20 EA #--)---------- - OOOOOOOOOOOOOOOO
+; 1060 1B A9 C3 20 B8 14 20 FA 20 A9 01 8D 6A 29 AD 01 --- -- - ---j)-- OOOOOOOOOOOOOOOO
+; 1070 28 8D 90 29 AD 97 29 F0 2B A9 4E 85 1A A9 89 85 (--)--)-+-N----- OOOOOOOOOOOOOOOO
+; 1080 1B 20 8D 0D F0 1E A5 89 C9 4E D0 0B 20 CE 14 C4 - -------N-- --- OOOOOOOOOOOOOOOD
+; 1090 1D 5D 40 00 20 FA 20 A5 17 18 69 C8 AA A0 5A A9 -]@- - ---i---Z- DDDDOOOOOOOOOOOO
+; 10A0 1F 20 9E 1C A5 89 C9 A9 D0 6E AE FC 27 BD BF 25 - -------n--'--% OOOOOOOOOOOOOOOO
+; 10B0 C9 E2 D0 5F BD 7F 25 A8 B9 54 26 C9 1E 90 32 CA ---_--%--T&---2- OOOOOOOOOOOOOOOO
+; 10C0 A0 B0 98 20 6C 1B E6 20 20 CE 14 3D C5 C6 3E C7 --- l--  --=-->- OOOOOOOOOOODDDDD
+; 10D0 39 3C 44 C8 87 48 C9 3B CA 43 2E 5D 4E CB CC CD 9<D--H-;-C.]N--- DDDDDDDDDDDDDDDD
+; 10E0 87 00 20 FA 20 A2 28 A0 C8 98 20 6C 1B A9 35 D0 -- - -(--- l--5- DDOOOOOOOOOOOOOO
+; 10F0 1C CA A0 6F A9 80 20 6C 1B 20 CE 14 87 48 CE 8A ---o-- l- ---H-- OOOOOOOOOOOODDDD
+; 1100 87 48 3A CF D0 82 D1 00 20 FA 20 A9 6F 20 5A 24 -H:----- - -o Z$ DDDDDDDDOOOOOOOO
+; 1110 4C 92 11 CA D0 97 F0 E1 C9 6D D0 76 A5 20 D0 26 L--------m-v- -& OOOOOOOOOOOOOOOO
+; 1120 20 CE 14 5D 4E CB D2 55 D3 87 B8 D4 3C D5 3A D6  --]N--U----<-:- OOODDDDDDDDDDDDD
+; 1130 D7 39 43 D8 D1 B8 5D 4F 39 44 C8 B8 3D D9 00 20 -9C---]O9D--=--  DDDDDDDDDDDDDDDO
+; 1140 FA 20 A9 A9 D0 C7 24 21 30 0B 20 CE 14 87 48 DA - ----$!0- ---H- OOOOOOOOOOOOODDD
+; 1150 37 00 4C 8F 11 20 CE 14 87 48 DB 3C C9 3A 60 32 7-L-- ---H-<-:`2 DDOOOOOODDDDDDDD
+; 1160 2F 38 3E DC 3A C5 C6 00 20 FA 20 46 21 A0 C8 98 /8>-:--- - F!--- DDDDDDDDOOOOOOOO
+; 1170 A2 04 20 6C 1B 90 1B A2 04 A0 6D A9 FF 20 6C 1B -- l------m-- l- OOOOOOOOOOOOOOOO
+; 1180 20 CE 14 38 B4 43 5D 56 39 DD 3D DE 48 47 00 20  --8-C]V9-=-HG-  OOODDDDDDDDDDDDO
+; 1190 FA 20 A5 21 D0 4E A0 A8 20 4E 12 A4 7B B1 77 29 - -!-N-- N--{-w) OOOOOOOOOOOOOOOO
+; 11A0 40 F0 41 A5 20 F0 2A AD E8 25 C9 C8 D0 23 A9 80 @-A- -*--%---#-- OOOOOOOOOOOOOOOO
+; 11B0 85 21 20 CE 14 3A DF E0 2F E1 E2 87 50 3D CA 3C -! --:--/---P=-< OOOOODDDDDDDDDDD
+; 11C0 E3 8A E4 E5 39 5D 4E 4F 39 E6 E7 87 E8 00 4C E1 ----9]NO9-----L- DDDDDDDDDDDDDDOO
+; 11D0 11 A9 40 85 21 20 CE 14 3A DF E0 2F E1 E9 CD 87 --@-! --:--/---- OOOOOOOODDDDDDDD
+; 11E0 00 20 FA 20 AE C1 25 E8 D0 1D AD 81 25 D0 18 20 - - --%-----%--  DOOOOOOOOOOOOOOO
+; 11F0 CE 14 5D 76 3E EA 44 C4 00 20 FA 20 20 D7 19 A9 --]v>-D-- -  --- OODDDDDDDOOOOOOO
+; 1200 C7 A8 A2 00 20 6C 1B A5 89 C9 29 F0 04 C9 4D D0 ---- l----)---M- OOOOOOOOOOOOOOOO
+; 1210 02 85 24 C9 28 D0 2A C5 1C F0 32 A5 24 F0 22 AD --$-(-*---2-$-"- OOOOOOOOOOOOOOOO
+; 1220 E9 25 C9 C8 F0 1B 20 CE 14 87 34 5D 2A 57 16 00 -%---- ---4]*W-- OOOOOOOOODDDDDDD
+; 1230 20 FA 20 20 5A 12 A9 32 91 77 A9 0C 8D 28 1F D0  -  Z--2-w---(-- OOOOOOOOOOOOOOOO
+; 1240 0C 20 5A 12 A9 29 91 77 A9 0B 8D 28 1F 60 A5 89 - Z--)-w---(-`-- OOOOOOOOOOOOOOOO
+

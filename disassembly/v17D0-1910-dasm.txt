@@ -74,7 +74,7 @@ OSCLI   = $FFF7
 
         EQUB    $2A,$29,$94,$00
 
-.L17DA
+.L17DA                ; compares $1A with $89
         LDA     L001A
         CMP     L0089
         RTS

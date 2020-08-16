@@ -1,0 +1,1455 @@
+L0000   = $0000
+L0015   = $0015
+L0016   = $0016
+L0018   = $0018
+L001A   = $001A
+L001D   = $001D
+L001E   = $001E
+L001F   = $001F
+L0022   = $0022
+L0023   = $0023
+L0026   = $0026
+L0027   = $0027
+L0029   = $0029
+L002B   = $002B
+L0032   = $0032
+L0035   = $0035
+L003A   = $003A
+L0042   = $0042
+L0044   = $0044
+L0053   = $0053
+L0057   = $0057
+L0058   = $0058
+L005D   = $005D
+L0060   = $0060
+L0061   = $0061
+L0062   = $0062
+L0063   = $0063
+L0064   = $0064
+L0065   = $0065
+L0066   = $0066
+L0067   = $0067
+L0068   = $0068
+L0069   = $0069
+L006A   = $006A
+L006F   = $006F
+L0070   = $0070
+L0071   = $0071
+L0072   = $0072
+L0073   = $0073
+L0077   = $0077
+L007C   = $007C
+L0083   = $0083
+L0086   = $0086
+L0087   = $0087
+L0089   = $0089
+L008C   = $008C
+L0094   = $0094
+L0095   = $0095
+L00A8   = $00A8
+L00A9   = $00A9
+L00B0   = $00B0
+L00B1   = $00B1
+L00BE   = $00BE
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L0D0D   = $0D0D
+L0D2F   = $0D2F
+L0D59   = $0D59
+L12EE   = $12EE
+L133D   = $133D
+L14B8   = $14B8
+L14CE   = $14CE
+L1513   = $1513
+L152F   = $152F
+L1563   = $1563
+L1588   = $1588
+L1597   = $1597
+L1599   = $1599
+L15D2   = $15D2
+L15D4   = $15D4
+L161C   = $161C
+L161E   = $161E
+L1624   = $1624
+L1692   = $1692
+L17AF   = $17AF
+L17DA   = $17DA
+L1813   = $1813
+L185A   = $185A
+L18E6   = $18E6
+L18EB   = $18EB
+L18F7   = $18F7
+L190C   = $190C
+L1FD9   = $1FD9
+L1FED   = $1FED
+L20FA   = $20FA
+L229F   = $229F
+L24DD   = $24DD
+L24F6   = $24F6
+L24FB   = $24FB
+L2545   = $2545
+L2580   = $2580
+L2589   = $2589
+L25BF   = $25BF
+L25C0   = $25C0
+L25C9   = $25C9
+L2600   = $2600
+L262A   = $262A
+L267E   = $267E
+L26A8   = $26A8
+L26D2   = $26D2
+L26FC   = $26FC
+L2726   = $2726
+L275C   = $275C
+L27FA   = $27FA
+L27FB   = $27FB
+L27FC   = $27FC
+L27FE   = $27FE
+L2820   = $2820
+L2840   = $2840
+L2860   = $2860
+L28A0   = $28A0
+L28C6   = $28C6
+L28E0   = $28E0
+L28EC   = $28EC
+L2912   = $2912
+L2967   = $2967
+L29B3   = $29B3
+L29DA   = $29DA
+L2A08   = $2A08
+L344F   = $344F
+L3B51   = $3B51
+L3B8D   = $3B8D
+L4144   = $4144
+L5457   = $5457
+L5959   = $5959
+L615B   = $615B
+L6565   = $6565
+L7A49   = $7A49
+L7E6D   = $7E6D
+L868A   = $868A
+L9459   = $9459
+LA6A5   = $A6A5
+LAC43   = $AC43
+LADB0   = $ADB0
+LBCBC   = $BCBC
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $1911
+.BeebDisStartAddr
+        LDX     #$09
+        JSR     L3B8D
+
+        BNE     L18E6
+
+.L1918
+        LDA     L2589
+L1919 = L1918+1
+        CMP     #$1C
+        BNE     L1924
+
+        JSR     L18F7
+
+        BNE     L192E
+
+.L1924
+        CMP     #$0B
+        BNE     L18E6
+
+        JSR     L1997
+
+        JSR     L190C
+
+.L192E                 
+        LDA     L25C9 ; Load location of the jug
+        CMP     #$C8  ; Is it C8?
+        BNE     L1944 ; Branch if not
+                      ; Jug is at C8
+        LDA     L29DA 
+        SEC
+        SBC     #$0F
+        STA     L29DA
+.L193E
+        LDA     #$0A
+        STA     L2589
+        RTS
+
+.L1944                ; Not the jug
+        LDA     L27FA  
+        SEC
+        SBC     #$0F
+        STA     L27FA
+        JMP     L193E 
+
+        JSR     L1A16
+
+        BNE     L18EB
+
+        JSR     L190C
+
+        LDA     L0089
+        CMP     #$89
+        BNE     L1997
+
+        BIT     L0000
+        BMI     L1997
+
+        DEC     L0000
+        JSR     L14CE
+        A STRANGE MAGIC REVEALS TO YOU THE SECRET
+        OF CONCEALED DOORS
+
+.L1973
+        LDX     #$06
+        STX     L0060
+        LDA     L0089
+        PHA
+.L197A
+        LDA     L1A33,X
+        STA     L0089
+        JSR     L24FB
+
+        LDA     L0087
+        CLC
+        ADC     #$20
+        LDY     #$01
+        STA     (L0077),Y
+        DEC     L0060
+        LDX     L0060
+        BPL     L197A
+
+        PLA
+        STA     L0089
+.L1994
+        JMP     L20FA
+
+.L1997
+        JSR     L14CE
+        THE COOL WATER REFRESHES YOU
+
+.L19A0
+        BNE     L1994
+
+        JSR     L15D2
+
+        LDX     L0063
+        DEX
+        BEQ     L19D4
+
+        CPX     #$01
+        BEQ     L19D1
+
+        CPX     #$09
+        BEQ     L19B7
+
+        LDA     L0083
+        JMP     L1ABE
+
+.L19B7
+        LDA     L2589
+        CMP     #$0A
+        BNE     L19C3
+
+        LDA     #$1F
+        JMP     L17AF
+
+.L19C3
+        JSR     L14CE
+        THE LIQUID DRAINS AWAY
+
+.L19CB
+        JSR     L20FA
+
+.L19CE
+        JMP     L192E
+
+.L19D1
+        JMP     L1AF5
+
+.L19D4
+        JSR     L161C
+
+        LDX     L27FC
+.L19DA
+        LDA     L25BF,X
+        CMP     #$FF
+        BNE     L19E6
+
+        LDA     L0089
+.L19E3
+        STA     L25BF,X
+L19E4 = L19E3+1
+.L19E6
+        DEX
+        BNE     L19DA
+
+        STX     L27FA
+        RTS
+
+        JSR     L12EE
+
+        LDA     L0083
+        JSR     L1FD9
+
+        JSR     L1A3A
+
+        BCC     L1A05
+
+.L19FA               ; Death then infinite input loop
+        LDA     #$AA ; Word is Bye_Bye
+        JSR     L161E; Prints word in A
+
+.L19FF
+        JSR     L229F ; collects input
+
+        JMP     L19FF ; Goes round in infinite loop so can load
+
+.L1A05
+        JMP     L3B51
+
+        LDX     #$03
+.L1A0A
+        LDA     L1A2F,X
+        CMP     L0089
+        BNE     L1A12
+
+        RTS
+
+.L1A12
+        DEX
+        BPL     L1A0A
+
+        RTS
+
+.L1A16
+        LDX     #$0E
+.L1A18
+        LDA     L1A24,X
+        CMP     L0089
+        BNE     L1A20
+
+        RTS
+
+.L1A20
+        DEX
+        BPL     L1A18
+
+        RTS
+
+        PHP
+        ORA     #$1B
+        ORA     L1F1E,X
+        DEY
+.L1A2F
+        ORA     L1513
+        LSR     L615B,X
+.L1A39
+        BCS     L19E4
+
+L1A3A = L1A39+1
+        JSR     L14B8
+
+.L1A3F
+        JSR     L185A
+
+        AND     #$DF
+        CMP     #$59
+        BEQ     L1A4D
+
+        CMP     #$4E
+        BNE     L1A3F
+
+        CLC
+.L1A4D
+        RTS
+
+.L1A4E
+        JSR     L1624
+
+        JSR     L3B51
+
+        BIT     L0062
+        BMI     L1A5B
+
+        JMP     L1692
+
+.L1A5B
+        LDX     L27FC
+        DEX
+        STX     L0063
+.L1A61
+        LDA     L25C0,X
+        CMP     #$C8
+        BNE     L1A81
+
+        STA     L0026
+        LDA     #$AC
+        JSR     L14B8
+
+        LDX     L0063
+        JSR     L24DD
+
+        LDA     #$44
+        JSR     L14B8
+
+        JSR     L1A3A
+
+        BCS     L1A88
+
+.L1A7E
+        JSR     L3B51
+
+.L1A81
+        DEC     L0063
+        LDX     L0063
+        BNE     L1A61
+
+        RTS
+
+.L1A88
+        LDX     L0063
+        LDY     #$FF
+        TYA
+        JSR     L1B6C
+
+        BCC     L1A7E
+
+        JSR     L3B51
+
+        JSR     L14CE
+0518
+        YOU CAN'T GET
+
+.L1A9C
+        LDX     L0063
+        JSR     L24DD
+
+        LDA     #$44
+        JSR     L14B8
+
+        JSR     L20FA
+
+        JMP     L1A7E
+
+        JSR     L15D2
+
+        LDX     L0063
+        DEX
+        BEQ     L1A4E
+
+        CPX     #$01
+        BEQ     L1AD1
+
+        CPX     #$09
+        BEQ     L1B1A
+
+        LDA     #$1D
+.L1ABE
+        STA     L1AC6
+        JSR     L14CE
+0518
+        YOU CAN'T
+        FILL
+
+.L1AC8
+        LDX     L0063
+        DEX
+        JSR     L24DD
+
+        JMP     L3B51
+
+.L1AD1
+        JSR     L1A16
+
+        BEQ     L1AF5
+
+        LDA     L0089
+        CMP     #$3C
+        BEQ     L1AED
+
+        LDX     #$09
+        JSR     L3B8D
+
+        BNE     L1B00
+
+        LDA     L2589
+        CMP     #$0C
+        BNE     L1B00
+
+        JSR     L192E
+
+.L1AED
+        LDA     #$FF
+        STA     L27FB
+        JMP     L161C
+
+.L1AF5
+        JSR     L14CE
+054b
+0608
+060a
+060f
+        DON'T BE SILLY !
+
+.L1AFD
+        JMP     L3B51
+
+.L1B00
+        LDA     #$5C
+.L1B02
+        STA     L1B0B
+        JSR     L14CE
+        THERE IS NO
+        OIL HERE
+
+.L1B0E
+        JMP     L20FA
+
+.L1B11
+        LDA     #$47
+        JMP     L17AF
+
+.L1B16
+        LDA     #$0B
+        BNE     L1B3A
+
+.L1B1A
+        LDA     L2589
+        CMP     #$0A
+        BNE     L1B11
+
+        JSR     L1A16
+
+        BEQ     L1B16
+
+        LDA     L0089
+        CMP     #$AE
+        BEQ     L1B60
+
+        CMP     #$3F
+        BEQ     L1B64
+
+        CMP     #$9D
+        BEQ     L1B64
+
+        CMP     #$3C
+        BNE     L1B68
+
+        LDA     #$0C
+.L1B3A
+        PHA
+        LDA     L25C9
+        CMP     #$C8
+        BNE     L1B4E
+
+        LDA     #$0F
+        JSR     L1588
+
+.L1B47
+        PLA
+        STA     L2589
+        JMP     L161C
+
+.L1B4E
+        LDA     #$0F
+        CLC
+        ADC     L27FA
+        CMP     #$64
+        BCC     L1B5B
+
+        JMP     L1597
+
+.L1B5B
+        STA     L27FA
+        BNE     L1B47
+
+.L1B60
+        LDA     #$1B
+        BNE     L1B3A
+
+.L1B64
+        LDA     #$1C
+        BNE     L1B3A
+
+.L1B68
+        LDA     #$A7
+        BNE     L1B02
+
+.L1B6C                  ; Handles transfer of object
+                        ; X is index of object, Y specifies its destination
+        STX     L0070   ; $70 = object index
+        STA     L0073   ; $73=A which is set to ?$15 if called from $0E9F
+        LDA     L25C0,X ; Object location
+        STA     L0071   ; $71=object current location
+        LDA     L2580,X ; Object code
+        TAX             ; X=A now index is object code
+        LDA     L2600,X ; Object size
+        STA     L0072   ; $72=object size
+        CPY     #$C8    
+        BCS     L1B88   ; Branch if Y>=$C8 ie the object is held by character or in holdall
+                        ; Object is being dropped or thrown?
+        BIT     L0073   
+        BMI     L1BC4   ; Branch if bit 7 of $73 is set
+
+        CLC
+        RTS
+
+.L1B88                 ; Y is destination of object, A is object's size
+        CPY     #$FF   ; Holdall
+        BNE     L1B9F  ; Branch if not to go in the holdall
+                       ; Object is to go in holdall
+        LDA     L0072  ; Load object weight
+        CLC            
+        ADC     L27FA  ; Add to holdall weight
+        BCC     L1B95  ; Branch if C=0
+                       ; If C=1 the holdall is full
+        RTS
+
+.L1B95                 
+        CMP     #$64  ; $63 is max capacity of hodall
+        BCC     L1B9A ; Branch if not full 
+                      ; If C=1 the holdall is full
+        RTS
+
+.L1B9A                ; Holdall isn't full cos C=0 previously
+        STA     L27FA ; Update its new holdall weight
+        BCC     L1BC4 ; Always branches cos C=0
+
+.L1B9F  ; Add to character Y carry capacity
+        LDA     L2912,Y ; Y>=$C8 so Loads from address $29DA
+        CLC
+        ADC     L0072   ; Add object size
+        BCC     L1BA8   ; Branch if carry clear
+                        ; C=1 indicating destination was full
+        RTS
+
+.L1BA8                  
+        STA     L0022   ; Store new amount carried in $22
+        LDA     L28A0,Y ; Load something from $2968 about NPC Y - a lookup index?
+        AND     #$1F    ; Wipe bits 5,6,7
+        STY     L0023   ; Store Y in $23
+        TAY             ; Y=A will be zero for player
+        LDA     L0022   ; Load new amount carried
+        CMP     L28E0,Y ; Compare with value from $28E0, will be $6E=110 for player
+        BCC     L1BBA   ; Branch if less
+
+        RTS
+
+.L1BBA
+        LDY     L0023   ; Y=index of NPC again
+        BIT     L0073   
+        BMI     L1BC1   ; Branch if bit 7 of $73 is set
+
+        RTS
+
+.L1BC1                  ; Handle transfer of an object updating amount carried
+        STA     L2912,Y ; Store new amount carried in $29DA onwards
+.L1BC4                  ; Code arrives here after new holdall weight checked out as OK
+                        ; or if destination was not a character.
+        TYA             ; A=Y ie destination
+        LDX     L0070   ; Object index
+        STA     L25C0,X ; Store new location of object in X
+        LDY     L0071   ; Y=Load object's current location
+        CPY     #$C8    
+        BCC     L1BE8   ; If it's not a character branch to CLC and RTS
+                        ; A object in holdall or character decrease weight carried
+        CPY     #$FF    ; The holdall
+        BEQ     L1BDF   ; Branch if it's in the holdall
+
+        LDA     L2912,Y ; Load amount carried by the NPC that has it
+        SEC
+        SBC     L0072   ; Subtract object size
+        STA     L2912,Y ; Store new amount carried
+        CLC
+        RTS
+
+.L1BDF                  ; Deduct object size from amount holdall carries 
+        LDA     L27FA
+        SEC
+        SBC     L0072
+        STA     L27FA
+.L1BE8
+        CLC
+.L1BE9
+        RTS
+
+.L1BEA                  ; Prints three words describing NPC specified by X
+        LDA     L28A0,X ; Don't know why $28A0 is used here.
+        AND     #$1F
+        TAX             ; X is character class
+        LDA     L2820,X ; Example X=$8 is THE INN KEEPER
+        JSR     L24F6   ; Print first word describing NPC 
+
+        LDA     L2840,X
+        JSR     L24F6   ; Print second word
+
+        LDA     L2860,X
+        JMP     L24F6   ; Print third and final word and return
+
+.L1C02                  ; Handle damage and print if a character X is WEAK or DYING or DEAD
+        STA     L0062   ; This is damage
+        STX     L0063
+        CMP     L28C6,X ; Compare damage in A with health of character X
+        BCS     L1C31   ; If Damage >= health this character is dead!
+
+        LDA     L28C6,X 
+        SEC
+        SBC     L0062
+        STA     L28C6,X
+        CMP     #$50  ; Compare health to $50
+        BCS     L1BE9 ; If health >=$50 print nothing and RTS
+
+        STA     L0062
+        JSR     L17DA ; compares $1A with $89 the player's current location
+
+        BNE     L1BE9 ; The event occurred away from the player so print nothing and RTS
+
+        JSR     L1C74 ; Prints three words describing character specified by X and IS
+
+        LDA     L0062 ; $62 contains health of a character
+        CMP     #$28  
+        BCS     L1C2D ; Branch if A>=$28 which is WEAK
+                      ; A<$28 so is dying
+        LDA     #$B0  ; DYING
+.L1C2A
+        JMP     L161E ; Prints word in A then . and newline and RTS
+
+.L1C2D                
+        LDA     #$B1  ; WEAK
+        BNE     L1C2A ;
+
+.L1C31      ; Print that character X is dead
+        TXA           ; Save A onto stack
+        PHA
+        JSR     L17DA ; compares $1A with $89
+
+        BNE     L1C43 ; If not present that don't print anything 
+
+        JSR     L1C74 ; Prints three words describing character specified by X and IS
+
+        LDA     #$B2  ; Print DEAD
+        JSR     L14B8
+
+        JSR     L20FA ; Print . and newline
+
+.L1C43                ; 
+        PLA           ; Restore X from stack
+        TAX
+        LDA     #$00  ; Set health of char to zero
+        STA     L28C6,X
+        CPX     #$C8  ; The player
+        BNE     L1C54 ; If not the player
+                      ; The player is DEAD!!!!
+        JSR     L12EE ; Prints out score and strength
+
+        JMP     L19FA ; Enter infinite input loop
+
+.L1C54                ; Handle death of NPC X, drop objects
+        LDA     #$C7
+        STA     L28EC,X 
+        STX     L0062 ; Save X in $62 ie index of the deceased NPC
+        LDX     L27FC ; Load number of objects?
+        DEX           ; Decrement
+        STX     L0063 ; Save $63
+.L1C61                  ; Start loop for dropping the deceased's items
+        LDA     L25C0,X ; Load location of object X
+        CMP     L0062   ; is it this NPC
+        BNE     L1C6D   ; Branch if not
+                        ; Yes, object belonged to this NPC
+        LDY     L001A   ; Y=location of the death
+        JSR     L1B6C   ; Transfer object from deceased NPC to the location of death
+
+.L1C6D
+        DEC     L0063   ; Decrement the object index
+        LDX     L0063   ; Load it into X
+        BPL     L1C61   ; Loop while X>=0
+
+        RTS
+
+.L1C74                 ; Prints three words describing character specified by X and IS
+        STX     L0063
+        JSR     L1BEA ; Prints three words describing character specified by X
+
+        LDX     L0063
+        CPX     #$C8  ; Looks like X is a location
+        BNE     L1C83
+
+        LDA     #$48  ; Location $48 is A LARGE HALL
+        BNE     L1C85
+
+.L1C83
+        LDA     #$3E  ; Prints IS
+.L1C85
+        JMP     L14B8
+
+.L1C88  ; Puts a pseudo random number in A?
+        LDX     #$08
+.L1C8A
+        LDA     L001D ; Set to $AA at $1403 and only changed here
+        AND     #$48  ; A=8
+        ADC     #$38  ; A=$40
+        ASL     A     ; A=$80
+        ASL     A     ; A=$0 and C=1
+        ROL     L001F ; 
+        ROL     L001E
+        ROL     L001D
+        DEX
+        BNE     L1C8A
+
+        LDA     L001D
+        RTS
+
+.L1C9E                
+        STX     L0061 ; ?$61=X
+        STA     L0060 ; ?$60=A
+        JSR     L1C88 ; Dunno
+
+        AND     L0060
+        STA     L0060
+        SEC
+        TYA
+        SBC     L0060
+        LDX     L0061
+        JMP     L1C02
+
+.L1CB2
+        LDA     #$2F
+        JSR     L14B8 ; Print .
+
+        LDA     #$02
+        STA     L006F ; $6F=2
+        JMP     L3B51 ; Print newline change colour to green
+
+.L1CBE
+        LDX     L0067 ; X=Code for object
+        LDY     L006A ; Y=index of object location
+        LDA     #$80  ; 
+        STA     L2A08,Y ; Set entry in this table to 128
+        RTS
+
+.L1CC8
+        CLC
+        RTS
+.L1CCA
+        JSR     L1D20 ; Loads info about object into various places
+
+        BCS     L1D3F ; RTS
+
+.L1CCF
+        BIT     L0064
+        BPL     L1D3F ; RTS
+
+        JSR     L17DA ; Is ?$1A=?$89
+
+        BNE     L1CEB ; Branch if no
+                      ; ?$1A=?$89
+        LDX     L0066
+        JSR     L1C74
+
+        JSR     L14CE
+        HIT WITH
+
+.L1CE3
+        LDX     L0065 ; X is index of object
+        JSR     L24DD ; Print description of object
+
+        JSR     L1CB2 ; Print . newline and change colour to green 
+
+.L1CEB
+        JSR     L1CBE ; Stores $80 into $2A00 table
+
+        LDA     L26FC,X
+        TAY             ; Y=A
+        LDA     L2726,X
+        LDX     L0066   ; Set near $0E6B but don't understand what it means
+        JSR     L1C9E
+
+        JSR     L1C88
+
+        CMP     #$D2
+        BCS     L1D0B
+
+        LDA     L0067
+        CMP     #$16
+        BNE     L1CC8
+
+        DEC     L0027
+        BPL     L1CC8
+
+.L1D0B
+        JSR     L17DA
+
+        BNE     L1D71
+
+        LDX     L0065
+        JSR     L24DD
+
+        LDA     #$B4
+        JSR     L14B8
+
+        JSR     L20FA
+
+        JMP     L1D71
+
+.L1D20  ; See $1D40 for A,X,Y values. Loads info about object into various places as follows:
+        ; $64 contains A on entry
+        ; $65 contains X on entry, index of object
+        ; $66 contains Y on entry
+        ; $67 contains code for object
+        ; $6A contains index of location for object
+        ; On return C=1 if weapon damage (I think) >=0 health of carrier
+        STA     L0064 ; ?$64=A
+        LDA     L25C0,X ; A=location of object X, it will be carried
+        STY     L0066   ; ?$66=Y, this is index of hostile to carrier of X
+        CMP     #$FF    ; Holdall
+        BNE     L1D2E   ; Branch if object isn't in holdall
+                        ; Object is in holdall
+        LDA     L25C0   ; A=holdall's location
+.L1D2E                  ; A=location of object X
+        TAY             ; Y=A = location of object X
+        LDA     L2580,X ; A=code for object X
+        STX     L0065   ; ?$65=X object index
+        TAX             ; X=A the code for object
+        STX     L0067   ; $67=code for object
+        LDA     L262A,X ; A=some property of object index by object code in X - its damage?
+        CMP     L28C6,Y ; Compare with health of carrier of the object (note $28C6+$C8=$298E, health table)
+        STY     L006A   ; ?6A = Y the location index of the object
+.L1D3F
+        RTS
+
+.L1D40  ; A=$15
+        ; X=index of weapon carried by character in outer loop
+        ; Y=index of most healthy hostile in same location plus C8
+        JSR     L1D20 ; Loads info about object into various places as follows:
+       
+        BCS     L1D3F ; Branch to RTS if C=1, wielder of weapon too weak?
+                      ; C=0 so attack!
+.L1D45
+        BIT     L0064
+        BPL     L1D3F
+
+        JSR     L17DA
+
+        BNE     L1D62
+
+        LDX     L0065
+        JSR     L24DD
+
+        JSR     L14CE
+        IS THROWN AT
+
+.L1D5A
+        LDX     L0066
+        JSR     L1BEA
+
+        JSR     L1CB2
+
+.L1D62
+        JSR     L1CBE
+
+        LDA     L26A8,X
+        TAY
+        LDA     L26D2,X
+        LDX     L0066
+        JSR     L1C9E
+
+.L1D71
+        JSR     L1C88
+
+        LDX     L0067
+        AND     L267E,X
+        LDY     L001A
+        CMP     L267E,X
+        BEQ     L1D87
+
+.L1D80
+        LDA     L0064
+        LDX     L0065
+        JMP     L1B6C
+
+.L1D87
+        CPY     L0089
+        BNE     L1D98
+
+        LDX     L0065
+        JSR     L24DD
+
+        LDA     #$B6
+        JSR     L14B8
+
+        JSR     L20FA
+
+.L1D98
+        LDY     #$C7
+        BNE     L1D80
+
+.L1D9C
+        STA     L0061
+        LDA     #$00
+        STA     L0060
+        LDX     L27FE
+.L1DA5
+        LDA     L29B3,X
+        CMP     L0061
+        BNE     L1DD4
+
+        LDA     #$00
+        STA     L0062
+        LDA     L2967,X
+        AND     #$7F
+        TAY
+        LDA     L2820,Y
+        JSR     L152F
+
+        LDA     L2840,Y
+        JSR     L152F
+
+        LDA     L2860,Y
+        JSR     L152F
+
+        LDA     L0060
+        CMP     L0062
+        BCS     L1DD4
+
+        LDA     L0062
+        STA     L0060
+        STX     L0063
+.L1DD4
+        DEX
+        BNE     L1DA5
+
+        LDA     L0060
+        RTS
+
+        TSX
+        STX     L0069
+        CMP     #$10
+        BEQ     L1DF2
+
+        LDA     L0083
+        PHA
+        LDA     #$B3
+        STA     L0083
+        PLA
+        JSR     L1DFD
+
+        JSR     L1E57
+
+        JMP     L1CCF
+
+.L1DF2
+        LDA     #$49
+        JSR     L1DFD
+
+        JSR     L1E57
+
+        JMP     L1D45
+
+.L1DFD
+        STA     L0068
+        LDA     L0089
+        JSR     L1D9C
+
+        STA     L0065
+        LDA     L0063
+        STA     L0066
+        JSR     L15D2
+
+        LDA     L0063
+        STA     L0067
+        LDA     L0065
+        BNE     L1E5D
+
+        LDA     L0089
+.L1E17
+        JSR     L1D9C
+
+L1E19 = L1E17+2
+        BNE     L1E33
+
+        LDA     L0068
+        JSR     L14B8
+
+        LDA     #$B7
+        JSR     L14B8
+
+        JSR     L229F
+
+        LDA     L0089
+        JSR     L1D9C
+
+        BNE     L1E33
+
+        JMP     L1563
+
+.L1E33
+        LDA     L0063
+.L1E35
+        CLC
+        ADC     #$C7
+        TAY
+        LDX     L0067
+        DEX
+        LDA     L0089
+        STA     L001A
+        LDA     #$FF
+        RTS
+
+        LDA     #$43
+        JSR     L1DFD
+
+        STY     L0063
+        JSR     L1B6C
+
+        BCC     L1E54
+
+        LDX     L0063
+        JMP     L1599
+
+.L1E54
+        JMP     L161C
+
+.L1E57
+        JSR     L1D20
+
+        BCS     L1E62
+
+        RTS
+
+.L1E5D
+        LDA     L0066
+        JMP     L1E35
+
+.L1E62
+        JSR     L14CE
+        YOU ARE TOO WEAK
+
+.L1E6A
+        JSR     L20FA
+
+        LDX     L0069
+        TXS
+        RTS
+
+.L1E71
+        JMP     L1597
+
+        LDA     L0089
+        JSR     L1D9C
+
+        BNE     L1E8E
+
+        JSR     L14CE
+0632
+        ASK WHO
+
+.L1E81
+        JSR     L229F
+
+        LDA     L0089
+        JSR     L1D9C
+
+        BNE     L1E8E
+
+        JMP     L1563
+
+.L1E8E
+        LDA     #$B8
+        STA     L0083
+        LDA     L0063
+        STA     L0066
+        JSR     L15D4
+
+        LDX     L0066
+        CPX     #$11
+        BEQ     L1EAD
+
+        LDA     L2967,X
+        BMI     L1EAD
+
+        LDX     L0063
+        DEX
+        JSR     L133D
+
+        BCS     L1E71
+
+        RTS
+
+.L1EAD
+        JSR     L14CE
+0638
+063f
+        YOUR REQUEST IS REFUSED
+
+.L1EB5
+        JMP     L1E6A
+
+        JSR     L14CE
+0518
+        YOU WAIT HERE
+
+.L1EBF
+        JMP     L20FA
+
+        PHA
+.L1EC4
+        PHA
+        LDY     LBCBC,X
+        SBC     LAC43,Y
+        LDX     #$A2
+        CLV
+        STA     (L00B0),Y
+        BVC     L1EC4
+
+        SBC     L0000
+        INC     L0D2F
+        LSR     L0016,X
+        ORA     L0015,X
+.L1EE8
+        ASL     L0016,X
+L1EE9 = L1EE8+1
+        ASL     L001E,X
+        ORA     L1E19,Y
+        ASL     L1813,X
+        ORA     L1919,Y
+        CLC
+        CLC
+        ASL     L0018,X
+        AND     L0029
+        ROL     L275C
+        AND     (L005D,X)
+        AND     #$5D
+        AND     #$A4
+        AND     #$28
+        PLP
+        CLI
+        AND     #$A4
+        CPY     #$93
+        AND     #$63
+        ROL     L344F,X
+.L1F1D
+        AND     (L0032),Y
+L1F1E = L1F1D+1
+        ORA     L0016,X
+        CLC
+        ASL     L0D0D
+        ORA     L0D59,Y
+        CMP     (L0058,X)
+        AND     L0035,X
+        ADC     L868A,X
+        EOR     (L0072,X)
+        ADC     (L007C),Y
+        BVS     L1FB1
+
+        STY     L00A9
+        TAY
+        BCC     L1EE9
+
+        LDY     #$89
+        STA     L6565,X
+        ADC     L0065
+        ROR     L7E6D
+        JMP     L7A49
+
+        JMP     LA6A5
+
+        TAY
+        STX     L0086
+        STX     L00A8
+        TXA
+        EOR     L0067
+        DEY
+        STX     L00BE
+        JMP     L4144
+
+        JSR     L5457
+
+        EOR     (L0042,X)
+        JMP     L2545
+
+        BIT     L5959
+        EOR     L9459,Y
+        STY     L0094,X
+        STY     L0032,X
+        STX     L0095,Y
+        CPY     #$89
+        EOR     (L0057,X)
+        EOR     (L0042,X)
+        JMP     L2545
+
+        EOR     LADB0,Y
+        AND     #$AE
+        LDA     (L0053),Y
+        LDA     (L00B1),Y
+        CMP     (L0058,X)
+        CPY     #$C1
+        AND     #$58
+        CPY     #$C1
+        TAY
+        CLI
+        CPY     #$C1
+        TSX
+        EOR     (L008C,X)
+.L1FB1
+        BMI     L1FED
+
+        EOR     (L0057,X)
+        EOR     (L0044,X)
+        AND     L002B
+        AND     (L003A),Y
+        EOR     L0000,Y
+.BeebDisEndAddr
+SAVE "command/v1911-1FBF-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 1911 A2 09 20 8D 3B D0 CE AD 89 25 C9 1C D0 05 20 F7 -- -;----%---- - OOOOOOOOOOOOOOOO
+; 1921 18 D0 0A C9 0B D0 BE 20 97 19 20 0C 19 AD C9 25 ------- -- ----% OOOOOOOOOOOOOOOO
+; 1931 C9 C8 D0 0F AD DA 29 38 E9 0F 8D DA 29 A9 0A 8D ------)8----)--- OOOOOOOOOOOOOOOO
+; 1941 89 25 60 AD FA 27 38 E9 0F 8D FA 27 4C 3E 19 20 -%`--'8----'L>-  OOOOOOOOOOOOOOOO
+; 1951 16 1A D0 96 20 0C 19 A5 89 C9 89 D0 39 24 00 30 ---- -------9$-0 OOOOOOOOOOOOOOOO
+; 1961 35 C6 00 20 CE 14 3A A2 A3 A4 43 87 5D 4D 6B A5 5-- --:---C-]Mk- OOOOOODDDDDDDDDD
+; 1971 A6 00 A2 06 86 60 A5 89 48 BD 33 1A 85 89 20 FB -----`--H-3--- - DDOOOOOOOOOOOOOO
+; 1981 24 A5 87 18 69 20 A0 01 91 77 C6 60 A6 60 10 E9 $---i ---w-`-`-- OOOOOOOOOOOOOOOO
+; 1991 68 85 89 4C FA 20 20 CE 14 5D 9C 6C A1 87 00 D0 h--L-  --]-l---- OOOOOOOOODDDDDDO
+; 19A1 F2 20 D2 15 A6 63 CA F0 2A E0 01 F0 23 E0 09 F0 - ---c--*---#--- OOOOOOOOOOOOOOOO
+; 19B1 05 A5 83 4C BE 1A AD 89 25 C9 0A D0 05 A9 1F 4C ---L----%------L OOOOOOOOOOOOOOOO
+; 19C1 AF 17 20 CE 14 5D A7 A8 A9 00 20 FA 20 4C 2E 19 -- --]---- - L.- OOOOODDDDDOOOOOO
+; 19D1 4C F5 1A 20 1C 16 AE FC 27 BD BF 25 C9 FF D0 05 L-- ----'--%---- OOOOOOOOOOOOOOOO
+; 19E1 A5 89 9D BF 25 CA D0 F1 8E FA 27 60 20 EE 12 A5 ----%-----'` --- OOOOOOOOOOOOOOOO
+; 19F1 83 20 D9 1F 20 3A 1A 90 0B A9 AA 20 1E 16 20 9F - -- :----- -- - OOOOOOOOOOOOOOOO
+; 1A01 22 4C FF 19 4C 51 3B A2 03 BD 2F 1A C5 89 D0 01 "L--LQ;---/----- OOOOOOOOOOOOOOOO
+; 1A11 60 CA 10 F5 60 A2 0E BD 24 1A C5 89 D0 01 60 CA `---`---$-----`- OOOOOOOOOOOOOOOO
+; 1A21 10 F5 60 03 04 08 09 1B 1C 1D 1E 1F 87 88 0D 13 --`------------- OOOOOOOOOOOOOOOO
+; 1A31 15 89 8B 5E 5B 61 5F 6F B0 A9 AB 20 B8 14 20 5A ---^[a_o--- -- Z OOOOOOOOOOOOOOOO
+; 1A41 18 29 DF C9 59 F0 05 C9 4E D0 F3 18 60 20 24 16 -)--Y---N---` $- OOOOOOOOOOOOOOOO
+; 1A51 20 51 3B 24 62 30 03 4C 92 16 AE FC 27 CA 86 63  Q;$b0-L----'--c OOOOOOOOOOOOOOOO
+; 1A61 BD C0 25 C9 C8 D0 19 85 26 A9 AC 20 B8 14 A6 63 --%-----&-- ---c OOOOOOOOOOOOOOOO
+; 1A71 20 DD 24 A9 44 20 B8 14 20 3A 1A B0 0A 20 51 3B  -$-D -- :--- Q; OOOOOOOOOOOOOOOO
+; 1A81 C6 63 A6 63 D0 DA 60 A6 63 A0 FF 98 20 6C 1B 90 -c-c--`-c--- l-- OOOOOOOOOOOOOOOO
+; 1A91 EC 20 51 3B 20 CE 14 87 36 13 00 A6 63 20 DD 24 - Q; ---6---c -$ OOOOOOODDDDOOOOO
+; 1AA1 A9 44 20 B8 14 20 FA 20 4C 7E 1A 20 D2 15 A6 63 -D -- - L~- ---c OOOOOOOOOOOOOOOO
+; 1AB1 CA F0 9A E0 01 F0 19 E0 09 F0 5E A9 1D 8D C6 1A ----------^----- OOOOOOOOOOOOOOOO
+; 1AC1 20 CE 14 87 36 1D 00 A6 63 CA 20 DD 24 4C 51 3B  ---6---c- -$LQ; OOODDDDOOOOOOOOO
+; 1AD1 20 16 1A F0 1F A5 89 C9 3C F0 11 A2 09 20 8D 3B  -------<---- -; OOOOOOOOOOOOOOOO
+; 1AE1 D0 1D AD 89 25 C9 0C D0 16 20 2E 19 A9 FF 8D FB ----%---- .----- OOOOOOOOOOOOOOOO
+; 1AF1 27 4C 1C 16 20 CE 14 90 AD AE AF 00 4C 51 3B A9 'L-- -------LQ;- OOOOOOODDDDDOOOO
+; 1B01 5C 8D 0B 1B 20 CE 14 45 3E 46 5C 37 00 4C FA 20 \--- --E>F\7-L-  OOOOOOODDDDDDOOO
+; 1B11 A9 47 4C AF 17 A9 0B D0 20 AD 89 25 C9 0A D0 F0 -GL----- --%---- OOOOOOOOOOOOOOOO
+; 1B21 20 16 1A F0 F0 A5 89 C9 AE F0 34 C9 3F F0 34 C9  ---------4-?-4- OOOOOOOOOOOOOOOO
+; 1B31 9D F0 30 C9 3C D0 30 A9 0C 48 AD C9 25 C9 C8 D0 --0-<-0--H--%--- OOOOOOOOOOOOOOOO
+; 1B41 0C A9 0F 20 88 15 68 8D 89 25 4C 1C 16 A9 0F 18 --- --h--%L----- OOOOOOOOOOOOOOOO
+; 1B51 6D FA 27 C9 64 90 03 4C 97 15 8D FA 27 D0 E7 A9 m-'-d--L----'--- OOOOOOOOOOOOOOOO
+; 1B61 1B D0 D6 A9 1C D0 D2 A9 A7 D0 96 86 70 85 73 BD ------------p-s- OOOOOOOOOOOOOOOO
+; 1B71 C0 25 85 71 BD 80 25 AA BD 00 26 85 72 C0 C8 B0 -%-q--%---&-r--- OOOOOOOOOOOOOOOO
+; 1B81 06 24 73 30 3E 18 60 C0 FF D0 13 A5 72 18 6D FA -$s0>-`-----r-m- OOOOOOOOOOOOOOOO
+; 1B91 27 90 01 60 C9 64 90 01 60 8D FA 27 90 25 B9 12 '--`-d--`--'-%-- OOOOOOOOOOOOOOOO
+; 1BA1 29 18 65 72 90 01 60 85 22 B9 A0 28 29 1F 84 23 )-er--`-"--()--# OOOOOOOOOOOOOOOO
+; 1BB1 A8 A5 22 D9 E0 28 90 01 60 A4 23 24 73 30 01 60 --"--(--`-#$s0-` OOOOOOOOOOOOOOOO
+; 1BC1 99 12 29 98 A6 70 9D C0 25 A4 71 C0 C8 90 18 C0 --)--p--%-q----- OOOOOOOOOOOOOOOO
+; 1BD1 FF F0 0B B9 12 29 38 E5 72 99 12 29 18 60 AD FA -----)8-r--)-`-- OOOOOOOOOOOOOOOO
+; 1BE1 27 38 E5 72 8D FA 27 18 60 BD A0 28 29 1F AA BD '8-r--'-`--()--- OOOOOOOOOOOOOOOO
+; 1BF1 20 28 20 F6 24 BD 40 28 20 F6 24 BD 60 28 4C F6  ( -$-@( -$-`(L- OOOOOOOOOOOOOOOO
+; 1C01 24 85 62 86 63 DD C6 28 B0 26 BD C6 28 38 E5 62 $-b-c--(-&--(8-b OOOOOOOOOOOOOOOO
+; 1C11 9D C6 28 C9 50 B0 D1 85 62 20 DA 17 D0 CA 20 74 --(-P---b ---- t OOOOOOOOOOOOOOOO
+; 1C21 1C A5 62 C9 28 B0 05 A9 B0 4C 1E 16 A9 B1 D0 F9 --b-(----L------ OOOOOOOOOOOOOOOO
+; 1C31 8A 48 20 DA 17 D0 0B 20 74 1C A9 B2 20 B8 14 20 -H ---- t--- --  OOOOOOOOOOOOOOOO
+; 1C41 FA 20 68 AA A9 00 9D C6 28 E0 C8 D0 06 20 EE 12 - h-----(---- -- OOOOOOOOOOOOOOOO
+; 1C51 4C FA 19 A9 C7 9D EC 28 86 62 AE FC 27 CA 86 63 L------(-b--'--c OOOOOOOOOOOOOOOO
+; 1C61 BD C0 25 C5 62 D0 05 A4 1A 20 6C 1B C6 63 A6 63 --%-b---- l--c-c OOOOOOOOOOOOOOOO
+; 1C71 10 EE 60 86 63 20 EA 1B A6 63 E0 C8 D0 04 A9 48 --`-c ---c-----H OOOOOOOOOOOOOOOO
+; 1C81 D0 02 A9 3E 4C B8 14 A2 08 A5 1D 29 48 69 38 0A --->L------)Hi8- OOOOOOOOOOOOOOOO
+; 1C91 0A 26 1F 26 1E 26 1D CA D0 EF A5 1D 60 86 61 85 -&-&-&------`-a- OOOOOOOOOOOOOOOO
+; 1CA1 60 20 88 1C 25 60 85 60 38 98 E5 60 A6 61 4C 02 ` --%`-`8--`-aL- OOOOOOOOOOOOOOOO
+; 1CB1 1C A9 2F 20 B8 14 A9 02 85 6F 4C 51 3B A6 67 A4 --/ -----oLQ;-g- OOOOOOOOOOOOOOOO
+; 1CC1 6A A9 80 99 08 2A 60 18 60 20 20 1D B0 70 24 64 j----*`-`  --p$d OOOOOOOOOOOOOOOO
+; 1CD1 10 6C 20 DA 17 D0 13 A6 66 20 74 1C 20 CE 14 0E -l -----f t- --- OOOOOOOOOOOOOOOD
+; 1CE1 B3 00 A6 65 20 DD 24 20 B2 1C 20 BE 1C BD FC 26 ---e -$ -- ----& DDOOOOOOOOOOOOOO
+; 1CF1 A8 BD 26 27 A6 66 20 9E 1C 20 88 1C C9 D2 B0 0A --&'-f -- ------ OOOOOOOOOOOOOOOO
+; 1D01 A5 67 C9 16 D0 C1 C6 27 10 BD 20 DA 17 D0 61 A6 -g-----'-- ---a- OOOOOOOOOOOOOOOO
+; 1D11 65 20 DD 24 A9 B4 20 B8 14 20 FA 20 4C 71 1D 85 e -$-- -- - Lq-- OOOOOOOOOOOOOOOO
+; 1D21 64 BD C0 25 84 66 C9 FF D0 03 AD C0 25 A8 BD 80 d--%-f------%--- OOOOOOOOOOOOOOOO
+; 1D31 25 86 65 AA 86 67 BD 2A 26 D9 C6 28 84 6A 60 20 %-e--g-*&--(-j`  OOOOOOOOOOOOOOOO
+; 1D41 20 1D B0 FA 24 64 10 F6 20 DA 17 D0 14 A6 65 20  ---$d-- -----e  OOOOOOOOOOOOOOOO
+; 1D51 DD 24 20 CE 14 3E B5 49 00 A6 66 20 EA 1B 20 B2 -$ -->-I--f -- - OOOOODDDDOOOOOOO
+; 1D61 1C 20 BE 1C BD A8 26 A8 BD D2 26 A6 66 20 9E 1C - ----&---&-f -- OOOOOOOOOOOOOOOO
+; 1D71 20 88 1C A6 67 3D 7E 26 A4 1A DD 7E 26 F0 07 A5  ---g=~&---~&--- OOOOOOOOOOOOOOOO
+; 1D81 64 A6 65 4C 6C 1B C4 89 D0 0D A6 65 20 DD 24 A9 d-eLl------e -$- OOOOOOOOOOOOOOOO
+; 1D91 B6 20 B8 14 20 FA 20 A0 C7 D0 E4 85 61 A9 00 85 - -- - -----a--- OOOOOOOOOOOOOOOO
+; 1DA1 60 AE FE 27 BD B3 29 C5 61 D0 28 A9 00 85 62 BD `--'--)-a-(---b- OOOOOOOOOOOOOOOO
+; 1DB1 67 29 29 7F A8 B9 20 28 20 2F 15 B9 40 28 20 2F g))--- ( /--@( / OOOOOOOOOOOOOOOO
+; 1DC1 15 B9 60 28 20 2F 15 A5 60 C5 62 B0 06 A5 62 85 --`( /--`-b---b- OOOOOOOOOOOOOOOO
+; 1DD1 60 86 63 CA D0 CE A5 60 60 BA 86 69 C9 10 F0 11 `-c----``--i---- OOOOOOOOOOOOOOOO
+; 1DE1 A5 83 48 A9 B3 85 83 68 20 FD 1D 20 57 1E 4C CF --H----h -- W-L- OOOOOOOOOOOOOOOO
+; 1DF1 1C A9 49 20 FD 1D 20 57 1E 4C 45 1D 85 68 A5 89 --I -- W-LE--h-- OOOOOOOOOOOOOOOO
+; 1E01 20 9C 1D 85 65 A5 63 85 66 20 D2 15 A5 63 85 67  ---e-c-f ---c-g OOOOOOOOOOOOOOOO
+; 1E11 A5 65 D0 48 A5 89 20 9C 1D D0 17 A5 68 20 B8 14 -e-H-- -----h -- OOOOOOOOOOOOOOOO
+; 1E21 A9 B7 20 B8 14 20 9F 22 A5 89 20 9C 1D D0 03 4C -- -- -"-- ----L OOOOOOOOOOOOOOOO
+; 1E31 63 15 A5 63 18 69 C7 A8 A6 67 CA A5 89 85 1A A9 c--c-i---g------ OOOOOOOOOOOOOOOO
+; 1E41 FF 60 A9 43 20 FD 1D 84 63 20 6C 1B 90 05 A6 63 -`-C ---c l----c OOOOOOOOOOOOOOOO
+; 1E51 4C 99 15 4C 1C 16 20 20 1D B0 06 60 A5 66 4C 35 L--L--  ---`-fL5 OOOOOOOOOOOOOOOO
+; 1E61 1E 20 CE 14 87 48 41 B1 00 20 FA 20 A6 69 9A 60 - ---HA-- - -i-` OOOODDDDDOOOOOOO
+; 1E71 4C 97 15 A5 89 20 9C 1D D0 13 20 CE 14 20 B7 00 L---- ---- -- -- OOOOOOOOOOOOODDD
+; 1E81 20 9F 22 A5 89 20 9C 1D D0 03 4C 63 15 A9 B8 85  -"-- ----Lc---- OOOOOOOOOOOOOOOO
+; 1E91 83 A5 63 85 66 20 D4 15 A6 66 E0 11 F0 0E BD 67 --c-f ---f-----g OOOOOOOOOOOOOOOO
+; 1EA1 29 30 09 A6 63 CA 20 3D 13 B0 C5 60 20 CE 14 3D )0--c- =---` --= OOOOOOOOOOOOOOOD
+; 1EB1 B9 3E BA 00 4C 6A 1E 20 CE 14 87 21 37 00 4C FA ->--Lj- ---!7-L- DDDDOOOOOODDDDOO
+; 1EC1 20 0F 48 48 BC BC BC A3 A3 A7 A7 F9 43 AC A2 A2  -HH--------C--- OOOOOOOOOOOOOOOO
+; 1ED1 74 B8 91 B0 50 ED ED 00 00 73 73 EE 2F 0D 56 16 t---P----ss-/-V- OOOOOOOOOOOOOOOO
+; 1EE1 15 15 17 17 17 17 17 16 16 16 1E 1A 19 19 1E 1E ---------------- OOOOOOOOOOOOOOOO
+; 1EF1 13 18 19 19 19 42 42 18 18 12 16 18 13 25 29 2F -----BB------%)/ OOOOOOOOOOOOOOOO
+; 1F01 2E 5C 27 57 21 5D 62 57 57 29 5D 29 A4 29 28 28 .\'W!]bWW)])-)(( OOOOOOOOOOOOOOOO
+; 1F11 58 29 A4 C0 93 92 29 63 3E 4F 34 33 31 32 4F 92 X)----)c>O4312O- OOOOOOOOOOOOOOOO
+; 1F21 92 92 5A 15 16 17 18 0B 0E 0D 0D 19 59 0D 1A C1 --Z---------Y--- OOOOOOOOOOOOOOOO
+; 1F31 58 35 35 7D 8A 86 41 72 71 7C 70 74 83 80 82 80 X55}--Arq|pt---- OOOOOOOOOOOOOOOO
+; 1F41 80 80 80 84 A9 9E A8 90 9F A3 A0 89 9D 65 65 65 -------------eee OOOOOOOOOOOOOOOO
+; 1F51 65 67 67 67 67 6E 6D 7E 4C 49 7A 7B 4C A5 A6 A7 eggggnm~LIz{L--- OOOOOOOOOOOOOOOO
+; 1F61 A8 86 86 9C 89 86 A8 8A 45 67 88 89 97 86 BE 3A --------Eg-----: OOOOOOOOOOOOOOOO
+; 1F71 5B 3A 4C 44 41 20 57 54 41 42 4C 45 25 2C 59 59 [:LDA WTABLE%,YY OOOOOOOOOOOOOOOO
+; 1F81 59 59 94 94 94 94 32 96 95 C0 89 41 57 89 41 42 YY----2----AW-AB OOOOOOOOOOOOOOOO
+; 1F91 4C 45 25 2B 57 44 59 B0 AD 29 AE B1 53 B1 B1 C1 LE%+WDY--)--S--- OOOOOOOOOOOOOOOO
+; 1FA1 58 C0 C1 29 58 C0 C1 9F 8B A8 58 C0 C1 BA 41 8C X--)X-----X---A- OOOOOOOOOOOOOOOO
+; 1FB1 30 3A 53 54 41 57 41 44 52 25 2B 31 3A 54 59 00 0:STAWADR%+1:TY- OOOOOOOOOOOOOOOO
+

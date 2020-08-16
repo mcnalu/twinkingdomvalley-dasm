@@ -5,10 +5,16 @@
 #define FILESIZE 23040
 #define MAXWORD 100
 #define MAXLINE 1000
+#define NOBJWORDS 4
+#define NNPCWORDS 3
 
 #define NOTHING 0
 #define L14CE 1
 #define L3B6C 2
+
+/* To do
+ * Why does location \$1D not work?
+ */
 
 //The start address of TKV code in BBC's memory 
 long start;
@@ -36,6 +42,7 @@ long getbyte(char *addrs,long y);
 void convertcodes2words(int argc, char *argv[]);
 void describelocation(int argc, char *argv[]);
 void describeobject(char *scode);
+void describenpc(char *scode);
 
 void dotests();
 
@@ -62,13 +69,15 @@ int main(int argc, char *argv[]) {
       describelocation(argc,argv);
     } else if(strstr(argv[1],"object")!=NULL){
       describeobject(argv[2]);
+    } else if(strstr(argv[1],"npc")!=NULL){
+      describenpc(argv[2]);
     } else if(strstr(argv[1],"dotests")!=NULL){
       dotests();
     }
   } else {
   //createbytelines(32,108,59);
   //createbytelines(32,-50,20);
-  processdasm();
+    processdasm();
   }
   return 0;
 }
@@ -116,27 +125,58 @@ void describeobject(char *scode){
   long code=strtol(scode+1,NULL,16);
   long loc = getbyte("25C0",code);
   long lu = getbyte("2580",code);
-  char addrs[3][5]={"2750","277A","27A4"};
+  long size = getbyte("2600",lu);
+  char addrs[NOBJWORDS][5]={"2750","277A","27A4","27CE"};
   int  i;
   int linepos=0;
   char line[MAXLINE];
   
-  printf("%s\n",scode);
+  //printf("%s\n",scode);
   if(code<0 || code>=42){
     printf("There are only 42 objects so index must be 0-41 or $0-29.\n");
     return;
   }
   
-  for(i=0;i<3;i++){
+  for(i=0;i<NOBJWORDS;i++){
     long w = getbyte(addrs[i],lu);
-    if(w==0)
+    if(w==0){
+      line[linepos-1]='\0';
       break;
+    }
     linepos+=getword(line+linepos,getcommandaddress(w));
-    if(i<2)
+    if(i<NOBJWORDS-1)
       line[linepos-1]=' ';
   }
-  printf("Object %02xL\nLookup code %02x\nLocation %02x\n|%s|\n",code,lu,loc,line);
+  printf("Object %02x\nLookup code %02x\nLocation %02x\nSize %02x\n|%s|\n",code,lu,loc,size,line);
 }
+
+void describenpc(char *scode){
+  long code=strtol(scode+1,NULL,16);
+  //long lu = getbyte("28A0",code)&0x1F; This lookup is used in $1BEA but dunno why
+  char addrs[NNPCWORDS][5]={"2820","2840","2860"};
+  int  i;
+  int linepos=0;
+  char line[MAXLINE];
+  
+  //printf("%s\n",scode);
+  if(code<0 || code>=32){
+    printf("There are only 32 things in this table so index must be 0-31 or $0-1F.\n");
+    return;
+  }
+  
+  for(i=0;i<NNPCWORDS;i++){
+    long w = getbyte(addrs[i],code);
+    if(w==0){
+      line[linepos-1]='\0';
+      break;
+    }
+    linepos+=getword(line+linepos,getcommandaddress(w));
+    if(i<NNPCWORDS-1)
+      line[linepos-1]=' ';
+  }
+  printf("NPC %02x\n|%s|\n",code,line);
+}
+
 
 long getbyte(char *tableaddr, long y){
   long table = strtol(tableaddr,NULL,16)-start;
@@ -178,7 +218,7 @@ long getaddressfromtable(long lbtable, long hbtable, long code){
   lb=fixnegbyte(lb);
   //printf("%d %d\n",lbtable+code,lb);
   sprintf(a,"%02x%02x",hb,lb);
-  printf("%s\n",a);
+  //printf("%s\n",a);
   return strtol(a,NULL,16)-start;  
 }
 

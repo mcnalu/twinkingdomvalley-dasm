@@ -144,7 +144,7 @@ OSCLI   = $FFF7
         JMP     L1451
 
 .L144E                ; Gets here only if draw wasn't just done
-        JSR     L20EA ; Dunno what this does
+        JSR     L20EA ; Sets up info and prints out description and objects based on player's location.
 
 .L1451                ; MAIN GAME LOOP
         LDA     #$00

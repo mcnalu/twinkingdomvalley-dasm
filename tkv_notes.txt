@@ -72,8 +72,11 @@ $254C Mode 7 Green Press tab...
 
 Storage locations:
 
-$1  contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846 and below
+$1 contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846 and below
+$2 is players thirst, see $0FC2 and after for getting dry type messages
+$21 Set to $80 if princess recognises you cos you have amulet or  $40 if not, see $1192 and after
 $26 Set to $80 in $22E1 block. If $26<0 then signal caps needed for new sentence start.
+$62 is where damage is stored, see $1C02
 $6F appears to be for setting colour, see $3B51
 $82 appears to count number of characters printed out - in a turn?
 $89 is the player's current location, eg 00 is cabin. Used in routine $20BD
@@ -111,28 +114,53 @@ $L1ECF,X ; and these are high bytes. See $14A7
 
 $1F00+1
 
-$2580 ; Table of object codes. Eg $2580 is $14 for holdall
+$2580 ; Table of object codes. Eg $2580 is $14 for holdall, used for $2600 lookup
+$25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other places.
+      ; Not all locations correspond to a index in the location table
+      ; $C8 means the player has it
+      ; Does $C8+X mean NPC X has it for X>0?
+      ; $FF means it is in holdall
+      ; $C7 is the initial location of the silver key
+$2600 ; Table of object sizes? - NOTE use object code as index
+$262A ; Table of unknown object property see $1D2E - I think it's weapon damage.
+$26FC ; Table indexed by object index
+$2726 ; Table indexed by object index
 $2750 ; First word of object description eg A
 $277A ; Second word eg SMALL
 $27A4 ; Final word eg HOLDALL. NOTE: A zero for any word=>no more words.
-$25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other places.
 
-$27FA
+
+$27FA ; Records weight inside holdall. Object location $FF means in holdall.
 $27FB
 $27FC ; Number of objects
 
-$27FE might contain total number of entries in $29B4 and $298E data tables
-$29B4 start of data table?
-$298E start of data table?
-$29B4 start of data table?
+$27FE might contain total number of entries in * data tables below
+
+$2820 Table with first NPC word, see $1BEA
+$2840 Table with second NPC word
+$2860 Table with third NPC word
+
+$2880 Dunno but indexed by character class like $2820 see $0D01
+$28A0 Dunno but indexed by character class like $2820 see $0D01
+*Each instance of an NPC has an index X 
+*$2968 start of data table. This identifies char class. Bit 7=1 means hostile. AND &7F=> index in $2820/40/60/80/A0 tables
+*$298E start of data table. This gives health of the character.
+*$29B4 start of data table. This gives location index of character.
+
+$28C6 start of data table that is used to assess health in $1C02.
+It is really table $298E=$28C6+C8 ie index is of a carried location.
+(Indexed by location in $1D2E, location might means carrier of object!)
+
+$29DA start of data table recording weight carried by character see $1B9F - $29DA is player
 
 $Y is set to the player location $89 for these:
 $2A00-2AB0 are low bytes of addresses ie LB=$2A00+Y
 $2B00-2BB0 are high bytes of addresses ie HB=$2B00+Y
 From values in $2B00 table, seems Y can go from 0 to B0 or 0 to 176.
+Note also that routine $1CBE stores stuff in the $2A00 table.
 So $2C00 to $33FF is some kind of look up table used by routine at $20A7
 
-$2AD0 start of data table?
+*$2AD0 start of data table? Bits 0-6 of these bytes are zeroed in $0C1E
 $2BD0 start of data table?
 
 

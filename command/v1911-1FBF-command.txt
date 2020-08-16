@@ -1,0 +1,33 @@
+load $1911 machinecode/VALLEYR-1911-1FBF
+save v1911-1FBF-dasm.txt
+entry $1911
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump
+
+byte $1967 $c
+entry pc
+byte $199a $6
+entry pc
+byte $19c6 $5
+entry pc
+byte $1a98 $4
+entry pc
+byte $1ac4 $4
+entry pc
+byte $1af8 $5
+entry pc
+byte $1b08 $6
+entry pc
+byte $1ce0 $3
+entry pc
+byte $1d56 $4
+entry pc
+byte $1e65 $5
+entry pc
+byte $1e7e $3
+entry pc
+byte $1eb0 $5
+entry pc
+byte $1ebb $4
+entry pc

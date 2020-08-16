@@ -107,7 +107,7 @@ OSCLI   = $FFF7
         RTS
 ; ^^^ OUT OF SEQUENCE BUT HANDY TO HAVE HERE
 
-        org     $42A0
+        org     $42A0 ; Prints out various info
 .BeebDisStartAddr
         LDA     L0089 ; Player's location
         CMP     #$93  ; 147 - In a small cave in the west mountains
@@ -128,7 +128,7 @@ OSCLI   = $FFF7
         LDA     #$47      ; Store $47 two bytes further
         STA     (L0077),Y
 .L42BC                  
-        JMP     L0F03 ; Don't know what this does but a flashing message is printed after $0F86!
+        JMP     L0F03 ; Prints out various events like lamp flickers, you are dry, witch casts spell
 
 .L42BF
         JSR     L24FB ; Load info from look up table using $89 store results in $7A-B

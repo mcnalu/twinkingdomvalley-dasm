@@ -2,18 +2,32 @@ TKV subroutines
 
 $0BCA deal with * commands
 $0C00 Draws magenta dashes for turn start and calls $229F for input +?
+$0D8D Inner loop through characters to find any hostiles at same location.
+$0F03 Prints out various events like lamp flickers, you are dry, witch casts spell
+$12EE Prints out score and strength
+$1303 Prints out score
 $1400 Main entry point
 $14CE Prints output sequence related to actions encoded as bytes immediately after JSR $14CE
 $149C zeroes $6F (implies text colour) and $82 (char count) and prints newline
+$1624 Prints out inventory
 $180D Prints select and issues the option command + ?
+$19FA Prints out Bye_Bye and enters infinite input loop on death
+$1B6C Handles transfer of object
+$1B9F Adds to NPC carry capacity
+$1BC1 Handle transfer of an object updating amount carried if given
+$1BEA Print three words describing NPC; X specifies the character
+$1C02 Prints that a character is WEAK or DYING or DEAD
+$1C74 Prints three words describing character specified by X and IS
+$1C88 Puts a pseudo random number in A?
+$1D20 Loads info about object specified by index in X into various memory location
 $1FC0 write the Press Tab message then hides it
 $1FD9 Prints command word stored in $3600 table
 $1FEA Continues $1FD9 but if entered here it can print word from response table $500
 $20A7 Loads two bytes into $79-A based on Y from address in $2A00/2B00 table put in $77-8
 $20BD Sets up info in various addresses including $8A based on player's location in $89.
 $20EA Sets up info and prints out description and objects based on player's location.
-L24DD Print out info about object eg a small holdall
 $20FA Prints a . followed by newline and text colour
+$24DD Print out info about object eg a small holdall
 $229F collects input
 $238D If A is in A-Z or a- then returns with carry set.
 $2517 Draws picture
@@ -23,4 +37,4 @@ $3B51 Prints newline and sets text colour based on $6F
 $3B6C Like 14CE but prints out messges related to moving.
 $3BA1 Prints A and then waits for $2A centiseconds
 $3BC4 Looks up address for command word Y i.e. <0 in $3600 table and stores it in $70-1
-
+$42A0 Handles special stuff for small cave then calls $0F03

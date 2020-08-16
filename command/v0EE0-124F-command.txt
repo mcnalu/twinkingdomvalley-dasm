@@ -1,0 +1,40 @@
+load $0EE0 machinecode/VALLEYR-0EE0-124F
+save v0EE0-124F-dasm.txt
+entry $0EE0
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump
+byte $0ee3 $7
+entry pc
+byte $0f89 $3
+entry pc
+byte $0fa7 $4
+entry pc
+byte $0fd8 $5
+entry pc
+byte $0fee $6
+entry pc
+byte $1035 $6
+entry pc
+byte $108f $5
+entry pc
+byte $10cb $17
+entry pc
+byte $10fc $c
+entry pc
+byte $1123 $1c
+entry pc
+byte $114d $5
+entry pc
+byte $1158 $10
+entry pc
+byte $1183 $c
+entry pc
+byte $11b5 $19
+entry pc
+byte $11d8 $9
+entry pc
+byte $11f2 $7
+entry pc
+byte $1229 $7
+entry pc

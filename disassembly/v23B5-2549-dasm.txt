@@ -210,27 +210,29 @@ OSCLI   = $FFF7
         PLA
         PLA
         LDA     L007D
-        STA     L0089
+        
+.L245A
+        STA     L0089 ; Set the new player location
         STA     L29B4
-        JSR     L20BD
+        JSR     L20BD ; Set up stuff for new player location
 
-        BIT     L008A
-        BVS     L2477
-
-        LDA     L0001
-        BMI     L2474
-
-        AND     #$20
-        BEQ     L2477
-
-        LDA     L008A
+        BIT     L008A 
+        BVS     L2477 ; Branch if bit 6 of $8A set
+                      ; Bit 6 clear
+        LDA     L0001 ; A = display/desc option
+        BMI     L2474 ; Branch if picture is drawn always 
+                      ; Might draw picture...
+        AND     #$20  ;
+        BEQ     L2477 ; Never draw picture
+                      ; Draw picture if room unvisited
+        LDA     L008A ; Room visited
         AND     #$10
-        BNE     L2477
+        BNE     L2477 ; If room visited, jump to avoid drawing picture
 
-.L2474
+.L2474                ; Draw picture
         JMP     L2517
 
-.L2477
+.L2477                ; Sets up info and prints out description and objects based on player's location.
         JMP     L20EA
 
 .L247A

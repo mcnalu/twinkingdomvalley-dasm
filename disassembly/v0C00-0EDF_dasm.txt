@@ -110,10 +110,10 @@ OSCLI   = $FFF7
 ; 3. Asks for and encodes user input in JSR $229F call
         org     $0C00
 .BeebDisStartAddr
-        STA     L0015 ; zero at call at start of game loop
+        STA     L0015 ; zero at call at start of game main loop
         BPL     L0C07 ; Branches if A>=0
 
-        JMP     L0CAE
+        JMP     L0CAE ; Dunno what this does
 
 .L0C07
         JSR     L3BEB ; Prints 10 spaces
@@ -127,23 +127,23 @@ OSCLI   = $FFF7
 
         JSR     L3B51 ; Print newline and sets colour based on &6F
 
-        JSR     L42A0 ; Have documented this this but don't understand it yet.
+        JSR     L42A0 ; Sets the new player location and draws and prints info.
 
-        LDX     #$25
-.L0C1E
+        LDX     #$25  ; 39
+.L0C1E                ; Loop from $2AF5 down to $2AD0
         LDA     L2AD0,X
-        AND     #$80
+        AND     #$80  ; Blank all but bit 7
         STA     L2AD0,X
         DEX
-        BPL     L0C1E
+        BPL     L0C1E ; Loop branch
 
-        LDX     L27FE
+        LDX     L27FE ; X=?$27FE is number entries in $29B4 and $298E tables
         DEX
-.L0C2D
-        JSR     L0CDE
+.L0C2D                ; Outer loop through all characters
+        JSR     L0CDE ; Handles object transfer, combat etc and print messages re WEAK, DYING & DEATH
 
         DEX
-        BNE     L0C2D
+        BNE     L0C2D ; Continue outer loop of characters
 
         LDX     L27FE
         DEX
@@ -170,15 +170,13 @@ OSCLI   = $FFF7
         JSR     L1BEA
 
         JSR     L14CE
+        IS HERE WITH
 
-        ROL     LB337,X
-        BRK
-        EQUB    $A5
+.L0C5E
+        LDA     L0011
+        JSR     L164C
 
-        ORA     (L0020),Y
-        JMP     LAD16
-
-        CPY     #$25
+        LDA     L25C0
         CMP     L0011
         BNE     L0C6D
 
@@ -273,48 +271,48 @@ OSCLI   = $FFF7
         BIT     L2AD0
         BVS     L0CED
 
-.L0CDE
-        LDA     L298E,X
-        BEQ     L0CED
+.L0CDE                
+        LDA     L298E,X 
+        BEQ     L0CED ; If health is zero this character is dead so RTS
+            
+        STX     L0016 ; ?$16=X ie index of character in outer loop
+        JSR     L0CEE ; Loads stuff from lookup tables and stores in zero page
 
-        STX     L0016
-        JSR     L0CEE
-
-        JSR     L149C
+        JSR     L149C ; prints newline
 
         LDX     L0016
 .L0CED
         RTS
 
-.L0CEE
-        LDA     L29B4,X
-        STA     L001A
-        LDA     L2AD0,X
+.L0CEE  ; Check for interactions with character X
+        LDA     L29B4,X ; Location of character X.
+        STA     L001A   ; Store potential location of an interaction.
+        LDA     L2AD0,X ; ?
         STA     L0013
-        BIT     L0015
+        BIT     L0015 
         BPL     L0D01
 
         AND     #$7F
         STA     L2AD0,X
 .L0D01
-        LDA     L2968,X
+        LDA     L2968,X ; If bit 7 set hostile to player, lower bits specify class.
         STA     L001B
-        AND     #$1F
-        TAY
-        LDA     L2880,Y
+        AND     #$1F    ; A=class of character
+        TAY             ; Y=A
+        LDA     L2880,Y ; 
         STA     L0018
         LDA     L28A0,Y
         STA     L0019
         ORA     L0018
-        BNE     L0D22
+        BNE     L0D22 ; branch if one or both of $18 and $19 are zero
+                      ; non-zero
+        JSR     L0D8D ; Sets $10 and uses lookup tables
+                      ; A=?$10=greatest health amongst hostil characters
+        BEQ     L0D1F ; Branch if A=0 ie no hostiles
+                      ; There are hostiles 
+        JMP     L0E5B ; Loop through all weapons
 
-        JSR     L0D8D
-
-        BEQ     L0D1F
-
-        JMP     L0E5B
-
-.L0D1F
+.L0D1F             
         JMP     L0E99
 
 .L0D22
@@ -404,34 +402,36 @@ OSCLI   = $FFF7
         STA     L0010
         RTS
 
-.L0D8D
+.L0D8D                 ; Performed inner loop to see if any character is at same location
+                       ; as one in outer loop and to see if they are hostile.
+                       ; On exit A=?$10=0 if no hostiles
         LDA     #$00
-        STA     L0010
-        LDX     L27FE
+        STA     L0010  ; Zeroed so to find the hostile character with greatest health
+        LDX     L27FE  ; Number of characters
         DEX
-.L0D95
-        LDA     L29B4,X
-        CMP     L001A
-        BNE     L0DB3
-
-        LDA     L2968,X
-        EOR     L001B
-        BPL     L0DB3
-
-        BIT     L2AD0
-        BVS     L0DB3
-
-        LDA     L298E,X
-        CMP     L0010
-        BCC     L0DB3
-
-        STA     L0010
-        STX     L0017
+.L0D95                  ; Begin a loop to see if this character and the one in $0CEE meet.
+        LDA     L29B4,X ; Location of character X.
+        CMP     L001A   ; Does it match the place of potential action set in $0CEE?
+        BNE     L0DB3   ; No match, branch ahead
+                        ; They are both at $1A
+        LDA     L2968,X ; Load this char's alignment(bit 7) and class (bits 0-4)
+        EOR     L001B   ; Exclusive OR to detect difference
+        BPL     L0DB3   ; Branch if bit 7 was the same... cos friends? 
+                        ; Potential enemy?
+        BIT     L2AD0   ; Not sure
+        BVS     L0DB3   ; Branch if bit 6 was set... not an enemy?
+                        ; An enemy?
+        LDA     L298E,X ; Load health of character X into A
+        CMP     L0010   ; 
+        BCC     L0DB3   ; Branch if A<?$10 ie char X less health so non-hostile?
+                        ; Char X has >=health to anyone checked so far 
+        STA     L0010   ; ?$10=A ie $10 contains the max value from the $298E table
+        STX     L0017   ; ?$17=X ie $17 contains the most healthy, hostile character.
 .L0DB3
         DEX
-        BPL     L0D95
+        BPL     L0D95   ; Keep looping
 
-        LDA     L0010
+        LDA     L0010   ; A=0 if there were no hostile characters
         RTS
 
 .L0DB9
@@ -574,87 +574,88 @@ OSCLI   = $FFF7
 
 .L0E5B
         LDA     #$00
-        STA     L0010
-        LDX     #$0A
-.L0E61
-        LDA     L25C0,X
-        CMP     #$FF
-        BNE     L0E6B
-
-        LDA     L25C0
+        STA     L0010   ; ?$10=0
+        LDX     #$0A    ; X=$A
+.L0E61                  ; Loop through objects from $0A to $23 ie weapons
+        LDA     L25C0,X ; Load location of object X
+        CMP     #$FF    ; 
+        BNE     L0E6B   ; Branch if not in holdall
+                        ; Object X is in holdall
+        LDA     L25C0   ; A=The holdall's location
 .L0E6B
-        SEC
-        SBC     #$C8
-        CMP     L0016
-        BNE     L0E94
-
-        STX     L0011
-        LDA     L0017
+        SEC             ; Subtract C8 because if object is carried this will give index of carrier
+        SBC     #$C8    ; A=A-C8 = index of carrier
+        CMP     L0016   ; $16 is index of character in outer loop
+        BNE     L0E94   ; Branch if this object isn't held by character in outer loop
+                        ; Outer loop character is carrying object X
+        STX     L0011   ; ?$11=X ie save object index
+        LDA     L0017   ; A = index of most healthy hostile character to outer loop one
         CLC
-        ADC     #$C8
-        TAY
-        JSR     L1C88
+        ADC     #$C8    ; Add C8 to A to turn it into a character location
+        TAY             ; Y=A
+        JSR     L1C88   ; Puts a pseudorandom number in A?
 
-        LDX     L0011
-        CMP     #$C0
-        BCC     L0E8B
-
-        LDA     L0015
-        JSR     L1D40
+        LDX     L0011   ; Load object index back into X
+        CMP     #$C0    
+        BCC     L0E8B   ; Branch if random byte A<$C0, 80% chance
+                        ; If A>=$C0, 20% chance
+        LDA     L0015   ; ?
+        JSR     L1D40   ; 
 
         JMP     L0E90
 
 .L0E8B
         LDA     L0015
-        JSR     L1CCA
+        JSR     L1CCA  
 
-.L0E90
-        LDX     L0011
-        BCC     L0ED5
+.L0E90                ; Handles transfer of object and prints results eg An elf takes an axe
+                      ; On entry $16 contains destination minus $C7
+        LDX     L0011 ; X=?$11
+        BCC     L0ED5 ; Branch to ?$10=$FF then RTS 
 
 .L0E94
-        INX
-        CPX     #$23
-        BNE     L0E61
-
+        INX           ; Inc X
+        CPX     #$23  ; Is it $23=35
+        BNE     L0E61 ; Branch if X isn't $23 - dunno what this branch does, holdall related?
+                      ; If X is 23
 .L0E99
         LDA     #$00
-        STA     L0010
-        LDX     #$0A
+        STA     L0010 ; ?$10=0
+        LDX     #$0A  ; X=$A ie the flint
 .L0E9F
-        LDA     L25C0,X
-        CMP     L001A
-        BNE     L0EDA
-
-        STX     L0011
-        LDA     L0016
-        ADC     #$C7
-        TAY
-        LDA     L0015
-        JSR     L1B6C
-
+        LDA     L25C0,X 
+        CMP     L001A 
+        BNE     L0EDA ; Branch if location isn't ?$1A. Will keep doing this until X=$23
+                      ; Location is ?$1A
+        STX     L0011 ; ?$11=X
+        LDA     L0016 
+        ADC     #$C7  ; ?$16 + $C7 specifies destination of object, could be character
+        TAY           ; Y=A
+        LDA     L0015 ;
+        JSR     L1B6C ; Handles transfer of object
+                      ; Returns with C=1 if transfer couldn't happen eg holdall full
         LDX     L0011
-        BCS     L0EDA
-
+        BCS     L0EDA ; Branch if transfer failed
+                      ; Transfer succeeded
         BIT     L0015
-        BPL     L0ED5
+        BPL     L0ED5 ; Branch to ?$10=&FF and RTS
 
         LDA     L001A
         CMP     L0089
-        BNE     L0ED5
+        BNE     L0ED5 ; Branch to ?$10=&FF and RTS
 
-        LDA     L0016
-        ADC     #$C7
-        TAX
-        JSR     L1BEA
+        LDA     L0016  
+        ADC     #$C7   ; ?$16 + $C7 specifies index of NPC
+        TAX            
+        JSR     L1BEA  ; Prints three words describing NPC specified by X
 
-        LDA     #$BB
+        LDA     #$BB   ; Print TAKES
         JSR     L14B8
 
-        LDX     L0011
+        LDX     L0011  ; Print object description
         JSR     L24DD
 
-        JSR     L20FA
+        JSR     L20FA  ; Print . and newline
 
 .L0ED5
         LDA     #$FF
@@ -663,8 +664,8 @@ OSCLI   = $FFF7
 
 .L0EDA
         INX
-        CPX     #$23
-        BNE     L0E9F
+        CPX     #$23  ; $23 is beer!
+        BNE     L0E9F ; Loop back if X<$23
 
         RTS
 
