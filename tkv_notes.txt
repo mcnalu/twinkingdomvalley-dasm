@@ -143,7 +143,7 @@ $27FA ; Records weight inside holdall. Object location $FF means in holdall.
 $27FB
 $27FC ; Number of objects
 
-$27FE might contain total number of entries in * data tables below
+$27FE is number of characters
 
 $2820 Table with first NPC word, see $1BEA
 $2840 Table with second NPC word

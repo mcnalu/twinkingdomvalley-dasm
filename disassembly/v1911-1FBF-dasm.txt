@@ -328,16 +328,16 @@ L19E4 = L19E3+1
 
         STX     L27FA
         RTS
+.L19ED                ; When player command is END
+        JSR     L12EE ; Print out score and strength
 
-        JSR     L12EE
-
-        LDA     L0083
+        LDA     L0083 ; Print the command for confirm question
         JSR     L1FD9
 
-        JSR     L1A3A
+        JSR     L1A3A ; Get confirmation from user Y gives C=1, N gives C=0
 
-        BCC     L1A05
-
+        BCC     L1A05 ; Branch to not quit
+                      ; User confirmed quit
 .L19FA               ; Death then infinite input loop
         LDA     #$AA ; Word is Bye_Bye
         JSR     L161E; Prints word in A
@@ -348,7 +348,7 @@ L19E4 = L19E3+1
         JMP     L19FF ; Goes round in infinite loop so can load
 
 .L1A05
-        JMP     L3B51
+        JMP     L3B51 ; Print newline and reset colour and RTS
 
         LDX     #$03
 .L1A0A
@@ -388,21 +388,22 @@ L19E4 = L19E3+1
         LSR     L615B,X
 .L1A39
         BCS     L19E4
+;               Manually adjusted as disassembly garbled here
+.L1A3A          ; Called to confirm
+        LDA     #$AB  ; (Yes / No) ?
+        JSR     L14B8 
 
-L1A3A = L1A39+1
-        JSR     L14B8
+.L1A3F  ; User enters Y gives C=1, N gives C=0 
+        JSR     L185A ; Receive user character in A
 
-.L1A3F
-        JSR     L185A
+        AND     #$DF  ; To upper case
+        CMP     #$59  ; Y
+        BEQ     L1A4D ; Branch if it's Y
 
-        AND     #$DF
-        CMP     #$59
-        BEQ     L1A4D
+        CMP     #$4E  ; N
+        BNE     L1A3F ; Branch back if it isn't N
 
-        CMP     #$4E
-        BNE     L1A3F
-
-        CLC
+        CLC           ; C=0 to indicate no
 .L1A4D
         RTS
 
@@ -460,7 +461,6 @@ L1A3A = L1A39+1
         JSR     L3B51
 
         JSR     L14CE
-0518
         YOU CAN'T GET
 
 .L1A9C
@@ -490,7 +490,6 @@ L1A3A = L1A39+1
 .L1ABE
         STA     L1AC6
         JSR     L14CE
-0518
         YOU CAN'T
         FILL
 
@@ -528,10 +527,6 @@ L1A3A = L1A39+1
 
 .L1AF5
         JSR     L14CE
-054b
-0608
-060a
-060f
         DON'T BE SILLY !
 
 .L1AFD

@@ -571,8 +571,6 @@ OSCLI   = $FFF7
         BNE     L1207
 
         JSR     L14CE
-076d
-0677
         THE HOLDALL IS ENGULFED IN FLAMES
 
 .L11F9
@@ -634,7 +632,7 @@ OSCLI   = $FFF7
         RTS
 
 ; vvv manually copied in
-.L124E                 ; Loads info on location Y using $24FB by temprarily setting ?$89=Y
+.L124E                 ; Loads info on location Y using $24FB by temporarily setting ?$89=Y
         LDA     L0089
         PHA            ; save $89 to stack
         STY     L0089  ; $89=Y to kid on this is player's location

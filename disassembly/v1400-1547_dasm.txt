@@ -206,8 +206,8 @@ OSCLI   = $FFF7
         JMP     OSWRCH
 
 .L14A7                  ; Index of a command will be in A on entry
-        TSX             ; Save the X register
-        STX     L0069   
+        TSX             ; X=S
+        STX     L0069   ; Save stack point to $69
         TAX             ; Put the command index in X
         LDA     L1EB1,X ; Set address to handle command in X from table 
         STA     L0060
