@@ -105,6 +105,8 @@ $0A00-  ; used as buffer OSWORD A=0
 $0AC0-4 ; used for param block for OSWORD A=0 for reading input
         ; then later used to store upper case converted char codes of that input
 
+$0A7F+X ; Dunno used at $1539
+        
 $1283   ; Lookup table used in $0F14
 $1289   ; Lookup table used in $0F14
         

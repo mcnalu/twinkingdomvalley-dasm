@@ -1,0 +1,10 @@
+load $3500 machinecode/VALLEYR-3500-35FF
+save v3500-35FF-dasm.txt
+entry $3500
+CPU 6502
+symbols BBC_OS_labels.txt
+hexdump
+byte $3566 $4
+entry pc
+byte $35f9 $5
+entry pc

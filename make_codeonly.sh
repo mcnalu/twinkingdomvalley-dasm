@@ -6,11 +6,12 @@
 
 V="machinecode/VALLEYR"
 
-#Offset is where VALLEY
+#Offset is where VALLEY? is loaded. Don't change!
 OFFSET=0400
 
-START=0B00
-END=57FF
+#The section that this file extracts. Do change!
+START=3500
+END=35FF
 
 B=$V-$START-$END
 

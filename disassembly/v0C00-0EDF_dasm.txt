@@ -203,12 +203,12 @@ OSCLI   = $FFF7
 
         LDA     L0083 ; Index of matched command
         BPL     L0C8E ; Branch if A>=0, something was matched
-                      ; A<0 means nothing matched,
-        JSR     L3500 ; 
-
+                      ; A<0 means nothing matched, but something was entered.
+        JSR     L3500 ; Try and match a word such as CABIN and put direction command for it in $8C
+                      ; $83 will be zero if such a word was found
         LDA     L0083
-        BNE     L0C78
-
+        BNE     L0C78 ; Branch if $3500 didn't return zero
+                      ; $3500 returned zero 
 .L0C8E
         CMP     #$25
         BCC     L0C98

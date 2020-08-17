@@ -103,7 +103,7 @@ vvv Inserted manually.
         
 .L2108
         LDA     L007A ; This contains the second byte from the location block
-        AND     #$1F  ; Clear all but bits 0-8 so value is now 0-31
+        AND     #$1F  ; Clear bits 5-6 so value is now 0-31
         BEQ     L2122 ; If zero branch ahead as there's nothing to print out.
 
         STA     L0076 ; If non-zero store in $76
@@ -158,10 +158,10 @@ vvv Inserted manually.
         CMP     #$03
         BNE     L2193
 
-        LDX     #$A7
-        LDY     #$54
+        LDX     #$A7  ; HIGH
+        LDY     #$54  ; MOUNTAINS
 .L2159
-        STX     L2164
+        STX     L2164 ; The two As below are placed by these values
         STY     L2165
         JSR     L3B6C
         WANDERING THROUGH
@@ -204,13 +204,13 @@ vvv Inserted manually.
         CMP     #$04
         BNE     L219D
 
-        LDX     #$5D
-        LDY     #$AC
+        LDX     #$5D ; THE
+        LDY     #$AC ; WOODS
         BNE     L2159
 
 .L219D
-        LDX     #$AD
-        LDY     #$4E
+        LDX     #$AD ; DENSE
+        LDY     #$4E ; FOREST
         BNE     L2159
 
 .L21A3

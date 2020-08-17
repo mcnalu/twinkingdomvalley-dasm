@@ -633,8 +633,27 @@ OSCLI   = $FFF7
 .L124D
         RTS
 
-.L124E
+; vvv manually copied in
+.L124E                 ; Loads info on location Y using $24FB by temprarily setting ?$89=Y
         LDA     L0089
+        PHA            ; save $89 to stack
+        STY     L0089  ; $89=Y to kid on this is player's location
+        JSR     L24FB  ; Load info for location Y
+
+        PLA            
+        STA     L0089  ; Restore $89
+        RTS
+
+.L125A
+        LDY     #$28
+        JSR     L124E
+
+.L125F
+        LDY     L007B
+        INY
+        RTS
+; ^^^ manually copied in
+
 .BeebDisEndAddr
 SAVE "command/v0EE0-124F-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
 

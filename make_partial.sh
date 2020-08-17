@@ -6,11 +6,12 @@
 
 V="machinecode/VALLEYR"
 
-#Offset is where VALLEY
+#Offset is where VALLEY? starts in BBC memory. Don't change!
 OFFSET=0400
 
-START=1548
-END=17CF
+#Chunk of code that this script extracts. Do change!
+START=3500
+END=35FF
 
 B=$V-$START-$END
 

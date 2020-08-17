@@ -322,11 +322,17 @@ OSCLI   = $FFF7
 
         JMP     L1FD9 ; Print the word and RTS
 
-.L24FB                ; Processes and puts bytes from player location block in &7A-7B
+.L24FB                ; Processes and puts bytes from location block in &7A-7B
+                      ; On entry $89 is a location
+                      ; On exit:
+                      ; $87 is second byte from location block
+                      ; $7A has bit 0-2 copied from bits 5-7 of second byte, bits 3-7 are zero,
+                      ;    ie number of directions out of this location.
+                      ; $7B is 2nd byte from location block with bits 5-7 wiped +2, index of first byte after desc
         LDY     L0089 
         JSR     L20A7 ; Load info on player's location
 
-        LDA     L007A ; Second byte from loation block
+        LDA     L007A ; Second byte from location block
         STA     L0087
 .L2504
         LDA     L007A 

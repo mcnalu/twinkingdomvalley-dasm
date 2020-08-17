@@ -6,6 +6,7 @@ $0CEE  Check, perform and print combat and picking up for character X
 $0D8D Inner loop through characters to find any hostiles at same location.
 $0E5B Handle combat and picking up of weapons
 $0F03 Prints out various events like lamp flickers, you are dry, witch casts spell
+$124E Loads info on location Y using $24FB by temporarily setting ?$89=Y
 $12EE Prints out score and strength
 $1303 Prints out score
 $1400 Main entry point

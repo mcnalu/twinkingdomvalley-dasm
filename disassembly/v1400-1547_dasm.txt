@@ -113,7 +113,7 @@ OSCLI   = $FFF7
         STA     L0027
         JSR     L1FC0 ; Print Press tab... message then hide it.
 
-        LDA     #$01
+        LDA     #$01  ; Player starting location
         STA     L0089
         STA     L29B4
         LDA     #$00
@@ -288,6 +288,7 @@ OSCLI   = $FFF7
         BCS     L152B
 
         LDA     L0062
+
         STA     L0060
         STX     L0063
 .L152B
@@ -296,27 +297,28 @@ OSCLI   = $FFF7
 
         RTS
 
-.L152F
-        BEQ     L1547
+.L152F                ; Based on A and $84 loop through table $0A80 counting matchs in $62
+        BEQ     L1547 ; Branch if A=0 to RTS
 
-        STA     L0064
-        TXA
-        PHA
-        LDX     L0084
-        BEQ     L1545
+        STA     L0064 ; ?64=A
+        TXA           ; A=X
+        PHA           ; Save onto stack
+        LDX     L0084 ; X is set to number of commands put in $0A80 in $229F
+        BEQ     L1545 ; Branch if X=0 to RTS
+                       
 
-.L1539
-        LDA     L0A7F,X
-        CMP     L0064
-        BNE     L1542
-
-        INC     L0062
-.L1542
-        DEX
-        BNE     L1539
+.L1539                ; Loop from current X to X=1 (not X=0)
+        LDA     L0A7F,X 
+        CMP     L0064 ; Is A=$(0A7F+X)=?$64
+        BNE     L1542 ; If not equal
+                      ; If equal;
+        INC     L0062 ; Inc $62
+.L1542                
+        DEX           ; Decrement
+        BNE     L1539 ; Loop back
 
 .L1545
-        PLA
+        PLA           ; Restore X and RTS
         TAX
 .L1547
         RTS

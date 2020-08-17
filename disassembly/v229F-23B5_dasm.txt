@@ -39,7 +39,12 @@
         TSX ; N flag can be changed by this, dunno why.
         RTS ; Returns with stack pointer in X which seems to ensure bit 7 is set in practice
 
-.L229F
+.L229F  ; Displays yellow ? prompt and gets user input.
+        ; On exit:
+        ; $83 contains index of first matched command
+        ; $84 contains number of matched commands
+        ; $0A80 is start of table containing all matched commands
+        ; X=2 if only return was pressed
         LDA     #$00
         STA     L0025
         STA     L0028
@@ -177,17 +182,17 @@ L2319 = L2317+2
         BNE     L233B   ; If not, back to start of the loop
 
 .L236C                  ; We've got the whole line
-        LDY     L0084   ; &84 set to zero above so Y=0
+        LDY     L0084   ; &84 counts matched commands, starts at zero above
         LDA     L0085   ; $85 contains index of matched command stored from $3600
         STA     L0A80,Y ; Store matched command index at &0A80+Y
         INC     L0084   
         CMP     #$2F    ; Is index >=47 ; Valid commands have 0-46
         BCS     L2388   ; Branch if index >=47
 
-        BIT     L0083   ; Was initialised to &80 above
-        BPL     L2388   ; So N=1 meaning won't branch 
+        BIT     L0083   ; Was initialised to &80 but gets replaced with match command
+        BPL     L2388   ; Branch if this isn't the first command found 
 
-        STA     L0083   ; Store matched command in $83
+        STA     L0083   ; Store first matched command in $83
 .L237F
         CMP     #$0E    ; Commands 0-13 are directions eg N,E,S etc
 L2380 = L237F+1

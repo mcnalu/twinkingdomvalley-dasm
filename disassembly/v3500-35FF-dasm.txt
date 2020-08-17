@@ -1,0 +1,277 @@
+L0020   = $0020
+L002A   = $002A
+L0060   = $0060
+L0062   = $0062
+L0063   = $0063
+L006A   = $006A
+L006C   = $006C
+L006D   = $006D
+L006E   = $006E
+L0077   = $0077
+L0078   = $0078
+L007A   = $007A
+L007B   = $007B
+L0083   = $0083
+L0087   = $0087
+L008C   = $008C
+L008D   = $008D
+L008E   = $008E
+L008F   = $008F
+USERV   = $0200
+BRKV    = $0202
+IRQ1V   = $0204
+IRQ2V   = $0206
+CLIV    = $0208
+BYTEV   = $020A
+WORDV   = $020C
+WRCHV   = $020E
+RDCHV   = $0210
+FILEV   = $0212
+ARGSV   = $0214
+BGETV   = $0216
+BPUTV   = $0218
+GBPBV   = $021A
+FINDV   = $021C
+FSCV    = $021E
+EVNTV   = $0220
+UPTV    = $0222
+NETV    = $0224
+VDUV    = $0226
+KEYV    = $0228
+INSV    = $022A
+REMV    = $022C
+CNPV    = $022E
+IND1V   = $0230
+IND2V   = $0232
+IND3V   = $0234
+L124E   = $124E
+L14B8   = $14B8
+L14CE   = $14CE
+L14EF   = $14EF
+L152F   = $152F
+L15A7   = $15A7
+L185A   = $185A
+L2039   = $2039
+L20FA   = $20FA
+L229F   = $229F
+L24FB   = $24FB
+L25C0   = $25C0
+L3020   = $3020
+L3601   = $3601
+L3B51   = $3B51
+L3BEB   = $3BEB
+L6564   = $6564
+L6F74   = $6F74
+L7961   = $7961
+LEF20   = $EF20
+OSRDRM  = $FFB9
+OSEVEN  = $FFBF
+GSINIT  = $FFC2
+GSREAD  = $FFC5
+NVWRCH  = $FFC8
+NVRDCH  = $FFCB
+OSFIND  = $FFCE
+OSGBPB  = $FFD1
+OSBPUT  = $FFD4
+OSBGET  = $FFD7
+OSARGS  = $FFDA
+OSFILE  = $FFDD
+OSRDCH  = $FFE0
+OSASCI  = $FFE3
+OSNEWL  = $FFE7
+OSWRCH  = $FFEE
+OSWORD  = $FFF1
+OSBYTE  = $FFF4
+OSCLI   = $FFF7
+
+        org     $3500
+.BeebDisStartAddr     ; Search for a command giving name of place eg GO IN CABIN
+                      ; $83 is zero such a word was found
+                      ; $8C stores the direction command to get there
+                      
+        LDA     #$00
+        STA     L008D
+        JSR     L24FB ; Gets info from player location block
+
+        LDA     L007B ; This is second byte for location block bits 5-7 zeroed, 2 added
+        STA     L008E ; This is an index that points to the first byte after location desc
+.L350B                ; Begin loop that increments ?$8D
+        JSR     L24FB ; $7A contains number of directions exiting this location
+                      ; $7B is index from location block start address to end of desc 
+        LDA     L008D  
+        CMP     L007A ; Have we checked all possible exit directions?
+        BEQ     L3551 ; Branch out of $8D loop if yes to print I DON'T UNDERSTAND
+                      ; No, check the next direction
+        INC     L008D ; Increment to continue search
+        LDY     L008E ; Y=modified second byte
+        LDA     (L0077),Y ; Load something from player's location block
+        STA     L008F     ; Store it in $8F, direction?
+        INY               ; Inc Y
+        LDA     (L0077),Y ; Load the next byte
+        STY     L008E     ; Store it in $8E, a destination?
+        TAY               ; Y=A
+        JSR     L124E     ; Loads info from location block for Y using $24FB
+
+        LDA     #$00
+        STA     L0062
+        LDA     L0087     ; Second byte from location block for Y
+        AND     #$1F      ; Wipe bits 5-7
+        BEQ     L3545     ; Branch if zero to continue 3B0D loop
+                          ; A is non-zero
+        TAY               ; Y=Second byte for Y with bits 5-7 zeroed
+        INY               ; Inc Y
+        LDA     (L0077),Y ; Load entry for this new location block
+        JSR     L152F     ; Count number of matches to word specified by A
+
+        LDA     L0062     ; Load count of matches
+        BEQ     L3545     ; Branch if zero to continue 3B0D loop
+                          ; The word the user entered matched a neighbouring location!
+        LDA     L008F     ; A direction?
+        AND     #$3F      ; Blank bits 6 and 7
+        STA     L008C     ; Store in $8C
+        LDA     #$00      
+        STA     L0083     ; Put zero in $83 to indicate command was found
+        RTS
+
+.L3545
+        LDY     L008E     ; Restore Y index (points to location block somewhere after desc)
+        BIT     L008F     
+        BPL     L354C     ; Branch if direction >=0 to increment Y only once
+                          ; If direction is negative then increment Y twice
+        INY
+.L354C
+        INY
+        STY     L008E     ; Store new Y in $8E
+        BNE     L350B
+
+.L3551
+        LDA     #$83
+        JSR     OSWRCH
+
+        LDA     #$9D
+        JSR     OSWRCH
+
+        LDA     #$84
+        JSR     OSWRCH
+
+        JSR     L3BEB
+
+        JSR     L14CE
+        I DON'T UNDERSTAND
+
+.L356A
+        JMP     L20FA
+
+        LDX     #$00
+.L356F
+        LDA     L358D,X
+        JSR     OSWRCH
+
+        INX
+        CPX     #$1B
+        BNE     L356F
+
+.L357A
+        JSR     L185A
+
+        CMP     #$30
+        BCC     L357A
+
+        CMP     #$3A
+        BCS     L357A
+
+        SEC
+        SBC     #$30
+        STA     L002A
+        JMP     L3B51
+
+        PLA
+        ADC     L0020
+        ADC     L0078
+        JSR     L6564
+
+        JMP     (L7961)
+
+        BIT     L3020
+        JSR     L6F74
+
+        JSR     L2039
+
+        ORA     LEF20
+        LDA     L0060
+        STA     L006C
+        LDA     L0063
+        STA     L006D
+        LDA     L25C0
+        CMP     L006E
+        BNE     L35C9
+
+        LDA     #$FF
+        JSR     L14EF
+
+        LDA     L006C
+        CMP     L0060
+        BCS     L35C9
+
+        LDA     L0060
+.L35C8
+        RTS
+
+.L35C9
+        LDA     L006D
+        STA     L0063
+        LDA     L006C
+        STA     L0060
+        RTS
+
+        LDA     #$01
+        CLC
+        ADC     #$C7
+        STA     L006E
+        JSR     L15A7
+
+        BNE     L35C8
+
+        LDA     L0083
+        JSR     L14B8
+
+        LDA     #$80
+        JSR     L14B8
+
+        JSR     L229F
+
+        JSR     L15A7
+
+        BNE     L35C8
+
+        LDA     L006E
+        CMP     #$C8
+        BNE     L3601
+
+        JSR     L14CE
+        YOU HAVEN'T GOT THAT
+
+.L35FE
+        JMP     L006A
+
+.BeebDisEndAddr
+SAVE "command/v3500-35FF-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
+
+
+; 3500 A9 00 85 8D 20 FB 24 A5 7B 85 8E 20 FB 24 A5 8D ---- -$-{-- -$-- OOOOOOOOOOOOOOOO
+; 3510 C5 7A F0 3D E6 8D A4 8E B1 77 85 8F C8 B1 77 84 -z-=-----w----w- OOOOOOOOOOOOOOOO
+; 3520 8E A8 20 4E 12 A9 00 85 62 A5 87 29 1F F0 16 A8 -- N----b--)---- OOOOOOOOOOOOOOOO
+; 3530 C8 B1 77 20 2F 15 A5 62 F0 0B A5 8F 29 3F 85 8C --w /--b----)?-- OOOOOOOOOOOOOOOO
+; 3540 A9 00 85 83 60 A4 8E 24 8F 10 01 C8 C8 84 8E D0 ----`--$-------- OOOOOOOOOOOOOOOO
+; 3550 BA A9 83 20 EE FF A9 9D 20 EE FF A9 84 20 EE FF --- ---- ---- -- OOOOOOOOOOOOOOOO
+; 3560 20 EB 3B 20 CE 14 81 90 EC 00 4C FA 20 A2 00 BD  -; ------L- --- OOOOOODDDDOOOOOO
+; 3570 8D 35 20 EE FF E8 E0 1B D0 F5 20 5A 18 C9 30 90 -5 ------- Z--0- OOOOOOOOOOOOOOOO
+; 3580 F9 C9 3A B0 F5 38 E9 30 85 2A 4C 51 3B 43 68 6F --:--8-0-*LQ;Cho OOOOOOOOOOOOOOOO
+; 3590 6F 73 65 20 74 65 78 74 20 64 65 6C 61 79 2C 20 ose text delay,  OOOOOOOOOOOOOOOO
+; 35A0 30 20 74 6F 20 39 20 3F 0D 20 EF 14 A5 60 85 6C 0 to 9 ?- ---`-l OOOOOOOOOOOOOOOO
+; 35B0 A5 63 85 6D AD C0 25 C5 6E D0 0E A9 FF 20 EF 14 -c-m--%-n---- -- OOOOOOOOOOOOOOOO
+; 35C0 A5 6C C5 60 B0 03 A5 60 60 A5 6D 85 63 A5 6C 85 -l-`---``-m-c-l- OOOOOOOOOOOOOOOO
+; 35D0 60 60 A9 01 18 69 C7 85 6E 20 A7 15 D0 EA A5 83 ``---i--n ------ OOOOOOOOOOOOOOOO
+; 35E0 20 B8 14 A9 80 20 B8 14 20 9F 22 20 A7 15 D0 D8  ---- -- -" ---- OOOOOOOOOOOOOOOO
+; 35F0 A5 6E C9 C8 D0 0B 20 CE 14 87 88 89 8A 00 4C 6A -n---- -------Lj OOOOOOOOODDDDDOO
+

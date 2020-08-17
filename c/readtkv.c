@@ -41,6 +41,7 @@ long getbyte(char *addrs,long y);
 
 void convertcodes2words(int argc, char *argv[]);
 void describelocation(int argc, char *argv[]);
+void incodedescription(char *ss, long b);
 void describeobject(char *scode);
 void describenpc(char *scode);
 
@@ -108,6 +109,7 @@ void describelocation(int argc, char *argv[]){
   long b79=fixnegbyte(c[addr]);
   long b7A=fixnegbyte(c[addr+1]);
   long nwords=b7A&0x1F;
+  long nexits=b7A>>5;
   int i;
   int linepos=0;
   char line[MAXLINE];  
@@ -118,7 +120,30 @@ void describelocation(int argc, char *argv[]){
     if(i<nwords-1)
       line[linepos-1]=' ';
   }
+  printf("Exits: ");
+  for(i=0;i<nexits;i++){
+    long dir=fixnegbyte(c[addr+2+nwords+i])&0x3F;
+    long dest=fixnegbyte(c[addr+2+nwords+i+1]);
+    printf(" %02x>%02x",dir,dest);
+  }
+  if(nwords==0){
+    printf("\nNOTE: This is an in code description\n");
+    incodedescription(line,b79);
+  } else
+    printf("\n");
   printf("|%s|\n",line);
+}
+
+void incodedescription(char *ss, long b){
+  //These are given in order they appear in code from $2122
+  switch(b){
+    case 6: sprintf(ss,"IN A SLOPING MAZE"); return;
+    case 2: sprintf(ss,"ON THE CANYON FLOOR"); return;
+    case 7: sprintf(ss,"IN AN ARID DESERT"); return;
+    case 3: sprintf(ss,"WANDERING THROUGH HIGH MOUNTAINS, PATHS LEAD"); return;
+    case 4: sprintf(ss,"WANDERING THROUGH THE WOODS, PATHS LEAD"); return;
+    default: sprintf(ss,"WANDERING THROUGH DENSE FOREST, PATHS LEAD"); return;
+  }
 }
 
 void describeobject(char *scode){
