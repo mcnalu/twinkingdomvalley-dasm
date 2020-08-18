@@ -25,24 +25,25 @@ long lbloctable,hbloctable;
 long offsettable;
 
 //TKV code as re-ordered into BBC's memory at very start of game.
-char c[FILESIZE];
+unsigned char c[FILESIZE];
 
 long getword(char *word,long address);
-long getwordaddress(long code);
-long getcommandaddress(long code);
-long getlocationaddress(long code);
-long getaddressfromtable(long tablelb, long tablehb,long code);
+long getwordaddress(unsigned char code);
+long getcommandaddress(unsigned char code);
+long getlocationaddress(unsigned char code);
+long getaddressfromtable(long tablelb, long tablehb,unsigned char code);
 long printwords(char *line, char *s, int type);
-void createbytelines(char b1, char b2, char b3);
+void createbytelines(unsigned char b1, unsigned char b2, unsigned char b3);
 void processdasm();
 int processline(char *line, int found);
-long fixnegbyte(long byte);
-long getbyte(char *addrs,long y);
+unsigned char fixnegbyte(unsigned char byte);
+unsigned char getbyte(char *addrs,unsigned char  y);
 
 void convertcodes2words(int argc, char *argv[]);
 void describelocation(int argc, char *argv[]);
-void incodedescription(char *ss, long b);
+void incodedescription(char *ss, unsigned char b);
 void describeobject(char *scode);
+void describenpcclass(char *scode);
 void describenpc(char *scode);
 
 void dotests();
@@ -70,6 +71,8 @@ int main(int argc, char *argv[]) {
       describelocation(argc,argv);
     } else if(strstr(argv[1],"object")!=NULL){
       describeobject(argv[2]);
+    } else if(strstr(argv[1],"npcclass")!=NULL){
+      describenpcclass(argv[2]);
     } else if(strstr(argv[1],"npc")!=NULL){
       describenpc(argv[2]);
     } else if(strstr(argv[1],"dotests")!=NULL){
@@ -106,25 +109,31 @@ void describelocation(int argc, char *argv[]){
   long location=strtol(arg2+1,NULL,16); //Skip 1st char $ in 2nd argument
   long addr = getlocationaddress(location);
   printf("location %s is at address %04x\n",argv[2],addr+start);
-  long b79=fixnegbyte(c[addr]);
-  long b7A=fixnegbyte(c[addr+1]);
-  long nwords=b7A&0x1F;
-  long nexits=b7A>>5;
+  unsigned char b79=fixnegbyte(c[addr]);
+  unsigned char b7A=fixnegbyte(c[addr+1]);
+  unsigned char  nwords=b7A&0x1F;
+  unsigned char  nexits=b7A>>5;
   int i;
   int linepos=0;
   char line[MAXLINE];  
   printf("b79=%02x, b7A=%02x, b7A AND $1F=%02x\n",b79,b7A,nwords);
   for(i=0;i<nwords;i++){
-    long l =fixnegbyte(c[addr+2+i]);
+    unsigned char l =fixnegbyte(c[addr+2+i]);
     linepos+=getword(line+linepos,getcommandaddress(l));
     if(i<nwords-1)
       line[linepos-1]=' ';
   }
   printf("Exits: ");
   for(i=0;i<nexits;i++){
-    long dir=fixnegbyte(c[addr+2+nwords+i])&0x3F;
-    long dest=fixnegbyte(c[addr+2+nwords+i+1]);
-    printf(" %02x>%02x",dir,dest);
+    long j=addr+2+nwords+i;
+    unsigned char  first = c[j];
+    if(first>=0 && first <0x80){ // Positive byte
+      unsigned char  dir=fixnegbyte(first)&0x3F;
+      unsigned char  dest=fixnegbyte(c[j+1]);
+      printf(" %02x>%02x",dir,dest);
+    } else { //If first byte is negative then three follow, see $0DE6 but dunno why
+      printf(" SPECIAL: %02x,%02x,%02x",first,c[j+1],c[j+2]); 
+    }
   }
   if(nwords==0){
     printf("\nNOTE: This is an in code description\n");
@@ -134,7 +143,7 @@ void describelocation(int argc, char *argv[]){
   printf("|%s|\n",line);
 }
 
-void incodedescription(char *ss, long b){
+void incodedescription(char *ss, unsigned char b){
   //These are given in order they appear in code from $2122
   switch(b){
     case 6: sprintf(ss,"IN A SLOPING MAZE"); return;
@@ -147,16 +156,16 @@ void incodedescription(char *ss, long b){
 }
 
 void describeobject(char *scode){
-  long code=strtol(scode+1,NULL,16);
-  long loc = getbyte("25C0",code);
-  long lu = getbyte("2580",code);
-  long requiredstr = getbyte("262A",code);
-  long weapondur = getbyte("267E",code);
-  long meldamagernd = getbyte("2726",code);
-  long meldamagemax = getbyte("26FC",code);
-  long thrdamagernd = getbyte("26D2",code);
-  long thrdamagemax = getbyte("26A8",code);
-  long size = getbyte("2600",lu);
+  unsigned char code=(unsigned char) strtol(scode+1,NULL,16);
+  unsigned char  loc = getbyte("25C0",code);
+  unsigned char  lu = getbyte("2580",code);
+  unsigned char  requiredstr = getbyte("262A",code);
+  unsigned char  weapondur = getbyte("267E",code);
+  unsigned char  meldamagernd = getbyte("2726",code);
+  unsigned char  meldamagemax = getbyte("26FC",code);
+  unsigned char  thrdamagernd = getbyte("26D2",code);
+  unsigned char  thrdamagemax = getbyte("26A8",code);
+  unsigned char  size = getbyte("2600",lu);
   char addrs[NOBJWORDS][5]={"2750","277A","27A4","27CE"};
   int  i;
   int linepos=0;
@@ -169,7 +178,7 @@ void describeobject(char *scode){
   }
   
   for(i=0;i<NOBJWORDS;i++){
-    long w = getbyte(addrs[i],lu);
+    unsigned char  w = getbyte(addrs[i],lu);
     if(w==0){
       line[linepos-1]='\0';
       break;
@@ -187,7 +196,24 @@ void describeobject(char *scode){
 }
 
 void describenpc(char *scode){
-  long code=strtol(scode+1,NULL,16);
+  unsigned char code= (unsigned char) strtol(scode+1,NULL,16);
+  unsigned char class= (unsigned char) getbyte("2968",code);
+  unsigned char health= (unsigned char) getbyte("298E",code);
+  unsigned char location= (unsigned char) getbyte("29B4",code);
+  char a[4];
+  sprintf(a,"$%02x",class&0x7F);
+  printf("Class code is %02x\n",class);
+  printf("Health is %02x\n",health);
+  printf("Location is %02x\n",location);  
+  printf("NPC class %s is ",a);
+  if((class&0x80)==0)
+    printf("not ");
+  printf("hostile to player\n");
+  describenpcclass(a);
+}
+
+void describenpcclass(char *scode){
+  unsigned char code= (unsigned char) strtol(scode+1,NULL,16);
   //long lu = getbyte("28A0",code)&0x1F; This lookup is used in $1BEA but dunno why
   char addrs[NNPCWORDS][5]={"2820","2840","2860"};
   int  i;
@@ -195,13 +221,13 @@ void describenpc(char *scode){
   char line[MAXLINE];
   
   //printf("%s\n",scode);
-  if(code<0 || code>=32){
-    printf("There are only 32 things in this table so index must be 0-31 or $0-1F.\n");
+  if(code<0 || code>=15){
+    printf("There are only 15 things in this table so index must be $00 to $0E.\n");
     return;
   }
   
   for(i=0;i<NNPCWORDS;i++){
-    long w = getbyte(addrs[i],code);
+    unsigned char w = getbyte(addrs[i],code);
     if(w==0){
       line[linepos-1]='\0';
       break;
@@ -214,7 +240,7 @@ void describenpc(char *scode){
 }
 
 
-long getbyte(char *tableaddr, long y){
+unsigned char getbyte(char *tableaddr, unsigned char y){
   long table = strtol(tableaddr,NULL,16)-start;
   return fixnegbyte(c[table+y]);
 }
@@ -237,19 +263,19 @@ void dotests(){
 }
 
 //Gets the address for a code <128 which corresponds to the command table via 14CE
-long getwordaddress(long code){
+long getwordaddress(unsigned char code){
   return getaddressfromtable(lbwordtable,hbwordtable,code);
 }
 
 //Gets the address for a code <128 which corresponds to the command table via 14CE
-long getlocationaddress(long code){
+long getlocationaddress(unsigned char code){
   return getaddressfromtable(lbloctable,hbloctable,code);
 }
 
-long getaddressfromtable(long lbtable, long hbtable, long code){
+long getaddressfromtable(long lbtable, long hbtable, unsigned char code){
   char a[5];
-  long lb=c[lbtable+code];
-  long hb=c[hbtable+code];
+  unsigned char lb=c[lbtable+code];
+  unsigned char hb=c[hbtable+code];
   hb=fixnegbyte(hb);
   lb=fixnegbyte(lb);
   //printf("%d %d\n",lbtable+code,lb);
@@ -258,17 +284,18 @@ long getaddressfromtable(long lbtable, long hbtable, long code){
   return strtol(a,NULL,16)-start;  
 }
 
-long fixnegbyte(long byte){
-  if(byte<0)
+unsigned char fixnegbyte(unsigned char byte){
+/* Not needed now I've switched to unsigned chars 
+ * if(byte<0)
     return byte+256;
-  else
+  else */
     return byte;
 }
 
 //Gets the address for a code >=128 which corresponds to the word table
-long getcommandaddress(long code){
-  long add=5*code;
-  long offset = fixnegbyte(c[offsettable+code]);
+long getcommandaddress(unsigned char code){
+  long add=5* (long) code; //Convert to long to avoid overflow
+  long offset = (long) fixnegbyte(c[offsettable+code]);
  
   add += strtol("3500",NULL,16)+offset+128;
   //printf("Address is %04x and offset was %d\n",add,offset);
@@ -294,7 +321,8 @@ long getword(char *w, long address){
 //Turns codes terminated by $00 into words eg $98 $2D $00
 //type is either L14CE or L3B6C
 long printwords(char *line, char *s, int type){
-  long i=0, linepos=0, l;
+  long i=0, linepos=0;
+  unsigned char l;
   char b[3];
   do {
     if(s[i]=='$'){
@@ -324,7 +352,7 @@ long printwords(char *line, char *s, int type){
 
 //Finds all lines with JSR $XXXX and outputs byte lines for use with BeebDis
 //b1=32 and b2 is the low byte and b3 the high byte of address in two complement
-void createbytelines(char b1, char b2, char b3){
+void createbytelines(unsigned char b1, unsigned char b2, unsigned char b3){
   long i=0,j;
   do{
     if(c[i]==b1 && c[i+1]==b2 && c[i+2]==b3){//JSR 14CE
@@ -383,7 +411,7 @@ int processline(char *line, int found){
   }
   if(ret==0){//$00 was found on this line so end the conversion
     return NOTHING;
-  } else {  //Still ore to do so return found for use in next call
+  } else {  //Still more to do so return found for use in next call
     return found;
   }
 }
