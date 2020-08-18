@@ -74,6 +74,11 @@ Storage locations:
 
 $1 contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846 and below
 $2 is players thirst, see $0FC2 and after for getting dry type messages
+$14 is set to player location ?$89 at $1004 but is it different at times?
+$15 Determines how $0C00 runs, see $0C00 structure notes
+$16 is used to store index of outer loop character in $0C00 routines
+$18 is used to store $2880 entry for outer loop character class
+$19 is used to store $28A0 entry for outer loop character class
 $21 Set to $80 if princess recognises you cos you have amulet or  $40 if not, see $1192 and after 
 $26 Set to $80 in $22E1 block. If $26<0 then signal caps needed for new sentence start.
 $27 Set to $2 near start at $1400. Once negative staff drops 80% of the time it's used.
@@ -145,16 +150,16 @@ $27FC ; Number of objects
 
 $27FE is number of characters
 
-$2820 Table with first NPC word, see $1BEA
-$2840 Table with second NPC word
-$2860 Table with third NPC word
-
-$2880 Dunno but indexed by character class like $2820 see $0D01
-$28A0 Dunno but indexed by character class like $2820 see $0D01
+xThese tables are indexed by character class index which goes from $0 to $0F
+x$2820 Table with first NPC word, see $1BEA
+x$2840 Table with second NPC word
+x$2860 Table with third NPC word
+x$2880 Dunno but indexed by character class like $2820 see $0D01, fight or flee maybe, see $0D79?
+x$28A0 Dunno but indexed by character class like $2820 see $0D01
 
 $28EB is loaded in $20BD but I don't know what it means
 
-*Each instance of an NPC has an index X 
+*Each instance of an NPC has an index X which can go from $0 to $23
 *$2968 start of data table. This identifies char class. Bit 7=1 means hostile. AND &7F=> index in $2820/40/60/80/A0 tables
 *$298E start of data table. This gives health of the character.
 *$29B4 start of data table. This gives location index of character.
@@ -174,7 +179,7 @@ So $2C00 to $33FF is some kind of look up table used by routine at $20A7
 
 $2A08 is really $2AD0 cos of +$C8
 *$2AD0 Bit 7 is set when this character done an attack. Bits 0-6 of these bytes are zeroed in $0C1E
-$2BD0 start of data table?
+*$2BD0 Stores where character X has decided to move, I think
 
 
 $2AD0-2AF5 - zeroed in $143C loop, bits 0-6 wiped in $0C1E, bit 7 zeroed in $0CEE

@@ -1,0 +1,31 @@
+Structure of $0C00
+
+$0C00 is called twice during the main game loop.
+
+First call at $1452 with A=0: this is the full version
+
+Second call can be in one of three places:
+   A. $148B with A=$80 if player issues non-direction command
+   OR B. $1475 with A=$80 if bit 7 of $2AD0 is NOT set
+   OR C. $146A with A=$80 if direction command and bit 7 is set
+   
+$15 is set to A at $0C00. If bit 7 then branches to $0CAE skipping most of routine.
+
+Note: $15 is also set to $80 during full run of $0C00 at $0C98.
+
+##SECOND call structure
+
+JSR $0C00 with A=$80
+JMP $0CAE near start
+
+$0CB2 loop: check if NPCs at player's location attack or pick up but NPC cannot
+            act if bit 6 of player is set.
+$0CC3 loop: move NPCs
+
+##FIRST call structure
+
+Print magenta dashes to indicate start of new turn.
+Call to $42A0 set players new location $89 and handles special events
+$0C1E loop clears all but bit 7 from $2AD0 to $2AD0+25=$2AF5 inclusive
+
+

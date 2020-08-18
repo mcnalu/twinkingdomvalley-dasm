@@ -153,18 +153,18 @@ OSCLI   = $FFF7
         LDA     L0083 ; This will contain index of matched command.
         CMP     #$0E  ; If <14 it's a direction eg N,S,E etc
         BCS     L147F ; Branch if it's not a direction
-
+                      ; Direction command given
         BIT     L2AD0
-        BPL     L1474
-
-        JSR     L24D4
+        BPL     L1474 ; Branch if bit 7 not set
+                      ; Bit 7 is set
+        JSR     L24D4 ; Checks commanded direction is valid prints messages if not. Other things too.
 
         LDA     #$40
         STA     L2AD0
-        ASL     A
+        ASL     A      ; A=$80
         JSR     L0C00
 
-.L146D                ; Code returns here if it's not a direction AND combat to complete the loop 
+.L146D                ; Code returns here if command neither direction nor combat to complete the loop 
         LDA     #$00
         STA     L2AD0
         BEQ     L1451

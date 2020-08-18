@@ -298,12 +298,13 @@ OSCLI   = $FFF7
 
 .L24D3
         RTS
-
+.L24D4
         JSR     L23C3
 
         JSR     L20FA
 
-        JMP     L3B51l
+        JMP     L3B51
+        
 .L24DD                  ; Print info about objects
         LDA     L2580,X ; Lookup code for object X eg X=0=>$14
         TAX             ; X=code for the object now to look up follow words.

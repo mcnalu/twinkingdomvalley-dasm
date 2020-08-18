@@ -127,9 +127,9 @@ OSCLI   = $FFF7
 
         JSR     L3B51 ; Print newline and sets colour based on &6F
 
-        JSR     L42A0 ; Sets the new player location and draws and prints info.
+        JSR     L42A0 ; Calls $0F03 to set player location and before that handles special events
 
-        LDX     #$25  ; 39 is total number of characters, dead or alive.
+        LDX     #$25  ; 37 is total number of characters, dead or alive.
 .L0C1E                ; Loop from $2AF5 down to $2AD0. Used to signal info on the characters.
         LDA     L2AD0,X
         AND     #$80  ; Blank all but bit 7
@@ -137,7 +137,7 @@ OSCLI   = $FFF7
         DEX
         BPL     L0C1E ; Loop branch
 
-        LDX     L27FE ; $27FE is number of characters but why is $25 hard coded above?
+        LDX     L27FE ; $27FE is number of characters, starts as $24 (why is $25 hard coded above?)
         DEX
 .L0C2D                ; Outer loop through all characters except player X=0
         JSR     L0CDE ; Handles object transfer, combat etc and print messages re WEAK, DYING & DEATH
@@ -235,43 +235,43 @@ OSCLI   = $FFF7
 
         RTS
 
-.L0CAE
-        LDX     L27FE
+.L0CAE  ; $0C00 routine JMPs here if called with ?$15=A>=$80
+        LDX     L27FE   ; Load number of characters
         DEX
-.L0CB2
-        LDA     L29B4,X
-        CMP     L0014
-        BNE     L0CBC
-
-        JSR     L0CD9
+.L0CB2                  ; Loop through all NPCs X>0
+        LDA     L29B4,X ; Load NPC location
+        CMP     L0014   ; Player's location, or possibly player's previous location?
+        BNE     L0CBC   ; Branch if location's differ to do next iteration of loop
+                        ; Location's match so something involving player
+        JSR     L0CD9   ; Check if character X attacks or picks up
 
 .L0CBC
         DEX
-        BNE     L0CB2
+        BNE     L0CB2 ; Exit loop without doing player X=0
 
         LDX     L27FE
         DEX
-.L0CC3
-        LDA     L298E,X
-        BEQ     L0CD5
-
-        LDA     L2AD0,X
-        AND     #$60
-        BEQ     L0CD5
-
-        LDA     L2BD0,X
-        STA     L29B4,X
+.L0CC3                   ; Loop through all NPCs X>0
+        LDA     L298E,X  ; Load health
+        BEQ     L0CD5    ; Branch if NPC dead, nothing to do!
+                        
+        LDA     L2AD0,X  ; Load status for NPC
+        AND     #$60     ; $60 has only bits 5 or 6 set
+        BEQ     L0CD5    ; Branch if neither bits 5 or 6 set
+                         ; Bit 5 or 6 set so this NPC wants to move
+        LDA     L2BD0,X  ; Load intended destination for NPC
+        STA     L29B4,X  ; Put them in their new location.
 .L0CD5
         DEX
         BNE     L0CC3
 
         RTS
 
-.L0CD9  ; Check if combat or picking up is needed for character X and do it and print
+.L0CD9  ; Decide if character X attacks or pickups and and print results
         BIT     L2AD0 
         BVS     L0CED ; Branch if bit 6 set, meaning something happened with player so RTS
 
-.L0CDE  ; Similar to $0CD9              
+.L0CDE  ; Similar to $0CD9 but without the check on the player              
         LDA     L298E,X ; Health of character X
         BEQ     L0CED ; If health is zero this character is dead so RTS
             
@@ -299,13 +299,13 @@ OSCLI   = $FFF7
         STA     L001B
         AND     #$1F    ; A=class of character
         TAY             ; Y=A
-        LDA     L2880,Y ; 
-        STA     L0018
-        LDA     L28A0,Y
+        LDA     L2880,Y ; Some property of a character class 
+        STA     L0018   
+        LDA     L28A0,Y ; Some property of a character class
         STA     L0019
         ORA     L0018
-        BNE     L0D22 ; branch if one or both of $18 and $19 are zero in all bits
-                      ; non-zero
+        BNE     L0D22 ; branch if one or both of $18 and $19 have bits set
+                      ; Both $18 and $19 are zero
         JSR     L0D8D ; Inner loop through characters to find any hostiles at same location
                       ; A=?$10=greatest health amongst hostile characters
         BEQ     L0D1F ; Branch if A=0 ie no hostiles
@@ -326,18 +326,21 @@ OSCLI   = $FFF7
         BIT     L0013 ; $2AD0 for the outer loop character
         BPL     L0D55 ; Branch ahead if ?$13>=0 ie characte performed an attack this turn
 
-        JSR     L0D3D ; 
+        JSR     L0D3D ; Movement decision of NPC, setting of intentions in $2AD0/$2BD0 tables
 
-        LDA     L0010
-        BNE     L0D54
+        LDA     L0010 ; Load the selected exit+1 for NPC, zero if not moving 
+        BNE     L0D54 ; Branch if an exit was selected to RTS
+                      ; No movement
+.L0D36                ; 
+        JSR     L0E5B ; Handle combat and picking up of weapons
 
-.L0D36
-        JSR     L0E5B
-
-        LDA     L0010
+        LDA     L0010 
         BEQ     L0DB9
 
-.L0D3D                ; ?$10=0 indicates player is here or was here last turn
+.L0D3D                ; Movement decision of NPC, setting of intentions in $2AD0/$2BD0 tables
+                      ; ?$10=0 indicates player is here or was here last turn
+                      ; On exit $10 is zero if no movement for this NPC
+                      ; $10 is set to index+1 of selected exit in location block
         LDA     #$FF
         STA     L0010 ; ?$10=$FF
         LDA     L001A 
@@ -391,7 +394,7 @@ OSCLI   = $FFF7
 
         AND     #$0F  ;
         STA     L0010 ; ?$10 = random in $0-F
-        LDA     L0018 ; dunno
+        LDA     L0018 ; Some property of the character class
         AND     #$0F  ; zero bits 4-7
         CMP     L0010 
         BCS     L0DB9 ; Branch if ?$18>=random number
@@ -448,45 +451,46 @@ OSCLI   = $FFF7
         CMP     L007A 
         BCS     L0DC2 ; If A>=$7A then invalid exit so branch back and try again
                       ; Valid exit found
-        TAX           ; X = A ie direction of the exit
+        TAX           ; X = A ie index of the exit
         INX           ; Inc X
-        JSR     L0DE2 ; 
+        JSR     L0DE2 ; Sets C=1 and X=?$10=index of selected exit plus 1
 
-        BCS     L0DD6
-
-.L0DD2
+        BCS     L0DD6 ; Branch if carry set
+                      ; If carry clear
+.L0DD2               
         LDA     #$FF
-        BNE     L0D8A
+        BNE     L0D8A ; Branch always to ?$10=FF and RTS
 
 .L0DD6
-        LDX     L007A
-.L0DD8
-        JSR     L0DE2
+        LDX     L007A ; X=number of directions out of this location
+.L0DD8                ; Loop through all exits
+        JSR     L0DE2 ; Check exit in X
 
-        BCC     L0DD2
+        BCC     L0DD2 ; Branch if C=0
 
-        DEX
-        BNE     L0DD8
+        DEX           ; Decrement
+        BNE     L0DD8 ; Branch back to check next exit
+                     
+        BEQ     L0D88 ; Branch always once loop is done branch to ?$10=0 and RTS
 
-        BEQ     L0D88
-
-.L0DE2
-        STX     L0010 ; Save X in $10
+.L0DE2                ; Checks to see if exit is suitable and if it is record it in $2BD0 table
+                      ; Also sets either bits 5 or 6 of $2AD0 for character
+        STX     L0010 ; Save X in $10 - this is the index of the exit plus 1
         LDY     L007B ; Y=index of direction map in this location's direction block
-.L0DE6
+.L0DE6                ; Begin loop counting down in X, ie X=0 means we've got our exit
         DEX           ; Dec X
-        BEQ     L0DF2 ; Branch if zero
-                      ; X is non-zero
+        BEQ     L0DF2 ; Branch if zero cos we've found our exit
+                      ; X is non-zero, move to next exit
         LDA     (L0077),Y ; Load the first direction
-        BPL     L0DEE ; Branch A>=0
-                      ; A<0
-        INY           ; Inc Y to skip destination
+        BPL     L0DEE ; Branch A>=0 ie it's a standard direction
+                      ; A<0 then that means there are two bytes following it
+        INY           ; Inc Y skip the extra byte
 .L0DEE                
-        INY           ; Inc Y twice to skip next exit
+        INY           ; Skip two bytes to get to next exit
         INY
-        BNE     L0DE6 ; Branch to loop again if Y is not zero
+        BNE     L0DE6 ; Always branch to loop again (Y isn't going to get to $FF cos X=0 first)
 
-.L0DF2                
+.L0DF2                    ; Found the selected exit
         LDA     (L0077),Y ; A = direction byte
         AND     #$40      ; Test for bit 6
         BNE     L0DFC     ; Branch if bit 6 set in A
@@ -494,83 +498,83 @@ OSCLI   = $FFF7
 .L0DF8
         SEC               ; C=1
 .L0DF9
-        LDX     L0010     ; X=0 due to BEQ just after $0DE6
+        LDX     L0010     ; X=index of selected exit plus one, see STX at $0DE2
         RTS
 
 .L0DFC
         INY               ; Inc Y
         LDA     (L0077),Y ; A = destination byte
 .L0DFF                    ; GOT TO HERE
-        TAX
-        LDA     L0018
-        PHA
-        TXA
-        LDY     #$03
+        TAX               ; X = destination byte
+        LDA     L0018     ; A=$18 some property of character in outer loop
+        PHA               ; Push onto stack
+        TXA               ; A = destination byte
+        LDY     #$03      ; Y=3
 .L0E06
-        TAX
-        PLA
-        ASL     A
-        PHA
-        TXA
-        BCC     L0E35
-
-        CMP     L1263,Y
-        BCC     L0E17
+        TAX               ; X= destination byte
+        PLA               ; A= value of $18
+        ASL     A         ; A=2*a
+        PHA               ; Push onto stack
+        TXA               ; A=destination byte
+        BCC     L0E35     ; Branch if bit 7 of $18 is clear to continue next loop iteration
+                          ; bit 7 of $18 set
+        CMP     L1263,Y   ; Dunno what this is
+        BCC     L0E17     ; Branch ahead if A<?$(1263+Y)
 
         CMP     L1273,Y
-        BCC     L0E3C
+        BCC     L0E3C     ; Branch if A<?$(1273+Y) to leave loop
 
 .L0E17
         CMP     L1267,Y
-        BCC     L0E21
+        BCC     L0E21     ; Branch ahead if A<?$(1267+Y)
 
         CMP     L1277,Y
-        BCC     L0E3C
+        BCC     L0E3C     ; Branch if A<?$(1277+Y) to leave loop
 
 .L0E21
         CMP     L126B,Y
-        BCC     L0E2B
+        BCC     L0E2B     ; Branch ahead
 
         CMP     L127B,Y
-        BCC     L0E3C
+        BCC     L0E3C    ; Branch to leave loop
 
 .L0E2B
         CMP     L126F,Y
-        BCC     L0E35
+        BCC     L0E35    ; Branch ahead
 
         CMP     L127F,Y
-        BCC     L0E3C
+        BCC     L0E3C    ; Branch to leave loop
 
 .L0E35
-        DEY
-        BPL     L0E06
+        DEY              ; Decrement
+        BPL     L0E06    ; Branch of Y>=0 to repeat loop
+                         ; Exiting loop
+        PLA              ; A=doubled value of $18
+        JMP     L0DF8    ; RTS from $0DE2 with C=1
 
-        PLA
-        JMP     L0DF8
+.L0E3C                   ; Found something in above loop
+        TAX              ; X=destination byte
+        PLA              ; A=doubled value of $18
+        TXA              ; X=A
+        BIT     L0015    
+        BPL     L0E58    ; Branch if $15>=0
+                         ; $15<0
+        LDX     L0016    ; index of outer loop character
+        STA     L2BD0,X  ; Store destination of character X
+        LDA     L2AD0,X  ; A = info about what character X has done this turn
+        BIT     L0013    ; Old value of $2AD0,X prior to combat checking
+        BMI     L0E53    ; Branch if $13 has bit 7 set ie character has done combat this turn
+                         ; Bit 7 not set
+        ORA     #$20     ; Set bit 5
+        BNE     L0E55    ; Branch always
 
-.L0E3C
-        TAX
-        PLA
-        TXA
-        BIT     L0015
-        BPL     L0E58
-
-        LDX     L0016
-        STA     L2BD0,X
-        LDA     L2AD0,X
-        BIT     L0013
-        BMI     L0E53
-
-        ORA     #$20
-        BNE     L0E55
-
-.L0E53
-        ORA     #$40
+.L0E53                   
+        ORA     #$40     ; Set bit 6
 .L0E55
-        STA     L2AD0,X
+        STA     L2AD0,X  ; Store new value with bit 5 or 6 set
 .L0E58
-        CLC
-        BCC     L0DF9
+        CLC              
+        BCC     L0DF9    ; Always branch to $0DF9 to RTS from $0DE2 with carry clear
 
 .L0E5B                  ; Handle combat and picking up of weapons
         LDA     #$00

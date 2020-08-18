@@ -105,13 +105,13 @@ OSCLI   = $FFF7
         JSR     L20FA
 
 .L0EED
-        LDY     #$64
-        LDA     #$3F
+        LDY     #$64  ; Max damage
+        LDA     #$3F  ; Max rnd subtraction
 .L0EF1
         LDX     L0089 
         STX     L001A ; Store player location in $1A
-        LDX     #$C8  ; Load 200
-        JMP     L1C9E ; Dunno
+        LDX     #$C8  ; The player's index+$C8
+        JMP     L1C9E ; Inflict damage and RTS
 
 .L0EFA
         LDX     #$C8
@@ -124,11 +124,11 @@ OSCLI   = $FFF7
         CMP     #$33  ; DIVING DOWN A DANGEROUS FALL
         BNE     L0F23 ; Branch if it isn't
                       ; If it is...
-        LDY     #$BE
-        LDA     #$7F
-        JSR     L0EF1 ; Dunno
+        LDY     #$BE  ; Max damage
+        LDA     #$7F  ; Max rnd subtraction
+        JSR     L0EF1 ; Do damage
 
-        LDY     #$05
+        LDY     #$05  
         LDA     L0014
 .L0F14                  ; Looks for ?$14 in $1283+Y for Y=4 to ?
         DEY
@@ -141,12 +141,12 @@ OSCLI   = $FFF7
         JMP     L0F4A
 
 .L0F23
-        CMP     #$37
+        CMP     #$37    ; DIVING DOWN A LARGE WATER FALL
         BNE     L0F32
 
-        JSR     L0EED
+        JSR     L0EED  ; inflict damage
 
-        LDA     #$1A
+        LDA     #$1A   ; ; Loop through all NPCs X>0
         JSR     L245A
 
         JMP     L0F36

@@ -839,6 +839,7 @@ L19E4 = L19E3+1
 
 .L1C9E                ; Calculates damage for attack, only throws?
                       ; On entry Y= max damage, A = max rnd subtraction from damage
+                      ; X is index of victim+$C8
                       ; Damage =  Y - RND AND A, W is weapon obj code
         STX     L0061 ; ?$61=X=Index of attack target, see $1D62
         STA     L0060 ; ?$60=A=Max for rnd damage subtraction see $1D62 (throw), $1CEB (melee)
