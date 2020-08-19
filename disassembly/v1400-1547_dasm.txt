@@ -130,7 +130,7 @@ OSCLI   = $FFF7
         STA     L0014
         STA     L001C
         LDX     #$25    
-.L143C
+.L143C                  ; Zero all $2AD0s as no previous actions
         STA     L2AD0,X
         DEX
         BPL     L143C
@@ -160,13 +160,13 @@ OSCLI   = $FFF7
         JSR     L24D4 ; Checks commanded direction is valid prints messages if not. Other things too.
 
         LDA     #$40
-        STA     L2AD0
+        STA     L2AD0  ; Set bit 6 of $2AD0 because player is moving
         ASL     A      ; A=$80
         JSR     L0C00
 
 .L146D                ; Code returns here if command neither direction nor combat to complete the loop 
         LDA     #$00
-        STA     L2AD0
+        STA     L2AD0 ; Clear all bits of $2AD0 as player is neither moving or attacking
         BEQ     L1451
 
 .L1474

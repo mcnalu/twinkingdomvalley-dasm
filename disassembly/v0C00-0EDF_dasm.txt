@@ -147,7 +147,7 @@ OSCLI   = $FFF7
 
         LDX     L27FE ; X=number of characters
         DEX
-.L0C37                ; Start loop over characters to see who is here with the player
+.L0C37                ; Start loop over NPCs to see who is here with the player
         BIT     L2AD0 
         BVS     L0C75 ; Branch if player has bit 6 set? Gets set in $0E3C
 
@@ -217,7 +217,7 @@ OSCLI   = $FFF7
                       ; If user changed their mind about quitting then ask for input 
         JMP     L0C78 ; Final branch back for 0C78 loop
 
-.L0C98                ; Check for remaining NPC interactions?
+.L0C98                ; Check for remaining NPC interactions
         LDX     L27FE ; Number of characters
         DEX
         LDA     #$80  ; Put $80 in $15

@@ -38,6 +38,8 @@ $229F Displays yellow ? prompt and gets user input, matches commands but doesn't
 $238D If A is in A-Z or a- then returns with carry set.
 $245A Sets new player location and then depending on option draws picture and prints info
 $24D4 Checks commanded direction is valid prints messages if not. Other things too.
+$24F6 Prints out a word in A using routine $1FD9
+$24FB Processes and puts bytes from location block specified by $89 in &7A-7B
 $2517 Draws picture
 $2AC0 Returns least sig bute of clock in A - 0 to 255 centiseconds
 $3B20 Waits for 2.56s

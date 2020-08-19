@@ -243,15 +243,18 @@ vvv Inserted manually.
 
         JMP     L3B51   ; Objects done. Print new line and RTS.
 
-.L21CD
-        LDY     L007B
-        LDA     (L0077),Y
-        INY
-        STA     L007C
-        LDA     (L0077),Y
-        INY
-        STA     L007D
-        STY     L007B
+.L21CD  ; Loads direction and destination byte pair from a location block
+        ; On entry: $7B points to direction in the location block, either from $24FB or previous call here
+        ; On exit : $7C contains direction byte
+                    $7D contains destination byte
+        LDY     L007B      ; Index to direction from location block
+        LDA     (L0077),Y  ; Load it
+        INY                ; Inc Y
+        STA     L007C      ; ?$7C=direction byte
+        LDA     (L0077),Y  ; Load destination byte
+        INY                ; Inc Y
+        STA     L007D      ; ?$7D=destination byte
+        STY     L007B      ; ?$7B=next index 
         RTS
 
 .L21DC

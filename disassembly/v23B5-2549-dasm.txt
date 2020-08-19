@@ -95,101 +95,103 @@ OSCLI   = $FFF7
         BIT     L0018
         CLC
 .L23C3
-        LDA     L008C
-        STA     L0086
-        BNE     L23DE
-
-        TAY
-.L23CA
-        LDA     L0A80,Y
-        CMP     #$0E
-        BCS     L23D9
-
-        TAX
-        LDA     BeebDisStartAddr,X
-        ORA     L0086
-        STA     L0086
+        LDA     L008C ; This is direction set in the $3500 implied from, eg, GO IN CABIN  
+        STA     L0086 ; $86=$8C
+        BNE     L23DE ; Branch if $86 non-zero 
+                      ; $86 is zero
+        TAY           ; Y=A
+.L23CA                  ; Loop through matched commands using index Y
+                        ; For each one that's a direction set bits using $23B5 table
+        LDA     L0A80,Y ; Load command 
+        CMP     #$0E    ; <$0E means it's a direction
+        BCS     L23D9   ; Branch if it's not a direction
+                        ; Command is a direction
+        TAX             ; X=A, the index of a command
+        LDA     L23B5,X ; Load a byte for this direction
+        ORA     L0086   ; Set any bits present in $86 (none if zero!)
+        STA     L0086   ; ?$86=direction byte
 .L23D9
-        INY
-        CPY     L0084
-        BNE     L23CA
+        INY             ; Inc Y
+        CPY     L0084   ; Number of command words matched
+        BNE     L23CA   ; Branch if there are more commands to process in this loop
 
 .L23DE
-        JSR     L24FB
+        JSR     L24FB   ; Load info about current player location
+                        ; A=?$7A the number of directions out of this location
+        BEQ     L2418   ; Branch if there no exits
+                        ; There are some exits
+.L23E3       
+        JSR     L21CD   ; Loads dir,dest bytes into $7C,$7D, $7B set to index for next pair
 
-        BEQ     L2418
-
-.L23E3
-        JSR     L21CD
-
-        LDA     L007C
-        AND     #$3F
-        CMP     L0086
-        BEQ     L2452
-
-        BIT     L007C
-        BPL     L23F4
-
-        INC     L007B
+        LDA     L007C   ; Load dir byte
+        AND     #$3F    ; Blank bits 6 and 7
+        CMP     L0086   ; The commanded direction
+        BEQ     L2452   ; Branch if this is where the user asked to go
+                        ; Not a match
+        BIT     L007C   
+        BPL     L23F4   ; Branch ahead if bit 7 isn't set in dir byte
+                        ; Bit 7 is set
+        INC     L007B   ; Do extra inc needed in this case
 .L23F4
-        DEC     L007A
-        BNE     L23E3
+        DEC     L007A   ; Decrement number of exits that remain to be checked
+        BNE     L23E3   ; Branch if there's more to checked
+                        ; Checked all exits
+        LDA     L0087   ; Second byte from the location block
+        STA     L007A   ; Store in $7A
+        JSR     L2504   ; Calls end of $24FB to reset $7A,$7B to original values
 
-        LDA     L0087
-        STA     L007A
-        JSR     L2504
+.L23FF                  ; Loop to check if $86 contains a valid instruction
+        JSR     L21CD   ; Load dir,dest byte pair
 
-.L23FF
-        JSR     L21CD
-
-        LDA     L007C
+        LDA     L007C   
         AND     #$3F
-        STA     L007F
-        ORA     L0086
-        CMP     L007F
-        BEQ     L2452
-
-        BIT     L007C
-        BPL     L2414
-
-        INC     L007B
+        STA     L007F   ; Store dir in $7F
+        ORA     L0086   ; Set bits from $86
+        CMP     L007F   
+        BEQ     L2452   ; Branch ahead if this is where the user wanted to go
+                        ; Direction not a match
+        BIT     L007C   
+        BPL     L2414   ; Branch if bit 7 set in dir byte
+                        ; Bit 7 is set
+        INC     L007B   ; Skip extra byte
 .L2414
-        DEC     L007A
-        BNE     L23FF
-
+        DEC     L007A   ; Decrement number of exits that remain to be checked
+        BNE     L23FF   ; Branch if there are more exists to check
+                        ; Failed to match an exit to $86
 .L2418
-        LDA     L0086
-        AND     #$01
-        BNE     L2424
-
-        LDA     L0079
-        AND     #$07
-        BNE     L247A
+        LDA     L0086   
+        AND     #$01    
+        BNE     L2424   ; Branch if bit 1 of $86 is set to tell user they can't go that way
+                        ; bit 1 not set
+        LDA     L0079   ; Load first byte of location block
+        AND     #$07    ; Zero bits 3 to 7 
+        BNE     L247A   ; Branch if not zero
 
 .L2424
         JSR     L3B6C
         YOU CAN'T GO
 
-.L242B
-        LDA     L0086
+.L242B                  ; This converts the commanded direction to text
+        LDA     L0086   ; Load the direction
 .L242D
-        ASL     A
-        ASL     A
-        STA     L0080
+        ASL     A       ; 2x
+        ASL     A       ; 2x
+        STA     L0080   ; Shift A the left twice and store in $80
         LDX     #$00
-        STX     L0081
+        STX     L0081   ; $81=0
 .L2435
-        ROL     L0080
-        BCC     L244C
-
+        ROL     L0080   ; 
+        BCC     L244C   ; Branch if bit 7 set before ROL
+                        ; bit 7 wasn't set
+                        
         CPX     #$04
-        BCC     L2446
-
-        LDA     L0081
-        BEQ     L2446
-
-        LDA     #$3C
-        JSR     L1FD9
+        BCC     L2446   ; Branch if X<4
+                        ; X>=4
+        LDA     L0081   ; A=?$81
+        BEQ     L2446   ; Branch if ?$81=0
+                        ; ?$81 is non-zero
+        LDA     #$3C    ; This handles commands that were like UP AND SOUTH
+        JSR     L1FD9   ; AND
 
 .L2446
         TXA
@@ -318,18 +320,19 @@ OSCLI   = $FFF7
         JSR     L24F6
 
         LDA     L27CE,X ; eg $27E2=>00 which indicates there are no more words
-.L24F6                ; Prints out a word
+.L24F6                ; Prints out a word in A
         BEQ     L24D3 ; If A=0 then RTS
 
         JMP     L1FD9 ; Print the word and RTS
 
-.L24FB                ; Processes and puts bytes from location block in &7A-7B
+.L24FB                ; Processes and puts bytes from location block specified by $89 in &7A-7B
                       ; On entry $89 is a location
                       ; On exit:
                       ; $87 is second byte from location block
                       ; $7A has bit 0-2 copied from bits 5-7 of second byte, bits 3-7 are zero,
                       ;    ie number of directions out of this location.
                       ; $7B is 2nd byte from location block with bits 5-7 wiped +2, index of first byte after desc
+                      ; A=?$7A
         LDY     L0089 
         JSR     L20A7 ; Load info on player's location
 
