@@ -39,6 +39,7 @@ int processline(char *line, int found);
 unsigned char fixnegbyte(unsigned char byte);
 unsigned char getbyte(char *addrs,unsigned char  y);
 
+void printdirection(char *word, char dirbyte);
 void convertcodes2words(int argc, char *argv[]);
 void describelocation(int argc, char *argv[]);
 void incodedescription(char *ss, unsigned char b);
@@ -104,6 +105,23 @@ void convertcodes2words(int argc, char *argv[]){
     printf("%s is %s\n",codes,words);
 }
 
+void printdirection(char *word, char dirbyte){
+  char searchdir=dirbyte&0x3F;
+  char di;
+  long dirtable = strtol("23B5",NULL,16)-start;
+  
+  for(di=0;di<0x0E;di++){//Corresponds to index of direction commands
+    char dd=c[dirtable+di];
+    if(dd==searchdir)
+      break;
+  }
+  if(di<0x0E)
+    getword(word,getcommandaddress(di));
+  else
+    sprintf(word,"NOT A DIRECTION");
+  return;
+}
+
 void describelocation(int argc, char *argv[]){
   char *arg2 = argv[2];
   long location=strtol(arg2+1,NULL,16); //Skip 1st char $ in 2nd argument
@@ -116,7 +134,7 @@ void describelocation(int argc, char *argv[]){
   int i;
   int linepos=0;
   char line[MAXLINE];  
-  printf("b79=%02x, b7A=%02x, b7A AND $1F=%02x\n",b79,b7A,nwords);
+  printf("b79=%02x, b7A=%02x, nwords=%02x, nexits=%02x\n",b79,b7A,nwords,nexits);
   for(i=0;i<nwords;i++){
     unsigned char l =fixnegbyte(c[addr+2+i]);
     linepos+=getword(line+linepos,getcommandaddress(l));
@@ -124,15 +142,19 @@ void describelocation(int argc, char *argv[]){
       line[linepos-1]=' ';
   }
   printf("Exits: ");
+  long j=addr+2+nwords;
   for(i=0;i<nexits;i++){
-    long j=addr+2+nwords+i;
     unsigned char  first = c[j];
     if(first>=0 && first <0x80){ // Positive byte
       unsigned char  dir=fixnegbyte(first)&0x3F;
       unsigned char  dest=fixnegbyte(c[j+1]);
-      printf(" %02x>%02x",dir,dest);
+      char word[MAXWORD];
+      printdirection(word,dir);
+      printf(" %s(%02x)>%02x",word,dir,dest);
+      j+=2;
     } else { //If first byte is negative then three follow, see $0DE6 but dunno why
-      printf(" SPECIAL: %02x,%02x,%02x",first,c[j+1],c[j+2]); 
+      printf(" SPECIAL:%02x,%02x,%02x",first,c[j+1],c[j+2]);
+      j+=3;
     }
   }
   if(nwords==0){
@@ -318,8 +340,11 @@ long getword(char *w, long address){
   return i+1;
 }
 
-//Turns codes terminated by $00 into words eg $98 $2D $00
-//type is either L14CE or L3B6C
+/*Turns codes terminated by $00 into words eg $98 $2D $00
+  type is either L14CE or L3B6C
+  NOTE: There's a bug in that a code of $00 meaning NORTH
+  will treated as the terminator and cause a '\0' to be
+  inserted. */
 long printwords(char *line, char *s, int type){
   long i=0, linepos=0;
   unsigned char l;
