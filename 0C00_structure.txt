@@ -15,7 +15,7 @@ Note: $15 is also set to $80 during full run of $0C00 at $0C98.
 
 ##SECOND call structure
 
-JSR $0C00 with A=$80
+JSR $0C00 with A=$80 so ?$15=$80
 JMP $0CAE near start
 
 $0CB2 loop: check if NPCs at player's location attack or pick up but NPC cannot
@@ -24,8 +24,56 @@ $0CC3 loop: move NPCs
 
 ##FIRST call structure
 
+JSR $0C00 with A=$0 so ?$15=$0
+
 Print magenta dashes to indicate start of new turn.
 Call to $42A0 set players new location $89 and handles special events
-$0C1E loop clears all but bit 7 from $2AD0 to $2AD0+25=$2AF5 inclusive
+$0C1E loop :clears all but bit 7 from $2AD0 to $2AD0+25=$2AF5 inclusive
+           :these are used to store status of characters inc player during turn
 
+$0C2D loop :first outer loop of NPCs in X calling $0CDE each time
+            do combat, pickups and decide movements - details below
+            (see third loop for affect of bit 7 of $15)
 
+$0C37 loop :second outer loop to print out info on NPCs in same location as player 
+            (see third loop for affect of bit 7 of $15)
+
+$0C78 loop :calls $229F to get user input and process into commands
+
+$0CA0 loop :third outer loop but not ?$15=$80
+            only calls $0CD9 if NPC is at player's (previous?) location
+            For each NPC for which $0CD9 is called:
+              Because bit 7 of $15 is set:
+                 bit 7 of $2AD0 for each NPC is cleared
+                 results of attacks are printed out at player location
+                 transfers of objects are done
+                 
+$0CAD RTS from $0C00
+
+--
+$0C2D loop details:
+            $0CEE is called for all non-dead NPCs
+              $15>=0 so $2AD0 bit 7s are as they were from previous turn
+              $18 set from $2880 table and $19 from $28A0
+              Two cases decided between just after $D01:
+              A Char has zero $18 and $19:
+                EITHER JMP to $0E5B if there are hostiles present then RTS
+                OR JMP to $0E99 to pick up weapons then RTS
+              B Char has non-zero $18 or non-zero $19 then branch to $0D22:
+                  If no hostiles branch to $0D6E:
+                     Try to pick up:
+                       If something picked up then RTS
+                       If nothing:
+                          If ?$19!=0 then branch to $D3D to do movement
+                          If ?$19==0 then randomly then
+                            EITHER RTS
+                            OR Branch to $0DB9 to random move and RTS
+                  If hostiles then:
+                    EITHER I  if ?$19=0 then JSR $0E5B to handle combat then branch to $0D36:
+                                JSR $E5B to handle combat and picking up of weapons
+                                If nothing happened branch to $0DB9 to random move and RTS
+                                If attack or pickup occurred then try movement in $0D3D
+                    OR     II if ?$19!=0 then if NPC's $2AD0 bit 7 set then branch to $0D55:
+                                  try to move and if move possible record in 2BD0 and RTS
+                                  if move not possible then do option I
+                          

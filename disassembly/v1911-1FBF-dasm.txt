@@ -615,6 +615,7 @@ L19E4 = L19E3+1
 
 .L1B6C                  ; Handles transfer of object
                         ; X is index of object, Y specifies its destination
+                        ; A=?$64=?$15
         STX     L0070   ; $70 = object index
         STA     L0073   ; $73=A which is set to ?$15 if called from $0E9F
         LDA     L25C0,X ; Object location

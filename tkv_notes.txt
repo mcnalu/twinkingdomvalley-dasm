@@ -74,17 +74,19 @@ Storage locations:
 
 $1 contains the 1-6 draw/description option. Codes stored in $17CA-F see $1846 and below
 $2 is players thirst, see $0FC2 and after for getting dry type messages
-$14 is set to player location ?$89 at $1004 but is it different at times?
+$14 is set to player location ?$89 at $1004 via call to $0F03 from $A42A0 but is it different at times?
 $15 Determines how $0C00 runs, see $0C00 structure notes
 $16 is used to store index of outer loop character in $0C00 routines
 $18 is used to store $2880 entry for outer loop character class
 $19 is used to store $28A0 entry for outer loop character class
+$1C is set to old value of $14 (player location) just before $14 is set to $89, see $14 above
 $21 Set to $80 if princess recognises you cos you have amulet or  $40 if not, see $1192 and after 
 $26 Set to $80 in $22E1 block. If $26<0 then signal caps needed for new sentence start.
 $27 Set to $2 near start at $1400. Once negative staff drops 80% of the time it's used.
 $62 is where damage is stored, see $1C02
 $6F appears to be for setting colour, see $3B51
 $82 appears to count number of characters printed out - in a turn?
+$83 After input in $229F routine this will contain index of first matched command
 $89 is the player's current location, eg 00 is cabin. Used in routine $20BD
 $8A is set to value of first byte in address $89 points to. Set in routine $20BD. Might have a use elsewhere though as it gets saved onto stack prior to $2089 call in just after $0C37.
 $8B sees to count down at a rate of once every couple of seconds, 2.56s?

@@ -193,7 +193,7 @@ OSCLI   = $FFF7
         DEX           ; Decrement
         BNE     L0C37 ; Branch back to continue loop
 
-.L0C78
+.L0C78                ; User input loop
         LDA     #$00
         STA     L008C ; ?$8C=0
         JSR     L229F ; Get user input
@@ -214,15 +214,15 @@ OSCLI   = $FFF7
         BCC     L0C98 ; Branch if not
                       ; User wants to quit
         JSR     L14A7 ; Execute the END command
-                       
-        JMP     L0C78 ; If user changed their mind about quitting then ask for input
+                      ; If user changed their mind about quitting then ask for input 
+        JMP     L0C78 ; Final branch back for 0C78 loop
 
-.L0C98                ; Check for remaining character interactions?
+.L0C98                ; Check for remaining NPC interactions?
         LDX     L27FE ; Number of characters
         DEX
         LDA     #$80  ; Put $80 in $15
         STA     L0015
-.L0CA0                  ; Begin loop
+.L0CA0                  ; Begin loop over NPCs
         LDA     L29B4,X ; A=location of character X
         CMP     L0014   ; Is this previous location of player?
         BEQ     L0CAA   ; Branch if locations match
@@ -324,7 +324,7 @@ OSCLI   = $FFF7
         BEQ     L0D36 ; Branch ahead if $19 is zero
                       ; $19 is non-zero
         BIT     L0013 ; $2AD0 for the outer loop character
-        BPL     L0D55 ; Branch ahead if ?$13>=0 ie characte performed an attack this turn
+        BPL     L0D55 ; Branch ahead if ?$13>=0 ie character performed an attack this turn
 
         JSR     L0D3D ; Movement decision of NPC, setting of intentions in $2AD0/$2BD0 tables
 
@@ -334,10 +334,11 @@ OSCLI   = $FFF7
 .L0D36                ; 
         JSR     L0E5B ; Handle combat and picking up of weapons
 
-        LDA     L0010 
-        BEQ     L0DB9
-
-.L0D3D                ; Movement decision of NPC, setting of intentions in $2AD0/$2BD0 tables
+        LDA     L0010 ; Set to $FF if attack or object transferred occurred in $0E5B
+        BEQ     L0DB9 ; Branch if nothing happened
+                      ; Carry on if something happened
+                      
+.L0D3D                ; Do setup and then movement decision of NPC, setting of intentions in $2AD0/$2BD0 tables
                       ; ?$10=0 indicates player is here or was here last turn
                       ; On exit $10 is zero if no movement for this NPC
                       ; $10 is set to index+1 of selected exit in location block
@@ -378,16 +379,16 @@ OSCLI   = $FFF7
         CMP     L001A ; Does it match location of outer loop character?
         BEQ     L0D50 ; Branch if yes to return
                       
-        JMP     L0DFF ; JMP is no
+        JMP     L0DFF ; JMP is no so JMP ahead to set up $2AD0/2BD0 and other stuff
 
 .L0D6E
-        JSR     L0E99
+        JSR     L0E99 ; Try to pick up objects
 
-        LDA     L0010
-        BNE     L0D54
-
+        LDA     L0010 ; 0 if nothing picked up, $FF is something was
+        BNE     L0D54 ; Branch if something picked up to RTS
+                      ; Nothing picked up
         LDA     L0019
-        BNE     L0D3D
+        BNE     L0D3D ; Branch if ?$19!=0 to do movement
 
 .L0D79                
         JSR     L1C88 ; A= random byte
@@ -437,7 +438,7 @@ OSCLI   = $FFF7
         LDA     L0010   ; A=0 if there were no hostile characters
         RTS
 
-.L0DB9                
+.L0DB9                ; Try and a choose a random direction for NPC to move
         LDY     L001A ; Y = location of outer loop character
         JSR     L124E ; Loads up info for location Y
 
@@ -504,7 +505,7 @@ OSCLI   = $FFF7
 .L0DFC
         INY               ; Inc Y
         LDA     (L0077),Y ; A = destination byte
-.L0DFF                    ; GOT TO HERE
+.L0DFF                    ; 
         TAX               ; X = destination byte
         LDA     L0018     ; A=$18 some property of character in outer loop
         PHA               ; Push onto stack
@@ -577,6 +578,8 @@ OSCLI   = $FFF7
         BCC     L0DF9    ; Always branch to $0DF9 to RTS from $0DE2 with carry clear
 
 .L0E5B                  ; Handle combat and picking up of weapons
+			; On exit ?$10=FF if an attack happened or object transferred
+			;         ?$10=0 if nothing happened
         LDA     #$00
         STA     L0010   ; ?$10=0
         LDX     #$0A    ; X=$A
@@ -612,17 +615,18 @@ OSCLI   = $FFF7
         LDA     L0015   ; A=?$15
         JSR     L1CCA   ; Handle melee attack, outcome and print result
 
-.L0E90                ; Handles picking up of objects eg An elf takes an axe
-                      ; On entry $16 contains destination minus $C7
+.L0E90                
         LDX     L0011 ; X=?$11 the object index
-        BCC     L0ED5 ; C=0 means weapon attack possible so branch to ?$10=$FF then RTS 
+        BCC     L0ED5 ; C=0 means attack occured so branch to ?$10=$FF then RTS 
 
 .L0E94
         INX           ; Inc X
         CPX     #$23  ; Is it $23=35? <$23 are weapons, >= aren't
         BNE     L0E61 ; Branch to continue loop if object is still a weapon
                       ; No more weapons to check
-.L0E99
+                      
+.L0E99                ; Handles picking up of objects eg An elf takes an axe
+                      ; On entry $16 contains destination minus $C7
         LDA     #$00
         STA     L0010 ; ?$10=0
         LDX     #$0A  ; X=$A ie the flint

@@ -34,7 +34,7 @@ $20BD Sets up info in various addresses including $8A based on player's location
 $20EA Sets up info and prints out description and objects based on player's location.
 $20FA Prints a . followed by newline and text colour
 $24DD Print out info about object eg a small holdall
-$229F collects input
+$229F Displays yellow ? prompt and gets user input, matches commands but doesn't execute them.
 $238D If A is in A-Z or a- then returns with carry set.
 $245A Sets new player location and then depending on option draws picture and prints info
 $24D4 Checks commanded direction is valid prints messages if not. Other things too.

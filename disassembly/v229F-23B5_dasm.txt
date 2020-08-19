@@ -39,7 +39,7 @@
         TSX ; N flag can be changed by this, dunno why.
         RTS ; Returns with stack pointer in X which seems to ensure bit 7 is set in practice
 
-.L229F  ; Displays yellow ? prompt and gets user input.
+.L229F  ; Displays yellow ? prompt and gets user input, matches commands but doesn't execute them.
         ; On exit:
         ; $83 contains index of first matched command
         ; $84 contains number of matched commands
@@ -111,7 +111,7 @@
 
         LDX     #$00  ; X points to chars in the OSWORD 0 buffer
 .L230D
-        JSR     L23A0 ; Put char X in A and RTS from $229F!
+        JSR     L23A0 ; Put char X in A and ***RTS from $229F***!
 
         CMP     #$2A  ; Is it a *? Also carry flag set for all chars beyond * which include letters
         BNE     L2317 ; If no then branch
@@ -203,7 +203,7 @@ L2380 = L237F+1
 .L2388
         PLA     ; See just after $2328. Pull number of chars off the stack
         TAY     ; and put it back in Y
-        JMP     L230D ; Jump back to start of loop and do next char
+        JMP     L230D ; Jump back to start of loop and do next char or RTS via $23A0
 
 .L238D     ; Return with carry set if it's  'A-Z' or after 'a' (is leaving carry set after 'z' a bug?)
         CMP     #$41  ; If it's >=$41 ('A') then C will be set
@@ -228,7 +228,7 @@ L2380 = L237F+1
         CMP     #$61  ; Carry will be set f it's after 'a'
         RTS
 
-.L23A0  ; Put char X from input buffer and inc X
+.L23A0  ; Put char X from input buffer and inc X and RTS from $229F if done
         BIT     L0088 ; $88 zerod just before $230D but just after $23AA it's DEC'd if there's a CR
         BPL     L23AA ; Branch if N=0 ie $88>=0
 
