@@ -157,8 +157,8 @@ OSCLI   = $FFF7
         BIT     L2AD0
         BPL     L1474 ; Branch if bit 7 not set
                       ; Bit 7 is set
-        JSR     L24D4 ; Checks commanded direction is valid prints messages if not. Other things too.
-
+        JSR     L24D4 ; Attempts to move, performing describing and drawing if succesful
+                      ; or handles printing error message is move impossible.
         LDA     #$40
         STA     L2AD0  ; Set bit 6 of $2AD0 because player is moving
         ASL     A      ; A=$80

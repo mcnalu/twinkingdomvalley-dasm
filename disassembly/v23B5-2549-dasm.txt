@@ -120,7 +120,11 @@ OSCLI   = $FFF7
                         ; A=?$7A the number of directions out of this location
         BEQ     L2418   ; Branch if there no exits
                         ; There are some exits
-.L23E3       
+
+.L23E3                  ; Tries to execute a move in the direction requested by the player
+                        ; If it succeeds, draw, description etc and RTS not to calling
+                        ; routine but the one before.
+                        ; If it fails, then there's an RTS to the calling routine.
         JSR     L21CD   ; Loads dir,dest bytes into $7C,$7D, $7B set to index for next pair
 
         LDA     L007C   ; Load dir byte
@@ -171,9 +175,9 @@ OSCLI   = $FFF7
         JSR     L3B6C
         YOU CAN'T GO
 
-.L242B                  ; This converts the commanded direction to text
+.L242B                  ; This converts the commanded direction in $86 to text and prints it
         LDA     L0086   ; Load the direction
-.L242D
+.L242D                  ; This converts the commanded direction in A to text and prints it
         ASL     A       ; 2x
         ASL     A       ; 2x
         STA     L0080   ; Shift A the left twice and store in $80
@@ -205,20 +209,22 @@ OSCLI   = $FFF7
 
         RTS
 
-.L2452
-        BIT     L007C
-        BVC     L2424
-
+.L2452                ; Arrives here if user's requested direction $86 matched the direction of an exit
+                      ; If bit 6 clear on the exit player cannot move this way and there's an RTS to calling routine
+                      ; If not then user move proceeds and RTS is not to calling routine, but to one before that.
+        BIT     L007C ; The direction of the exit before it's ANDed with $3F
+        BVC     L2424 ; Branch if bit 6 is not set
+                      ; Bit 6 is set
+        PLA           ; Pull return address bytes off stack
         PLA
-        PLA
-        LDA     L007D
+        LDA     L007D ; The desination byte of the exit
         
-.L245A
+.L245A                ; Sets the new player location and prints description and draws picture
         STA     L0089 ; Set the new player location
-        STA     L29B4
+        STA     L29B4 ; Also in the character location table
         JSR     L20BD ; Set up stuff for new player location
 
-        BIT     L008A 
+        BIT     L008A ; First byte of player's location block
         BVS     L2477 ; Branch if bit 6 of $8A set
                       ; Bit 6 clear
         LDA     L0001 ; A = display/desc option
@@ -232,10 +238,10 @@ OSCLI   = $FFF7
         BNE     L2477 ; If room visited, jump to avoid drawing picture
 
 .L2474                ; Draw picture
-        JMP     L2517
+        JMP     L2517 ; JMP and RTS not to calling routine (eg $24D4) but one before (eg $1452)
 
 .L2477                ; Sets up info and prints out description and objects based on player's location.
-        JMP     L20EA
+        JMP     L20EA ; JMP and RTS not to calling routine (eg $24D4) but one before (eg $1452)
 
 .L247A
         CMP     #$02
@@ -300,12 +306,14 @@ OSCLI   = $FFF7
 
 .L24D3
         RTS
-.L24D4
-        JSR     L23C3
+.L24D4                ; Attempts to move, performing describing and drawing if succesful
+                      ; or handles printing error message is move impossible.
+        JSR     L23C3 ; Attempt to move, draw and describe
+                      ; If move successful $23C3 will return to routine that called $24D4.
+                      ; If it fails $23C3 will return here.
+        JSR     L20FA ; Print . and newline.
 
-        JSR     L20FA
-
-        JMP     L3B51
+        JMP     L3B51 ; Prints newline and sets text colour then RTS.
         
 .L24DD                  ; Print info about objects
         LDA     L2580,X ; Lookup code for object X eg X=0=>$14
@@ -320,7 +328,7 @@ OSCLI   = $FFF7
         JSR     L24F6
 
         LDA     L27CE,X ; eg $27E2=>00 which indicates there are no more words
-.L24F6                ; Prints out a word in A
+.L24F6                ; Prints out a word in A but prints nothing if A=0
         BEQ     L24D3 ; If A=0 then RTS
 
         JMP     L1FD9 ; Print the word and RTS
@@ -338,7 +346,10 @@ OSCLI   = $FFF7
 
         LDA     L007A ; Second byte from location block
         STA     L0087
-.L2504
+.L2504                ; Process second byte from a location block
+                      ; On entry: $7A is the second byte
+                      ; On exit : $7A is the number of exits
+                                  $7B is where exit block starts
         LDA     L007A 
         AND     #$1F  ; Wipe bits 5,6,7
         CLC
@@ -354,22 +365,22 @@ OSCLI   = $FFF7
         RTS
 
 .L2517
-        LDA     L0025
-        BEQ     L251E
-
+        LDA     L0025 ; This is the last character printed out by $3BA1, zeroed when input requested at $229F
+        BEQ     L251E ; Branch if nothing printed yet since input requested at $229F
+                      ; If something was, wait a bit
         JSR     L3B20 ; Wait 2.56s
 
-.L251E
-        LDX     L0089
-        LDA     L1F00,X
+.L251E                
+        LDX     L0089 ; Player location
+        LDA     L1F00,X ; Something to do with drawing for this location?
         TAX
-        JSR     L0B12
+        JSR     L0B12 ; Drawing related?
 
         JSR     L3B32
 
         JSR     L1FC0
 
-        JSR     L24FB
+        JSR     L24FB ; Processes and puts bytes from location block specified by $89 in &7A-7B
 
         LDA     L0079
         AND     #$08
@@ -381,12 +392,12 @@ OSCLI   = $FFF7
 .L253F
         LDY     L007B
         LDA     (L0077),Y
-        JSR     L242D
+        JSR     L242D ; Prints the direction the drawing is of
 
-        JSR     L20FA
+        JSR     L20FA ; Print . and newline
 
-.L2549
-        JMP     L0000
+.L2549                ; This line was JMP L0000!!! Manually fixed this.
+        JMP     L20EA ; Sets up info and prints out description and objects based on player's location.
 
 .BeebDisEndAddr
 SAVE "command/v23B5-2549-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
@@ -417,5 +428,5 @@ SAVE "command/v23B5-2549-dasm.bin",BeebDisStartAddr,BeebDisEndAddr
 ; 2515 7A 60 A5 25 F0 03 20 20 3B A6 89 BD 00 1F AA 20 z`-%--  ;------  OOOOOOOOOOOOOOOO
 ; 2525 12 0B 20 32 3B 20 C0 1F 20 FB 24 A5 79 29 08 D0 -- 2; -- -$-y)-- OOOOOOOOOOOOOOOO
 ; 2535 13 20 6C 3B 5D 29 3E 3D 28 00 A4 7B B1 77 20 2D - l;])>=(--{-w - OOOODDDDDDOOOOOO
-; 2545 24 20 FA 20 4C 00 00 00 00 00 00 00 00 00 00 00 $ - L----------- OOOOOOOUUUUUUUUU
+; 2545 24 20 FA 20 4C EA 20 16 07 82 20 50 72 65 73 73 THIS LINE WAS CORRUPT, FIXED MANUALLY
 

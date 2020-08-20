@@ -29,6 +29,7 @@ $1D40 Handle if combat occurs and throwing of weapon, damage calc and weapon bre
 $1FC0 write the Press Tab message then hides it
 $1FD9 Prints command word stored in $3600 table
 $1FEA Continues $1FD9 but if entered here it can print word from response table $500
+$2038 Prints YOU CAN SEE... description through a door
 $20A7 Loads two bytes into $79-A based on Y from address in $2A00/2B00 table put in $77-8
 $20BD Sets up info in various addresses including $8A based on player's location in $89.
 $20EA Sets up info and prints out description and objects based on player's location.
@@ -36,9 +37,11 @@ $20FA Prints a . followed by newline and text colour
 $24DD Print out info about object eg a small holdall
 $229F Displays yellow ? prompt and gets user input, matches commands but doesn't execute them.
 $238D If A is in A-Z or a- then returns with carry set.
-$245A Sets new player location and then depending on option draws picture and prints info
-$24D4 Checks commanded direction is valid prints messages if not. Other things too.
-$24F6 Prints out a word in A using routine $1FD9
+$242B This converts the commanded direction in $86 to text and prints it
+$242D This converts the commanded direction in A to text and prints it
+$2452 Sets new player location and then depending on option draws picture and prints info
+$24D4 Attempts to move, performing describing and drawing if succesful, printing error if not
+$24F6 Prints out a word in A using routine $1FD9 but nothing if A=0
 $24FB Processes and puts bytes from location block specified by $89 in &7A-7B
 $2517 Draws picture
 $2AC0 Returns least sig bute of clock in A - 0 to 255 centiseconds

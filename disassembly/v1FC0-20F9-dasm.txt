@@ -90,9 +90,10 @@ OSCLI   = $FFF7
 .L1FD0
         RTS
 
-        AND     #$07
-        TAX
-        BEQ     L1FD0
+.L1FD1
+        AND     #$07     ; Zero bits 3-7 
+        TAX              ; X=A
+        BEQ     L1FD0    ; If zero, return
 
         LDA     L295F,X
 .L1FD9                ; Prints a command given its byte code A>=0 (see $14B8) eg $2F (see $20AF)
@@ -172,42 +173,40 @@ OSCLI   = $FFF7
 .L2035
         STA     L0026
         RTS
-
-        PHA
+.L2038          ; Print YOU CAN SEE... description
+                ; On entry: A is location to describe
+        PHA     ; Save A to stack
         JSR     L3B6C
+        YOU CAN SEE
 
-        STY     L009E
-        BRK
-        EQUB    $68
-
-        TAX
-        LDA     L2A00,X
+        PLA     ; Pull A off stack
+        TAX     ; X=A
+        LDA     L2A00,X ; Look up address bytes of location and store in $74-5
         STA     L0074
         LDA     L2B00,X
         STA     L0075
-        LDY     #$00
-        LDA     (L0074),Y
-        AND     #$07
-        BEQ     L208D
+        LDY     #$00       ; Y=0
+        LDA     (L0074),Y  ; Load the first byte
+        AND     #$07       ; Blank bits 3-7 so it's 0 to 7.
+        BEQ     L208D      ; Branch if zero
+                           ; non-zero
+        CMP     #$01       ;
+        BNE     L2060      ; Branch if not 1
+                           ; It's 1
+        JSR     L3B6C      ; Print it and pull the two bytes off the stack to RTS
+        A DISUSED QUARRY
 
-        CMP     #$01
-        BNE     L2060
-
-        JSR     L3B6C
-
-        LDY     #$00
+.L205F
         RTS
 
-.L2060
-        CMP     #$03
-        BCS     L206C
-
-        JSR     L3B6C
-
-        EOR     L56A1,X
-        BRK
-        EQUB    $60
-
+.L2060                
+        CMP     #$03   ; identifies location
+        BCS     L206C  ; Branch if yes
+                       ; <3 words
+        JSR     L3B6C  ; Print them and RTS using bytes on stack
+        THE CANYON FLOOR
+.L206B
+        RTS
 .L206C
         BNE     L2076
 
@@ -235,25 +234,25 @@ OSCLI   = $FFF7
 .L2088
         LDA     #$52
         JMP     L1FD9
-
-.L208D
-        INY
-        LDA     (L0074),Y
-        AND     #$1F
-        STA     L0076
-        DEC     L0076
-        LDY     #$03
+                           
+.L208D      
+        INY                ; Increment
+        LDA     (L0074),Y  ; Load second byte of location block
+        AND     #$1F       ; Zero bits 5-7 to give number of words
+        STA     L0076      ; Store in $76
+        DEC     L0076      ; Decrement
+        LDY     #$03       ; Y=3
 .L2098
-        TYA
-        PHA
-        LDA     (L0074),Y
-        JSR     L1FD9
+        TYA                ; A=Y
+        PHA                ; Save to stack
+        LDA     (L0074),Y  ; Load second word
+        JSR     L1FD9      ; and print it
 
-        PLA
+        PLA                
         TAY
         INY
         DEC     L0076
-        BNE     L2098
+        BNE     L2098      ; Repeat to do following words
 
         RTS
 
@@ -278,6 +277,9 @@ OSCLI   = $FFF7
 .L20BD                  ; Sets up info in various address based on player's location in $89.
                         ; First byte in location block ($2C00 table) has bit 4 set=> visited
                         ; $8A set to value of second byte.
+                        ; On exit:
+                        ;          $FF if the location is dark and unlit
+                        ;          $00 if the location is light or lit.        
         LDY     L0089   ; Load the player's location into Y
         JSR     L20A7   ; Address of location block in $77-8; its first two bytes in $79-A
                         ; Y=0 now, A will be same as in $79

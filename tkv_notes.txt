@@ -81,6 +81,7 @@ $18 is used to store $2880 entry for outer loop character class
 $19 is used to store $28A0 entry for outer loop character class
 $1C is set to old value of $14 (player location) just before $14 is set to $89, see $14 above
 $21 Set to $80 if princess recognises you cos you have amulet or  $40 if not, see $1192 and after 
+$25 This is the last character printed out by $3BA1, zeroed when input requested at $229F
 $26 Set to $80 in $22E1 block. If $26<0 then signal caps needed for new sentence start.
 $27 Set to $2 near start at $1400. Once negative staff drops 80% of the time it's used.
 $62 is where damage is stored, see $1C02
@@ -124,7 +125,7 @@ $17CA-F ; Codes for options 1-6 for draw/desc: 60 20 C0 80 40 00
 $L1EB1,X ; This a table of low bytes for each command index
 $L1ECF,X ; and these are high bytes. See $14A7
 
-$1F00+1
+$1F00+1 ; Something to do with drawing, see $251E
 
 $2580 ; Table of object codes. Eg $2580 is $14 for holdall, used for $2600 lookup
 $25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other places.
@@ -163,6 +164,8 @@ x$28A0 Dunno but indexed by character class like $2820 see $0D01
 
 $28EB is loaded in $20BD but I don't know what it means
 
+$2960 word codes for BRASS, BRONZE, METAL, SILVER, GOLD etc, see $2220
+
 *Each instance of an NPC has an index X which can go from $0 to $23
 *$2968 start of data table. This identifies char class. Bit 7=1 means hostile. AND &7F=> index in $2820/40/60/80/A0 tables
 *$298E start of data table. This gives health of the character.
@@ -174,12 +177,35 @@ It is really table $298E=$28C6+C8 ie index is of a carried location.
 
 $29DA start of data table recording weight carried by character see $1B9F - $29DA is player
 
-$Y is set to the player location $89 for these:
+LOCATION BLOCKS
+Y is set to the player location $89 for these:
 $2A00-2AB0 are low bytes of addresses ie LB=$2A00+Y
 $2B00-2BB0 are high bytes of addresses ie HB=$2B00+Y
 From values in $2B00 table, seems Y can go from 0 to B0 or 0 to 176.
 Note also that routine $1CBE stores stuff in the $2A00 table.
-So $2C00 to $33FF is some kind of look up table used by routine at $20A7
+So $2C00 to $33FF contain the location blocks, eg see $20A7.
+Each location block has this structure and starts at an address given by $2A00+Y,$2B00+Y:
+first byte:  if bit 7 is set then the location is dark and needs the lit lamp, see $20EA
+             if bit 6 is set then there is no drawing for this location, see $245A
+             if bit 5 is set then there's no long description, see $21DC
+             if bit 4 is set then the player has visited this location, see $245A
+second byte: bits 0-4 represent the count of words following this byte
+             bits 5-7 represent the count of exits from this location, following the words
+words      : these are a series of bytes that refer to the command lookup table from $3600
+exits      : For each exit there is either a pair or triplet of bytes, first byte is direction
+             If bit 7 is NOT set on the direction byte there is a pair:  
+                  the first byte encodes the direction, the second the destination
+                  direction: if bit 6 is set this is a normal direction and $89
+                                    is set to this byte, see $245A
+                             if bit 6 is not set the player cannot move this way, see $2454
+             If bit 7 is set on the first byte there is a triplet:
+                  second byte: if bit 7 is set then the exit is lockable:
+                                  if bit 6 of direction byte not set it is locked
+                                  if bit 6 of direction byte set it is open
+                                     which causes code prints THROUGH WHICH...
+                               For following, see $2220
+                               bits 0-2 of second byte specify BRASS, BRONZE etc see $2220
+                               bits 3-6 of second byte specifty GRATE or DOOR
 
 $2A08 is really $2AD0 cos of +$C8
 *$2AD0 Bit 7 is set when this character done an attack. Bits 0-6 of these bytes are zeroed in $0C1E

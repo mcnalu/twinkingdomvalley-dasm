@@ -88,27 +88,27 @@ vvv Inserted manually.
         JSR     L20BD ; Sets up info including in $8A based on player's location in $89.
 ^^^ Inserted manually.
         
-        BPL     L2102 ; If A>=0 then branch ahead
-                      ; If A<0
+        BPL     L2102 ; If A>=0 the location is lit
+                      ; The location is dark so can't print out a description.
 
         org     $20FA
-.BeebDisStartAddr     ; Prints a . followed by newline and text colour
+.L20FA                ; Prints a . followed by newline and text colour
         LDA     #$2F  ; $2F corresponds to word address $36DE ie byte code $AE=128+'.' 
         JSR     L1FD9 ; Process and print
         JMP     L3B51 ; Print newline and set text colour then return
 
-.L2102
-        JSR     L3B6C ; Print "YOU ARE" - This is usual result of a move I think.
+.L2102                ; A lit location so print out the description.
+        JSR     L3B6C ; Print "YOU ARE"
         YOU ARE      
         
 .L2108
         LDA     L007A ; This contains the second byte from the location block
-        AND     #$1F  ; Clear bits 5-6 so value is now 0-31
-        BEQ     L2122 ; If zero branch ahead as there's nothing to print out.
-
+        AND     #$1F  ; Clear bits 5-7 so value is now 0-31 and is the number of exits
+        BEQ     L2122 ; Branch if there are no words to print descriptions from within this code.
+                      ; There are words.
         STA     L0076 ; If non-zero store in $76
         LDY     #$02  ; Y=2
-.L2112
+.L2112                ; Print out location description
         TYA           ; Save Y to stack
         PHA
         LDA     (L0077),Y ; Load third byte from location block
@@ -120,7 +120,7 @@ vvv Inserted manually.
         DEC     L0076     ; DEC $76
         BNE     L2112     ; If $76!=0 loop back to print next word
 
-        BEQ     L2132     ; Will always branch ahead
+        BEQ     L2132     ; Branch always to skip past in-code descriptions
 
 .L2122                    ; Are we in the sloping maze?
         LDA     L0079
@@ -231,7 +231,7 @@ vvv Inserted manually.
 .L21B9
         JSR     L24DD   ; print out info about object eg a small holdall
 
-        LDA     #$37    ; print here
+        LDA     #$37    ; print HERE
         JSR     L1FD9
 
         JSR     L20FA   ; full stop and new line
@@ -245,8 +245,9 @@ vvv Inserted manually.
 
 .L21CD  ; Loads direction and destination byte pair from a location block
         ; On entry: $7B points to direction in the location block, either from $24FB or previous call here
-        ; On exit : $7C contains direction byte
-                    $7D contains destination byte
+        ; On exit : $7B points to the next byte pair after this one
+        ;           $7C contains direction byte
+        ;           $7D contains destination byte
         LDY     L007B      ; Index to direction from location block
         LDA     (L0077),Y  ; Load it
         INY                ; Inc Y
@@ -257,95 +258,93 @@ vvv Inserted manually.
         STY     L007B      ; ?$7B=next index 
         RTS
 
-.L21DC
+.L21DC                ; EITHER branchs to $21A6 to print object info
+                      ; OR carries on to print long description if appropriate
         JSR     L20FA ; Prints newline and sets text colour
 
-        LDA     L0079 ; Load location byte
+        LDA     L0079 ; Load first location byte
         AND     #$20  
-        BNE     L21A6 ; Branch if bit 5 is set
-                      ; We're somewhere where bit 5 is set
+        BNE     L21A6 ; Branch if bit 5 is set ie there's no long description
+                      ; We're somewhere where bit 5 is set ie there's a long descirption
         BIT     L0001 ; $1 is draw/desc option
         BVC     L21A6 ; Branch if bit 6 is not set ie don't give long description
+                      ; Give long description
+        JSR     L2504 ; $7A is number of exits, $7B is where exit block starts
+                      ; A=number of exits
+        BEQ     L21A6 ; Branch if no exits 
 
-        JSR     L2504 
+.L21EE                ; Start of loop to print out all exits, ie long description.
+        JSR     L21CD ; Load direction,destination byte pair into $7C,$7D
 
-        BEQ     L21A6
+        LDA     L007C ; Load direction byte
+        JSR     L242D ; This converts the commanded direction in A to text and prints it
 
-.L21EE
-        JSR     L21CD
-
-        LDA     L007C
-        JSR     L242D
-
-        LDA     L007C
-        BPL     L224D
-
-        LDA     #$3E
-        JSR     L1FD9
+        LDA     L007C ; Load direction byte
+        BPL     L224D ; Branch if direction bit 7 is not set
+                      ; bit 7 is set then this is a triplet and two bytes follow
+        LDA     #$3E  ; IS
+        JSR     L1FD9 ; Print IS
 
         LDA     #$00
-        STA     L007E
-        LDY     L007B
-        INC     L007B
-        LDA     (L0077),Y
-        STA     L007F
-        BPL     L2255
-
-        BIT     L007C
-        BVS     L221A
-
+        STA     L007E ; ?$7E=0
+        LDY     L007B ; Load index of next byte
+        INC     L007B ; Inc the index
+        LDA     (L0077),Y ; Load the second byte of triplet
+        STA     L007F     ; Store second byte in $7F
+        BPL     L2255     ; Branch if second byte bit 7 not set
+                          ; bit 7 is set then we have a lockable exit
+        BIT     L007C     ; Direction byte
+        BVS     L221A     ; Branch if bit 6 if direction byte is set, exit open
+                          ; Bit 6 not set so exit is locked
         JSR     L3B6C
+        A LOCKED
 
-        BRK
-        EQUB    $4C
+.L2217
+        JMP     L2220
 
-.L2218
-        JSR     L2022
+.L221A
+        JSR     L3B6C
+        AN
+        OPEN
 
-L221A = L2218+2
-        JMP     (L3B3B)
+.L2220
+        LDA     L007F ; Load the second byte of the triplet
+        JSR     L1FD1 ; Print out BRASS, BRONZE, METAL, SILVER, GOLD etc
 
-        BRK
-        EQUB    $A5
-
-        JSR     L1FD1
-
-        LDA     L007F
+        LDA     L007F 
         LSR     A
         LSR     A
-        LSR     A
-        AND     #$0F
-        ORA     #$10
-        JSR     L2275
+        LSR     A     ; Shift bits 3-6 into 0-3
+        AND     #$0F  ; Zero bits 4-7
+        ORA     #$10  ; Set bit 4
+        JSR     L2275 ; A is set to a number from $10 to $1F ($14 is GRATE or $18 is DOOR)
+                      ; Print a word based on code stored in $2910 to $291F
+        CPX     #$18  ; DOOR
+        BCS     L2243 ; Branch if it's a DOOR
+                     
+        CPX     #$14  ; GRATE
+        BCS     L2247 ; Branch it it's a GRATE
+                      ; Not a grate or a door, but what???
+.L2239                    
+        JSR     L20FA ; Print . and a newline
 
-        CPX     #$18
-        BCS     L2243
+        DEC     L007A ; Decrement number of exits
+        BNE     L21EE ; Branch to continue loop through all exits if there are more
+                      ; Once ?$7A is zero we've printed out info for all exits
+        JMP     L21A6 ; 
 
-        CPX     #$14
-        BCS     L2247
-
-.L2239
-        JSR     BeebDisStartAddr
-
-        DEC     L007A
-        BNE     L21EE
-
-        JMP     L21A6
-
-.L2243
-        BIT     L007C
-        BVC     L2239
-
+.L2243                ; A door
+        BIT     L007C ; Direction byte
+        BVC     L2239 ; If bit 6 clear branch to continue to next iteration of exiting print loop
+                      ; bit 6 was set
 .L2247
-        JSR     L3B6C
+        JSR     L3B6C 
+        THROUGH WHICH
+.L224D                
+        LDA     L007D ; destination byte
+        JSR     L2038 ; Prints YOU CAN SEE... description through a door/grate/other
 
-        LDA     #$AE
-        BRK
-.L224D
-        EQUB    $A5
-
-        ADC     L3820,X
-        JSR     L394C
+        JMP     L2239 
 
 .L2255
         LDA     #$3A
@@ -372,13 +371,13 @@ L221A = L2218+2
         BVC     L2239
 
 .L2275
-        TAX
-        LDA     L2900,X
-        JSR     L24F6
+        TAX             ; X=A
+        LDA     L2900,X ; Load code for word at this address
+        JSR     L24F6   ; Prints word in A or nothing if A=0
 
-        LDA     L2930,X
-        JMP     L24F6
-
+        LDA     L2930,X ; Load code for word at this address
+        JMP     L24F6   ; Prints word in A or nothing if A=0
+.L2282
         JSR     L2AC0
 
         STA     L008B
