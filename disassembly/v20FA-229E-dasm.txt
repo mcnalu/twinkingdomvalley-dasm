@@ -265,7 +265,7 @@ vvv Inserted manually.
         LDA     L0079 ; Load first location byte
         AND     #$20  
         BNE     L21A6 ; Branch if bit 5 is set ie there's no long description
-                      ; We're somewhere where bit 5 is set ie there's a long descirption
+                      ; We're somewhere where bit 5 is set ie there's a long description
         BIT     L0001 ; $1 is draw/desc option
         BVC     L21A6 ; Branch if bit 6 is not set ie don't give long description
                       ; Give long description
@@ -289,9 +289,9 @@ vvv Inserted manually.
         STA     L007E ; ?$7E=0
         LDY     L007B ; Load index of next byte
         INC     L007B ; Inc the index
-        LDA     (L0077),Y ; Load the second byte of triplet
-        STA     L007F     ; Store second byte in $7F
-        BPL     L2255     ; Branch if second byte bit 7 not set
+        LDA     (L0077),Y ; Load the third byte of triplet
+        STA     L007F     ; Store third byte in $7F
+        BPL     L2255     ; Branch if third byte bit 7 not set
                           ; bit 7 is set then we have a lockable exit
         BIT     L007C     ; Direction byte
         BVS     L221A     ; Branch if bit 6 if direction byte is set, exit open
@@ -308,8 +308,8 @@ vvv Inserted manually.
         OPEN
 
 .L2220
-        LDA     L007F ; Load the second byte of the triplet
-        JSR     L1FD1 ; Print out BRASS, BRONZE, METAL, SILVER, GOLD etc
+        LDA     L007F ; Load the third byte of the triplet
+        JSR     L1FD1 ; Print out BRASS, BRONZE, METAL, SILVER, GOLD, WOODEN etc
 
         LDA     L007F 
         LSR     A
@@ -346,27 +346,27 @@ vvv Inserted manually.
 
         JMP     L2239 
 
-.L2255
-        LDA     #$3A
+.L2255                
+        LDA     #$3A  ; A
         JSR     L1FD9
 
-        LDA     L007F
-        JSR     L1FD1
+        LDA     L007F ; Load third byte
+        JSR     L1FD1 ; Print WOODEN etc
 
-        LDA     L007F
+        LDA     L007F ; Load third byte again 
+        LSR     A     
         LSR     A
-        LSR     A
-        LSR     A
-        AND     #$0F
-        BIT     L007C
-        BVC     L226C
+        LSR     A     ; Move bits 3-7 to 0-4 
+        AND     #$0F  ; Zero bits r-7
+        BIT     L007C ; Test direction byte
+        BVC     L226C ; Branch if bit 6 clear
 
         ORA     #$20
 .L226C
-        JSR     L2275
+        JSR     L2275 ; Print word such as FENCE
 
-        BIT     L007F
-        BVS     L2247
+        BIT     L007F ; Test third byte
+        BVS     L2247 ; Branch if bit 6 is set
 
         BVC     L2239
 

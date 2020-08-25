@@ -211,28 +211,29 @@ OSCLI   = $FFF7
         BNE     L2076
 
         JSR     L3B6C
+        A MOUNTAIN RANGE
 
-        STA     (L00A2),Y
-        BRK
-        EQUB    $60
+.L2075
+        RTS
 
 .L2076
         CMP     #$06
         BCS     L207F
 
-        LDA     #$4E
+        LDA     #$4E  ; FOREST
         JMP     L1FD9
 
 .L207F
         BNE     L2088
 
         JSR     L3B6C
+        A PASSAGE
 
-        BRK
-        EQUB    $60
+.L2087
+        RTS
 
 .L2088
-        LDA     #$52
+        LDA     #$52       ; DESERT
         JMP     L1FD9
                            
 .L208D      

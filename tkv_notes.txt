@@ -1,5 +1,39 @@
 TKV notes
 
+Code document:
+(NOTE gaps in code are complete, but some data tables are not listed here, see below for that.)
+$0B16-0BFF - graphics
+$0D50-0D65
+$0F32-125F
+$1260-1400
+$14EF-152F
+$1548-163F - taking stuff
+$169C-17CF - lamp and locks NEEDS DISASSEMBLY
+$17D0-1910 - lots of 14CE lines need replaced
+$1911-1B6C - lots of 14CE lines about tell user they can't do something
+$1D9C-1FBF
+$216A-2193
+$2255-229E
+$2460-2452
+$254A-29D9 - NEEDS DISASSEMBLY
+$29DA-     - Weight carried by player/NPCs
+$2A00-2AB0 - DATA: Low bytes for addresses to location blocks
+$2AB1-2ACF - ?
+$2AD0-2AF5 - DATA: status bytes for player/NPCs
+$2B00-2BB0 - DATA: Low bytes for addresses to location blocks
+$2BB1-2BCF - ? $2BC0 contains value from hardware clock from OSWORD 1 see $2AC0
+$2BD0-2BF5 - DATA: next location bytes for player/NPCs
+$2C00-33FF - DATA: Location blocks
+$3400-?    - DATA: Offsets used in looking up words in $3600 table
+$3551-35FF
+$3600-3B04 - DATA: commands and other words
+$3B05-3B19 - Junk, I think
+$3B32-3B51
+$3BEB-3BFF
+
+
+
+
 =============================
 Main loop step through.
 Break is at $1451. Started game from scratch.
@@ -193,20 +227,26 @@ second byte: bits 0-4 represent the count of words following this byte
              bits 5-7 represent the count of exits from this location, following the words
 words      : these are a series of bytes that refer to the command lookup table from $3600
 exits      : For each exit there is either a pair or triplet of bytes, first byte is direction
-             If bit 7 is NOT set on the direction byte there is a pair:  
+             If bit 7 is NOT set on the direction byte there is a pair:
+                  a pair represents a simple exit
                   the first byte encodes the direction, the second the destination
-                  direction: if bit 6 is set this is a normal direction and $89
-                                    is set to this byte, see $245A
+                  direction: if bit 6 is set this is a normal direction, see $245A
                              if bit 6 is not set the player cannot move this way, see $2454
+                  destination: a byte containing the index of the location
              If bit 7 is set on the first byte there is a triplet:
-                  second byte: if bit 7 is set then the exit is lockable:
+                  a triplet represents a grate, door or fence
+                  first byte : direction as above
+                  second byte: destination
+                  third byte:  if bit 7 is not set then the exit is not lockable eg fence
+                               if bit 7 is set then the exit is lockable:
                                   if bit 6 of direction byte not set it is locked
                                   if bit 6 of direction byte set it is open
                                      which causes code prints THROUGH WHICH...
                                For following, see $2220
-                               bits 0-2 of second byte specify BRASS, BRONZE etc see $2220
-                               bits 3-6 of second byte specifty GRATE or DOOR
-
+                               bits 0-2 of third byte specify BRASS, BRONZE etc see $2220
+                               bits 3-6 of third byte specify GRATE or DOOR
+ 
+                               
 $2A08 is really $2AD0 cos of +$C8
 *$2AD0 Bit 7 is set when this character done an attack. Bits 0-6 of these bytes are zeroed in $0C1E
 *$2BD0 Stores where character X has decided to move, I think
