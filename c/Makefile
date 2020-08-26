@@ -1,8 +1,8 @@
-readtkv : readtkv.o libtkv.o
-	gcc -o readtkv readtkv.o libtkv.o -lm
-
 playtkv : playtkv.o libtkv.o
 	gcc -o playtkv playtkv.o libtkv.o -lm
+
+readtkv : readtkv.o libtkv.o
+	gcc -o readtkv readtkv.o libtkv.o -lm
 
 readtkv.o : readtkv.c libtkv.h
 	gcc -c readtkv.c
