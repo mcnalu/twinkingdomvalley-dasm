@@ -6,6 +6,7 @@
 #define IMPASSABLE 0
 #define NORMAL 0
 #define NONDOOR 1
+#define NONDOOR_SEETHRU 2
 
 struct location {
   UCHAR id;
@@ -39,6 +40,7 @@ void print_short_description(struct location *locations, int i);
 void print_long_description(struct location *locations, int i);
 char * get_exittext(UCHAR firstbyte, UCHAR thirdbyte);
 int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte);
+void you_can_see(char *text, struct location dest);
 
 int main(int argc, char *argv[]) {
   init_tkv();
@@ -111,10 +113,13 @@ long load_exit(struct exit *e, long addr){
     e->exittext=NULL;
     //See $21EE for logic of following
     if( (first&0x80)!=0 ) {//Triplet of bytes
-      if( (third&0x80)==0 ){//Third byte contains info about exit
-        e->exittype=NONDOOR; //$2255
+      if( (third&0x80)==0 ){//Third byte not set
+	if((third&0x40)!=0) //Bit six set, see $226F
+	  e->exittype=NONDOOR_SEETHRU;
+	else
+          e->exittype=NONDOOR; //$2255
 	e->exittext=get_exittext(first,third);
-      } else {//Set lockable to type of key/door
+      } else {//Third byte set so set lockable to type of key/door
       }      
     }
     if( (first&0x40)==0 )//if bit 6 is NOT set    
@@ -129,7 +134,8 @@ char * get_exittext(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as per $
   long addr=strtol("295F",NULL,16)-start;
   int pos=2;
   sprintf(text,"a ");
-  pos=print_word_or_zero(text, pos, addr, byte);
+  if(byte!=0)
+    pos=print_word_or_zero(text, pos, addr, byte);
 
   byte=(thirdbyte>>3)&0x0F;//See $2255
   if( (firstbyte&0x40)!=0 )//If dir byte bit 6 set
@@ -138,6 +144,7 @@ char * get_exittext(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as per $
   pos=print_word_or_zero(text, pos, addr, byte);
   addr=strtol("2930",NULL,16)-start;
   pos=print_word_or_zero(text, pos, addr, byte);
+  //The "through which" bit is handled in-game as dest structs not all loaded here
   
   text[pos-1]='\0';//Last char will be space, overwrite.
   return copytolower(text);
@@ -148,7 +155,7 @@ char * get_exittext(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as per $
    Print nothing if byte==0: pos is returned unchanged.
    See $2275 */
 int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte){
-  byte=c[addr+byte]; //code for word
+  byte=c[addr+byte];
   if(byte!=0){//if zero print nothing, see $1FD0
     addr=getcommandaddress(byte);
     pos+=getword(ss+pos,addr);
@@ -193,9 +200,7 @@ void print_short_description(struct location *locations, int i){
 }
 
 void print_long_description(struct location *locations, int i){
-  char *ss;
-  char s[20];
-  ss=s;
+  char text[1000];
   struct location *l = locations+i;
   print_short_description(locations,i);
   for(i=0;i<l->nexits;i++){
@@ -203,19 +208,31 @@ void print_long_description(struct location *locations, int i){
     struct location dest=locations[e.destination];
     printf("%s ",e.dirtext);
     if(e.exittype==NORMAL) {
-      printf("you can see ");
-      if(dest.locationtype==0)
-        ss=strchr(dest.description,' ')+1; //Skip first word
-      else
-        incodeexits(ss,dest.locationtype);
-      printf("%s",stolower(ss));
+      you_can_see(text,dest);
+      printf("%s",text);
     }
     else {//door or grate or fence or something else?
       printf("is ");
-      if(e.exittype==NONDOOR){//eg fence
+      if(e.exittype==NONDOOR || e.exittype==NONDOOR_SEETHRU){//eg fence
 	printf("%s",e.exittext);
+	if(e.exittype==NONDOOR_SEETHRU){//If dir byte bit 6 set, $2243
+	  sprintf(text," through which ");//15 chars
+	  you_can_see(text+15,dest);
+	  printf("%s",text);	  
+	}
       }
     }
     printf(".\n");
   }
+}
+
+void you_can_see(char *text, struct location dest){
+  char *ss;
+  char s[20];
+  ss=s;
+  if(dest.locationtype==0)
+    ss=strchr(dest.description,' ')+1; //Skip first word
+  else
+    incodeexits(ss,dest.locationtype);
+  sprintf(text,"you can see %s",stolower(ss));
 }
