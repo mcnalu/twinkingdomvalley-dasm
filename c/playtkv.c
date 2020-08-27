@@ -7,6 +7,9 @@
 #define NORMAL 0
 #define NONDOOR 1
 #define NONDOOR_SEETHRU 2
+#define DOOR 3
+#define UNLOCKED 0
+#define LOCKED 1
 
 struct location {
   UCHAR id;
@@ -26,8 +29,7 @@ struct exit {
   UCHAR destination;
   UCHAR ispassable;
   UCHAR exittype;
-  UCHAR locktype;
-  UCHAR isopen;
+  UCHAR islocked;
 };
 
 char * copytolower(char *from);
@@ -38,7 +40,8 @@ char * get_dirtext(UCHAR dirbyte);
 void free_location(struct location *l);
 void print_short_description(struct location *locations, int i);
 void print_long_description(struct location *locations, int i);
-char * get_exittext(UCHAR firstbyte, UCHAR thirdbyte);
+char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte);
+char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte);
 int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte);
 void you_can_see(char *text, struct location dest);
 
@@ -50,9 +53,8 @@ int main(int argc, char *argv[]) {
     load_location(locations+i,i);
     //print_short_description(locations,i);
   }
-  print_long_description(locations,0);
-  printf("\n");
-  print_long_description(locations,1);
+  if(argc>1)
+    print_long_description(locations,strtol(argv[1],NULL,16));
   for(i=0;i<NLOCATIONS;i++)
     free_location(locations+i);
   free(locations);
@@ -109,17 +111,22 @@ long load_exit(struct exit *e, long addr){
     e->destination=second;
     e->ispassable=PASSABLE;
     e->exittype=NORMAL;
-    e->locktype=NORMAL;
     e->exittext=NULL;
     //See $21EE for logic of following
-    if( (first&0x80)!=0 ) {//Triplet of bytes
-      if( (third&0x80)==0 ){//Third byte not set
+    if( (first&0x80)!=0 ) {//Triplet of bytes ie fence, door, grate etc
+      if( (third&0x80)==0 ){//Third byte bit 7 not set, not a door or grate
 	if((third&0x40)!=0) //Bit six set, see $226F
 	  e->exittype=NONDOOR_SEETHRU;
 	else
           e->exittype=NONDOOR; //$2255
-	e->exittext=get_exittext(first,third);
+	e->exittext=get_nondoor_text(first,third);
       } else {//Third byte set so set lockable to type of key/door
+	e->exittype=DOOR;
+	if( (first&0x40) == 0 ) //See just before $2217
+	  e->islocked=LOCKED;
+	else
+	  e->islocked=UNLOCKED;
+	e->exittext=get_door_text(first,third);
       }      
     }
     if( (first&0x40)==0 )//if bit 6 is NOT set    
@@ -128,7 +135,7 @@ long load_exit(struct exit *e, long addr){
     return addr;
 }
 
-char * get_exittext(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as per $2255
+char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as per $2255
   char text[1000], *ret;
   UCHAR byte=thirdbyte&0x07;
   long addr=strtol("295F",NULL,16)-start;
@@ -140,7 +147,27 @@ char * get_exittext(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as per $
   byte=(thirdbyte>>3)&0x0F;//See $2255
   if( (firstbyte&0x40)!=0 )//If dir byte bit 6 set
     byte=byte|0x20;        //set bit 5  
-  addr=strtol("2900",NULL,16)-start;
+  addr=strtol("2900",NULL,16)-start;  //$2275
+  pos=print_word_or_zero(text, pos, addr, byte);
+  addr=strtol("2930",NULL,16)-start;
+  pos=print_word_or_zero(text, pos, addr, byte);
+  //The "through which" bit is handled in-game as dest structs not all loaded here
+  
+  text[pos-1]='\0';//Last char will be space, overwrite.
+  return copytolower(text);
+}
+
+char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte){//$2220
+  char text[1000], *ret;
+  UCHAR byte=thirdbyte&0x07;
+  long addr=strtol("295F",NULL,16)-start;
+  int pos=0;
+  if(byte!=0)
+    pos=print_word_or_zero(text, pos, addr, byte);
+
+  byte=(thirdbyte>>3)&0x0F;//See $2255
+  byte=byte|0x10;        //set bit 4  
+  addr=strtol("2900",NULL,16)-start; //$2275
   pos=print_word_or_zero(text, pos, addr, byte);
   addr=strtol("2930",NULL,16)-start;
   pos=print_word_or_zero(text, pos, addr, byte);
@@ -219,6 +246,17 @@ void print_long_description(struct location *locations, int i){
 	  sprintf(text," through which ");//15 chars
 	  you_can_see(text+15,dest);
 	  printf("%s",text);	  
+	}
+      } else {//it's a door or grate
+	if(e.islocked=LOCKED)
+	  printf("a locked ");
+	else
+	  printf("an open ");
+	printf("%s",e.exittext);
+	if(strstr(e.exittext,"grate")!=NULL){
+	  sprintf(text," through which ");//15 chars
+	  you_can_see(text+15,dest);
+	  printf("%s",text);
 	}
       }
     }
