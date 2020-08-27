@@ -42,7 +42,7 @@ void namelocation(char *name, long addr){
       name[linepos-1]=' ';
   }
   if(nwords==0){
-    printf("NOTE: This is an in code description\n");
+    //printf("NOTE: This is an in code description\n");
     incodedescription(name,b79);
   }  
 }
@@ -59,6 +59,19 @@ void incodedescription(char *ss, UCHAR b){
   }
 }
 
+void incodeexits(char *ss, UCHAR b){
+  //These are given in order they appear in code from $2038
+  switch(b){
+    case 1: sprintf(ss,"A DISUSED QUARRY"); return;
+    case 2: sprintf(ss,"THE CANYON FLOOR"); return;
+    case 3: sprintf(ss,"A MOUNTAIN RANGE"); return;
+    case 4: sprintf(ss,"FOREST"); return;
+    case 5: sprintf(ss,"FOREST"); return;
+    case 6: sprintf(ss,"A PASSAGE"); return;
+    default: sprintf(ss,"DESERT"); return;
+  }  
+}
+
 //Gets the address for a code >=128 which corresponds to the word table
 long getcommandaddress(UCHAR code){
   long add=5* (long) code; //Convert to long to avoid overflow
@@ -70,6 +83,7 @@ long getcommandaddress(UCHAR code){
 }
 
 //Writes the word stored at address into w
+//Returns characters written including final \0
 long getword(char *w, long address){
   long i=0;
   do {

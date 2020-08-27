@@ -223,6 +223,7 @@ first byte:  if bit 7 is set then the location is dark and needs the lit lamp, s
              if bit 6 is set then there is no drawing for this location, see $245A
              if bit 5 is set then there's no long description, see $21DC
              if bit 4 is set then the player has visited this location, see $245A
+             bits 0-3 specify in-code descriptions, see $2038
 second byte: bits 0-4 represent the count of words following this byte
              bits 5-7 represent the count of exits from this location, following the words
 words      : these are a series of bytes that refer to the command lookup table from $3600

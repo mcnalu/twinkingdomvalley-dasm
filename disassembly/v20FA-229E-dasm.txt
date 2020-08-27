@@ -357,7 +357,7 @@ vvv Inserted manually.
         LSR     A     
         LSR     A
         LSR     A     ; Move bits 3-7 to 0-4 
-        AND     #$0F  ; Zero bits r-7
+        AND     #$0F  ; Zero bits 4-7
         BIT     L007C ; Test direction byte
         BVC     L226C ; Branch if bit 6 clear
 

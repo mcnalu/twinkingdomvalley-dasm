@@ -30,5 +30,6 @@ long getlocationaddress(unsigned char code);
 long getaddressfromtable(long tablelb, long tablehb,unsigned char code);
 void namelocation(char *name, long addr);
 void incodedescription(char *ss, UCHAR b);
+void incodeexits(char *ss, UCHAR b);
 long getcommandaddress(UCHAR code);
 long getword(char *word,long address);

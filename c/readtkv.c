@@ -100,14 +100,6 @@ long describeexit(long addr){
     }
     printf("\n");
     
-    printf("%s ",direction); //$21EE
-    if(first>=0x80){ //$21F8
-      printf("is ");
-    } else { //$224D
-      printf("you can see "); //$JSR 2038
-      
-    }
-    
     return addr;
 }
 

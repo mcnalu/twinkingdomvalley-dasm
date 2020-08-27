@@ -201,8 +201,8 @@ OSCLI   = $FFF7
 
 .L2060                
         CMP     #$03   ; identifies location
-        BCS     L206C  ; Branch if yes
-                       ; <3 words
+        BCS     L206C  ; Branch if 3 or more
+                       ; must be 2
         JSR     L3B6C  ; Print them and RTS using bytes on stack
         THE CANYON FLOOR
 .L206B
