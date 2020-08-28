@@ -45,6 +45,7 @@ UCHAR parse_and_process(char *line, int len);
 UCHAR process(UCHAR *matches, int nmatches);
 UCHAR move(UCHAR dir, UCHAR dirindex);
 UCHAR get_match(UCHAR *word);
+UCHAR report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type);
 
 char * copytolower(char *from);
 char * stolower(char *s);
@@ -182,15 +183,37 @@ UCHAR move(UCHAR dir, UCHAR dirindex){
       } 
     }    
   }
-  if(ematch==NULL || ematch->ispassable==IMPASSABLE){
-    char w[100];
-    getword(w, dirindex);
-    printf("You can't go %s.\n",stolower(w));
+  UCHAR type=get_player_location()->locationtype;
+  if(ematch==NULL){
+    if( (dir&1) !=0 )//User asked to go down, $2418
+      type=0;
+    report_invalid_move(ematch,dirindex,type);
     return INVALID_MOVE;
   } else {
+    if(ematch->ispassable==IMPASSABLE){
+      report_invalid_move(ematch,dirindex,0);
+      return INVALID_MOVE;
+    } 
     set_player_location_code(ematch->destination);
     return ematch->destination;
   }
+}
+
+UCHAR report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type){
+  char w[100];
+  getword(w, dirindex);
+  //These are given in order they appear in code from $247A
+  switch(type){ //type is 0-7
+    case 1: printf("Steep lag heaps block your way.\n"); break;
+    case 2: printf("The cliff is too steep.\n"); break;
+    case 3: printf("The mountains are too steep.\n"); break;
+    case 4: printf("There are bushes in your way.\n"); break;
+    case 5: printf("Dense undergrowth blocks your way.\n"); break;
+    case 6: printf("No passage leads %s.\n",stolower(w)); break;
+    case 7: printf("The dunes are too steep.\n"); break;
+    case 0: printf("You can't go %s.\n",stolower(w)); break;
+  }
+  return type;
 }
 
 UCHAR get_match(UCHAR *word){

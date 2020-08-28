@@ -95,6 +95,7 @@ OSCLI   = $FFF7
         BIT     L0018
         CLC
 .L23C3                ; Act on user commands.
+                      ; Search for direction commands in user input and act on them.
         LDA     L008C ; This is direction set in the $3500 implied from, eg, GO IN CABIN  
         STA     L0086 ; $86=$8C
         BNE     L23DE ; Branch if $86 non-zero 
@@ -166,9 +167,9 @@ OSCLI   = $FFF7
                         ; Failed to match an exit to $86
 .L2418
         LDA     L0086   
-        AND     #$01    
-        BNE     L2424   ; Branch if bit 1 of $86 is set to tell user they can't go that way
-                        ; bit 1 not set
+        AND     #$01    ; Test bit 1 ie user asked to go down
+        BNE     L2424   ; Branch if user asked to go down to tell user they can't go that way
+                        ; If user didn't ask to go down
         LDA     L0079   ; Load first byte of location block
         AND     #$07    ; Zero bits 3 to 7 
         BNE     L247A   ; Branch if not zero
