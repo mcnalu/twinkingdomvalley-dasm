@@ -43,7 +43,7 @@ struct exit {
 int process_input();
 UCHAR parse_and_process(char *line, int len);
 UCHAR process(UCHAR *matches, int nmatches);
-UCHAR move(UCHAR dir);
+UCHAR move(UCHAR dir, UCHAR dirindex);
 UCHAR get_match(UCHAR *word);
 
 char * copytolower(char *from);
@@ -152,12 +152,15 @@ UCHAR process(UCHAR *matches, int nmatches){
       dir=dir|dirbytes[matches[i]]; //Set bits for commanded direction
     }
   }
-  return move(dir);
+  for(i=0;i<0x0E;i++)   //Find index of commanded direction
+    if(dir==dirbytes[i])
+      break;
+  return move(dir,i);
 }
 
 //Returns the new player location code if move happened.
 //INVALID_MOVE if not.
-UCHAR move(UCHAR dir){
+UCHAR move(UCHAR dir, UCHAR dirindex){
   int i;
   if(dir==0)
     return INVALID_MOVE;
@@ -180,10 +183,11 @@ UCHAR move(UCHAR dir){
     }    
   }
   if(ematch==NULL || ematch->ispassable==IMPASSABLE){
-    printf("You can't go XXX\n");
+    char w[100];
+    getword(w, dirindex);
+    printf("You can't go %s.\n",stolower(w));
     return INVALID_MOVE;
   } else {
-    printf("YOU CAN GO YOUR OWN WAY!!!\n");
     set_player_location_code(ematch->destination);
     return ematch->destination;
   }
@@ -195,7 +199,7 @@ UCHAR get_match(UCHAR *word){
   for(code=0;code<0xFD;code++){//$FE is *** marking end of $3600 word table
     getword(w,code);
     stolower(w);
-    if(strstr(w,word)!=NULL)
+    if(strstr(w,word)==w)//Is seach term match for first part of w?
       return code;
   }
   return NOMATCH;
