@@ -37,6 +37,7 @@ $20FA Prints a . followed by newline and text colour
 $24DD Print out info about object eg a small holdall
 $229F Displays yellow ? prompt and gets user input, matches commands but doesn't execute them.
 $238D If A is in A-Z or a- then returns with carry set.
+$23C3 Act on user commands. 
 $242B This converts the commanded direction in $86 to text and prints it
 $242D This converts the commanded direction in A to text and prints it
 $2452 Sets new player location and then depending on option draws picture and prints info

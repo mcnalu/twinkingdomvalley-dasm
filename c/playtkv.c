@@ -2,6 +2,14 @@
 #include "libtkv.h"
 
 #define NLOCATIONS 176
+#define MAXLINE 1000
+
+#define QUIT -1
+#define EMPTY -2
+#define INVALID_MOVE 0xFF
+
+#define NOMATCH 0xFF
+
 #define PASSABLE 1
 #define IMPASSABLE 0
 #define NORMAL 0
@@ -23,7 +31,7 @@ struct location {
 };
 
 struct exit {
-  UCHAR direction;
+  UCHAR direction; //first&0x3F - bits 6 and 7 info in ispassable etc
   char *dirtext;
   char *exittext;
   UCHAR destination;
@@ -32,32 +40,165 @@ struct exit {
   UCHAR islocked;
 };
 
+int process_input();
+UCHAR parse_and_process(char *line, int len);
+UCHAR process(UCHAR *matches, int nmatches);
+UCHAR move(UCHAR dir);
+UCHAR get_match(UCHAR *word);
+
 char * copytolower(char *from);
 char * stolower(char *s);
+
 void load_location(struct location *l, UCHAR id);
 long load_exit(struct exit *e, long addr);
 char * get_dirtext(UCHAR dirbyte);
 void free_location(struct location *l);
-void print_short_description(struct location *locations, int i);
-void print_long_description(struct location *locations, int i);
+void print_short_description(UCHAR i);
+void print_long_description(UCHAR i);
 char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte);
 char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte);
 int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte);
 void you_can_see(char *text, struct location dest);
 
+struct location * get_location(UCHAR i);
+struct location * get_player_location();
+void set_player_location_code(UCHAR i);
+UCHAR get_player_location_code();
+
+//Never access these global variables directly - use get/set methods
+//Exception is during loading data and freeing location info
+struct location *locations;
+UCHAR player_location_code;
+
 int main(int argc, char *argv[]) {
   init_tkv();
   int i;
-  struct location *locations = (struct location *) malloc(NLOCATIONS*sizeof(struct location));
+  locations = (struct location *) malloc(NLOCATIONS*sizeof(struct location));
   for(i=0;i<NLOCATIONS;i++){
     load_location(locations+i,i);
     //print_short_description(locations,i);
   }
-  if(argc>1)
-    print_long_description(locations,strtol(argv[1],NULL,16));
+
+  if(argc>1){
+    print_long_description(strtol(argv[1],NULL,16));
+    return 0;
+  }
+  
+  set_player_location_code(1);
+  int input=1;
+  do {
+    if(input!=EMPTY && input!=INVALID_MOVE)
+      print_long_description(get_player_location_code());
+    printf("?");
+    input=process_input();
+  } while(input!=QUIT);
+
   for(i=0;i<NLOCATIONS;i++)
     free_location(locations+i);
   free(locations);
+}
+
+int process_input(){
+  char line[MAXLINE];
+  int c,i=0;
+
+  do {
+    c=getchar();
+    line[i++]=c;
+  } while( i<MAXLINE && c!=EOF && c!='\n' );
+  line[i-1]='\0';
+  
+  //printf("|%s|\n",line);
+  if(strstr(line,"quit")!=NULL)
+    return QUIT;
+  else if(i==1)
+    return EMPTY;
+  stolower(line);//Drop to lower case
+  return parse_and_process(line,i);
+}
+
+UCHAR parse_and_process(char *line, int len){
+  UCHAR matches[10];
+  int i;
+  int nmatches=0;
+  for(i=0;i<len-1;i++){//$230D loop
+    if(line[i]=='*'){//$2310
+      printf("The * commands are not implemented yet.\n");
+      return EMPTY;
+    }
+    char word[100];
+    int j=0;
+    while(line[i]>='a' && line[i]<='z' && i<len-1){//$231E
+      word[j++]=line[i++];
+    }
+    word[j]='\0';
+    matches[nmatches]=get_match(word);
+    //printf("Match result for %s: %02x\n",word,matches[nmatches]);
+    if(matches[nmatches]!=NOMATCH && nmatches<10)
+      nmatches++;
+  }
+  return process(matches, nmatches);
+}
+
+UCHAR process(UCHAR *matches, int nmatches){
+  //These dirbytes are in $23B5-C3
+  //Correspond to: N  S  E  W  U  D  NE NW NE NW SE SW SE SW
+  UCHAR dirbytes[]={0x20, 0x10, 0x08, 0x04, 0x02, 0x01,
+    0x28, 0x24, 0x28, 0x24, 0x18, 0x14, 0x18, 0x14};
+  int i;
+  UCHAR dir=0;
+  for(i=0;i<nmatches;i++){//See $23CA
+    if(matches[i]<0x0E){//A direction
+      dir=dir|dirbytes[matches[i]]; //Set bits for commanded direction
+    }
+  }
+  return move(dir);
+}
+
+//Returns the new player location code if move happened.
+//INVALID_MOVE if not.
+UCHAR move(UCHAR dir){
+  int i;
+  if(dir==0)
+    return INVALID_MOVE;
+  struct location *l = get_player_location();
+  struct exit *ematch=NULL;
+  for(i=0;i<l->nexits;i++){//$23E3 look for exact match
+    struct exit *e = (l->exits)+i;
+    if(e->direction==dir){
+      ematch=e;
+      break;
+    } 
+  }
+  if(ematch==NULL){//Failed to find exact match
+    for(i=0;i<l->nexits;i++){//$23FF look for partial match
+      struct exit *e = (l->exits)+i;
+      if( ( e->direction|dir) == e->direction ){ //eg E will match NE
+	ematch=e;
+	break;
+      } 
+    }    
+  }
+  if(ematch==NULL || ematch->ispassable==IMPASSABLE){
+    printf("You can't go XXX\n");
+    return INVALID_MOVE;
+  } else {
+    printf("YOU CAN GO YOUR OWN WAY!!!\n");
+    set_player_location_code(ematch->destination);
+    return ematch->destination;
+  }
+}
+
+UCHAR get_match(UCHAR *word){
+  char w[100];
+  UCHAR code;
+  for(code=0;code<0xFD;code++){//$FE is *** marking end of $3600 word table
+    getword(w,code);
+    stolower(w);
+    if(strstr(w,word)!=NULL)
+      return code;
+  }
+  return NOMATCH;
 }
 
 //Copys string, dropping case and creating memory for to string - remember to free it!
@@ -185,7 +326,7 @@ int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte){
   byte=c[addr+byte];
   if(byte!=0){//if zero print nothing, see $1FD0
     addr=getcommandaddress(byte);
-    pos+=getword(ss+pos,addr);
+    pos+=getwordforaddress(ss+pos,addr);
     ss[pos-1]=' ';
   }
   return pos;
@@ -203,7 +344,7 @@ char * get_dirtext(UCHAR dirbyte){
       break;
   }
   if(di<0x0E)
-    getword(word,getcommandaddress(di));
+    getwordforaddress(word,getcommandaddress(di));
   else
     sprintf(word,"NOT A DIRECTION");
   s=copytolower(word);
@@ -211,31 +352,21 @@ char * get_dirtext(UCHAR dirbyte){
   return s;
 }
 
-void free_location(struct location *l){
-  int i;
-  free(l->description);
-  for(i=0;i<l->nexits;i++){
-    free((l->exits)[i].dirtext);
-    if((l->exits)[i].exittext != NULL )
-      free((l->exits)[i].exittext);
-  }
-  free(l->exits);
+void print_short_description(UCHAR i){
+  struct location *l = get_location(i);
+  printf("You are %s.\n",l->description);
 }
 
-void print_short_description(struct location *locations, int i){
-  printf("You are %s.\n",(locations[i]).description);
-}
-
-void print_long_description(struct location *locations, int i){
+void print_long_description(UCHAR i){
   char text[1000];
-  struct location *l = locations+i;
-  print_short_description(locations,i);
+  struct location *l = get_location(i);
+  print_short_description(i);
   for(i=0;i<l->nexits;i++){
     struct exit e=(l->exits)[i];
-    struct location dest=locations[e.destination];
+    struct location *dest=get_location(e.destination);
     printf("%s ",e.dirtext);
     if(e.exittype==NORMAL) {
-      you_can_see(text,dest);
+      you_can_see(text,*dest);
       printf("%s",text);
     }
     else {//door or grate or fence or something else?
@@ -244,7 +375,7 @@ void print_long_description(struct location *locations, int i){
 	printf("%s",e.exittext);
 	if(e.exittype==NONDOOR_SEETHRU){//If dir byte bit 6 set, $2243
 	  sprintf(text," through which ");//15 chars
-	  you_can_see(text+15,dest);
+	  you_can_see(text+15,*dest);
 	  printf("%s",text);	  
 	}
       } else {//it's a door or grate
@@ -255,7 +386,7 @@ void print_long_description(struct location *locations, int i){
 	printf("%s",e.exittext);
 	if(strstr(e.exittext,"grate")!=NULL){
 	  sprintf(text," through which ");//15 chars
-	  you_can_see(text+15,dest);
+	  you_can_see(text+15,*dest);
 	  printf("%s",text);
 	}
       }
@@ -273,4 +404,31 @@ void you_can_see(char *text, struct location dest){
   else
     incodeexits(ss,dest.locationtype);
   sprintf(text,"you can see %s",stolower(ss));
+}
+
+void free_location(struct location *l){
+  int i;
+  free(l->description);
+  for(i=0;i<l->nexits;i++){
+    free((l->exits)[i].dirtext);
+    if((l->exits)[i].exittext != NULL )
+      free((l->exits)[i].exittext);
+  }
+  free(l->exits);
+}
+
+struct location * get_location(UCHAR i){
+  return locations+i;
+}
+
+struct location * get_player_location(){
+  return locations+player_location_code;
+}
+
+UCHAR get_player_location_code(){
+  return player_location_code;
+}
+
+void set_player_location_code(UCHAR i){
+  player_location_code=i;
 }

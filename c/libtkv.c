@@ -37,7 +37,7 @@ void namelocation(char *name, long addr){
   int i,linepos=0;
   for(i=0;i<nwords;i++){
     UCHAR l =c[addr+2+i];
-    linepos+=getword(name+linepos,getcommandaddress(l));
+    linepos+=getwordforaddress(name+linepos,getcommandaddress(l));
     if(i<nwords-1)
       name[linepos-1]=' ';
   }
@@ -82,9 +82,14 @@ long getcommandaddress(UCHAR code){
   return add-start;
 }
 
+//Note: last word in $3600 table has code $FE and is *** (3 asterisks)
+void getword(char *w, UCHAR code){
+  getwordforaddress(w,getcommandaddress(code));
+}
+
 //Writes the word stored at address into w
 //Returns characters written including final \0
-long getword(char *w, long address){
+long getwordforaddress(char *w, long address){
   long i=0;
   do {
     w[i]=c[address+i];

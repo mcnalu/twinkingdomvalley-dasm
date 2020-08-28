@@ -3,7 +3,7 @@
 /* To do
  */
 
-long getword(char *word,long address);
+long getwordforaddress(char *word,long address);
 long getwordaddress(UCHAR code);
 long printwords(char *line, char *s, int type);
 void createbytelines(UCHAR b1, UCHAR b2, UCHAR b3);
@@ -77,7 +77,7 @@ void printdirection(char *word, char dirbyte){
     word=word+11;
   }
   if(di<0x0E)
-    getword(word,getcommandaddress(di));
+    getwordforaddress(word,getcommandaddress(di));
   else
     sprintf(word,"NOT A DIRECTION");
   return;
@@ -154,7 +154,7 @@ void describeobject(char *scode){
       line[linepos-1]='\0';
       break;
     }
-    linepos+=getword(line+linepos,getcommandaddress(w));
+    linepos+=getwordforaddress(line+linepos,getcommandaddress(w));
     if(i<NOBJWORDS-1)
       line[linepos-1]=' ';
   }
@@ -203,7 +203,7 @@ void describenpcclass(char *scode){
       line[linepos-1]='\0';
       break;
     }
-    linepos+=getword(line+linepos,getcommandaddress(w));
+    linepos+=getwordforaddress(line+linepos,getcommandaddress(w));
     if(i<NNPCWORDS-1)
       line[linepos-1]=' ';
   }
@@ -223,7 +223,7 @@ void dotests(){
   char *testaddr="057C";
   long l = strtol(testaddr,NULL,16)-start;
   printf("Should be 53 or 83 or [S]: %x or %d or [%c]\n",c[l],c[l],c[l]);  
-  getword(word,l);
+  getwordforaddress(word,l);
   printf("Word at %s |%s|\n",testaddr,word);
   printf("Address for code &98 is %04x\n",start+getwordaddress(strtol("98",NULL,16)));
   printf("Address for code &1A is %04x\n",start+getcommandaddress(strtol("1A",NULL,16)));
@@ -262,9 +262,9 @@ long printwords(char *line, char *s, int type){
 	line[linepos-1]=' ';
       }
       if(type==L3B6C || l<128){
-	linepos+=getword(line+linepos,getcommandaddress(l));	
+	linepos+=getwordforaddress(line+linepos,getcommandaddress(l));	
       } else if(l<256){
-	linepos+=getword(line+linepos,getwordaddress(l));		
+	linepos+=getwordforaddress(line+linepos,getwordaddress(l));		
       }
       //printf("%d |%s|\n",linepos,line);
     }

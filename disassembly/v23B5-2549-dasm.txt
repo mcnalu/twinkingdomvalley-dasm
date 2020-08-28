@@ -94,7 +94,7 @@ OSCLI   = $FFF7
         BIT     L0028
         BIT     L0018
         CLC
-.L23C3
+.L23C3                ; Act on user commands.
         LDA     L008C ; This is direction set in the $3500 implied from, eg, GO IN CABIN  
         STA     L0086 ; $86=$8C
         BNE     L23DE ; Branch if $86 non-zero 
@@ -140,18 +140,20 @@ OSCLI   = $FFF7
         DEC     L007A   ; Decrement number of exits that remain to be checked
         BNE     L23E3   ; Branch if there's more to checked
                         ; Checked all exits
+                        
         LDA     L0087   ; Second byte from the location block
         STA     L007A   ; Store in $7A
         JSR     L2504   ; Calls end of $24FB to reset $7A,$7B to original values
 
-.L23FF                  ; Loop to check if $86 contains a valid instruction
+.L23FF                  ; Loop to check if $86 contains a less perfect match
+                        ; eg user says E but there's no E exit but this can match NE or SE here.
         JSR     L21CD   ; Load dir,dest byte pair
 
         LDA     L007C   
         AND     #$3F
         STA     L007F   ; Store dir in $7F
         ORA     L0086   ; Set bits from $86
-        CMP     L007F   
+        CMP     L007F   ; This will be zero if eg $7F is NE and user asked for N or E
         BEQ     L2452   ; Branch ahead if this is where the user wanted to go
                         ; Direction not a match
         BIT     L007C   
@@ -217,7 +219,7 @@ OSCLI   = $FFF7
                       ; Bit 6 is set
         PLA           ; Pull return address bytes off stack
         PLA
-        LDA     L007D ; The desination byte of the exit
+        LDA     L007D ; The destination byte of the exit
         
 .L245A                ; Sets the new player location and prints description and draws picture
         STA     L0089 ; Set the new player location

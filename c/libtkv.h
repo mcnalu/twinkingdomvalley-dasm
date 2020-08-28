@@ -32,4 +32,5 @@ void namelocation(char *name, long addr);
 void incodedescription(char *ss, UCHAR b);
 void incodeexits(char *ss, UCHAR b);
 long getcommandaddress(UCHAR code);
-long getword(char *word,long address);
+void getword(char *w, UCHAR code);
+long getwordforaddress(char *word,long address);

@@ -83,7 +83,7 @@
         STY     L008A ; $008A becomes &FF, presumably for BIT test a little before $22C4
         JSR     OSRDCH ; read a char
 
-        JSR     L2517  ; dunno what this does though I thought it drew the picture. Puzzled.
+        JSR     L2517  ; Draws picture.
 
         JMP     L229F  ; restart input routine
 
@@ -125,7 +125,7 @@ L2319 = L2317+2
         BCC     L230D ; If carry clear repeat loop for next char
 
         LDY     #$00  ; Y indexes where upper case converted chars are to be stored
-.L231E
+.L231E                  ; This loop copies contiguous sequence of A-z chars to $0AC0
         AND     #$DF    ; This converts lower case char codes to upper case equivalents
         STA     L0AC0,Y ; Store the upper case char code
         CPY     #$3E    ; Is Y=62? This is max length of input.
@@ -141,11 +141,11 @@ L2319 = L2317+2
 
         TYA     ; Push Y value indicating number of chars into the stack.
         PHA     
-        LDA     #$0D    ; Put CR at last char storage location
+        LDA     #$0D    ; Put CR at last char storage location to indicate end of word
         STA     L0AC0,Y
         LDA     #$FF    
         STA     L0085
-.L233B
+.L233B                  ; This loops matches the word stored in 0AC0 to a word in the command table
         INC     L0085   ; $85 contains index of valid commands stored from $3600
         LDY     L0085   ; Load this into Y
         JSR     L3BC4   ; Stores address in $70 (LB) and $71 (HB) that points to valid command to check below 
@@ -154,45 +154,44 @@ L2319 = L2317+2
 .L2344
         LDA     (L0070),Y ; Load a char from list of valid commands
         BMI     L2354     ; If negative then it's the last char in the command (has 128 added to it).
-
-        CMP     #$2A      ; Is it *?
-        BEQ     L2388     ; If yes branch ahead to deal with it
-
+                          ; Normal character
+        CMP     #$2A      ; Is it *? * At address $3B05 marks the end of the commands.
+        BEQ     L2388     ; If yes branch ahead to deal with fact no match was found.
+                          ; It's not a *
         CMP     L0AC0,Y   ; Compare with character of input
-        BNE     L2365     ; If not equal branch ahead
-
+        BNE     L2365     ; If not equal branch ahead to check if that's where user inputted word ends.
+                          ; Matches input character
         INY               ; If equal , next char please
         BNE     L2344     ; Always branch back to do next char (Y can't get so high to INY to 0)
 
 .L2354                    ; Reached if we've matched up to the last char of valid command (or Y=0)
         AND     #$7F      ; wipe bits 4-7 because it's likely a final char with 128 added
         CMP     L0AC0,Y   ; Compare with character of input
-        BNE     L2365     ; Jump ahead if not equal
+        BNE     L2365     ; Jump ahead if not equal to check if that's where user inputted word ends.
                           
-        INY               ; If equal, WE HAVE A MATCH!
-        LDA     L0AC0,Y   ; Load next char of input
-        CMP     #$0D      ; Is it a CR? 
-        BNE     L233B     ; No, back to start of the loop to get continue matching chars
-
-        BEQ     L236C     ; Yes, WE'VE GOT THE WHOLE LOT so branch ahead to process
-
-.L2365
+        INY               ; If equal, we have a match *if* this is the end of the user's inputted word.
+        LDA     L0AC0,Y   ; Load next char of input.
+        CMP     #$0D      ; Is it a CR which was inserted above to mark the end of the user's inputted word?
+        BNE     L233B     ; No, we don't have a match, back to start of the loop to move on to next command
+                          ; Yes, we have a match!
+        BEQ     L236C     ; Always branch to $336C
+.L2365                  ; Gets here if user inputted word matches some of a stored command.
         LDA     L0AC0,Y ; Load input char
         CMP     #$0D    ; Is it CR?
-        BNE     L233B   ; If not, back to start of the loop
-
-.L236C                  ; We've got the whole line
+        BNE     L233B   ; If not, no match :( back to start of the loop to move on to next command
+                        ; If so we have a match.
+.L236C                  ; WE HAVE A MATCH. HURRAH!
         LDY     L0084   ; &84 counts matched commands, starts at zero above
         LDA     L0085   ; $85 contains index of matched command stored from $3600
         STA     L0A80,Y ; Store matched command index at &0A80+Y
-        INC     L0084   
-        CMP     #$2F    ; Is index >=47 ; Valid commands have 0-46
-        BCS     L2388   ; Branch if index >=47
+        INC     L0084   ; Increment match count
+        CMP     #$2F    ; Is index >=47 ; Verb-like words have 0-46, 47+ are objects, NPCs or places
+        BCS     L2388   ; Branch if index >=47 ie not verb-like
+                        ; It's a verb-like command.
+        BIT     L0083   ; Was initialised to &80 but gets replaced with first matched verb-like command
+        BPL     L2388   ; Branch if we found one before 
 
-        BIT     L0083   ; Was initialised to &80 but gets replaced with match command
-        BPL     L2388   ; Branch if this isn't the first command found 
-
-        STA     L0083   ; Store first matched command in $83
+        STA     L0083   ; Store first matched verb-like command in $83
 .L237F
         CMP     #$0E    ; Commands 0-13 are directions eg N,E,S etc
 L2380 = L237F+1
