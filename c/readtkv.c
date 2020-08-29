@@ -68,7 +68,7 @@ void printdirection(char *word, char dirbyte){
   long dirtable = strtol("23B5",NULL,16)-start;
   
   for(di=0;di<0x0E;di++){//Corresponds to index of direction commands
-    char dd=c[dirtable+di];
+    char dd=ctkv[dirtable+di];
     if(dd==searchdir)
       break;
   }
@@ -84,7 +84,7 @@ void printdirection(char *word, char dirbyte){
 }
 
 long describeexit(long addr){
-    UCHAR  first = c[addr],second = c[addr+1],third = c[addr+2]; //For two or three bytes
+    UCHAR  first = ctkv[addr],second = ctkv[addr+1],third = ctkv[addr+2]; //For two or three bytes
     if(first <0x80) // Positive byte
       addr+=2;
     else // Negative byte
@@ -108,8 +108,8 @@ void describelocation(int argc, char *argv[]){
   long location=strtol(arg2+1,NULL,16); //Skip 1st char $ in 2nd argument
   long addr = getlocationaddress(location);
   printf("location %s is at address %04x\n",argv[2],addr+start);
-  UCHAR b79=c[addr];
-  UCHAR b7A=c[addr+1];
+  UCHAR b79=ctkv[addr];
+  UCHAR b7A=ctkv[addr+1];
   UCHAR  nwords=b7A&0x1F;
   UCHAR  nexits=b7A>>5;
   int i;
@@ -213,7 +213,7 @@ void describenpcclass(char *scode){
 
 UCHAR getbyte(char *tableaddr, UCHAR y){
   long table = strtol(tableaddr,NULL,16)-start;
-  return c[table+y];
+  return ctkv[table+y];
 }
 
 //Performs some tests
@@ -222,7 +222,7 @@ void dotests(){
   char line[MAXLINE];  
   char *testaddr="057C";
   long l = strtol(testaddr,NULL,16)-start;
-  printf("Should be 53 or 83 or [S]: %x or %d or [%c]\n",c[l],c[l],c[l]);  
+  printf("Should be 53 or 83 or [S]: %x or %d or [%c]\n",ctkv[l],ctkv[l],ctkv[l]);  
   getwordforaddress(word,l);
   printf("Word at %s |%s|\n",testaddr,word);
   printf("Address for code &98 is %04x\n",start+getwordaddress(strtol("98",NULL,16)));
@@ -278,13 +278,13 @@ long printwords(char *line, char *s, int type){
 void createbytelines(UCHAR b1, UCHAR b2, UCHAR b3){
   long i=0,j;
   do{
-    if(c[i]==b1 && c[i+1]==b2 && c[i+2]==b3){//JSR 14CE
+    if(ctkv[i]==b1 && ctkv[i+1]==b2 && ctkv[i+2]==b3){//JSR 14CE
       j=0;
       i+=3;
       printf("byte $%04x ",start+i);
       do {
          j++;
-      } while(c[i+j]!=0);
+      } while(ctkv[i+j]!=0);
       printf("$%x\nentry pc\n",j+1);
       i=i+j;
     }

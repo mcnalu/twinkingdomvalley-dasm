@@ -23,7 +23,7 @@ long lbloctable,hbloctable;
 long offsettable;
 
 //TKV code as re-ordered into BBC's memory at very start of game.
-unsigned char c[FILESIZE];
+unsigned char ctkv[FILESIZE];
 
 void init_tkv();
 long getlocationaddress(unsigned char code);

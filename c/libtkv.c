@@ -3,7 +3,7 @@
 void init_tkv(){
   fprintf(stderr,"Opening binary file...\n");
   FILE *fp = fopen("../machinecode/VALLEYR","r");
-  fread(c,1,FILESIZE,fp);
+  fread(ctkv,1,FILESIZE,fp);
   fclose(fp);  
   fprintf(stderr,"...closed.\n");
   
@@ -22,8 +22,8 @@ long getlocationaddress(unsigned char code){
 
 long getaddressfromtable(long lbtable, long hbtable, unsigned char code){
   char a[5];
-  unsigned char lb=c[lbtable+code];
-  unsigned char hb=c[hbtable+code];
+  unsigned char lb=ctkv[lbtable+code];
+  unsigned char hb=ctkv[hbtable+code];
   //printf("%d %d\n",lbtable+code,lb);
   sprintf(a,"%02x%02x",hb,lb);
   //printf("%s\n",a);
@@ -31,12 +31,12 @@ long getaddressfromtable(long lbtable, long hbtable, unsigned char code){
 }
 
 void namelocation(char *name, long addr){
-  UCHAR b79=c[addr];
-  UCHAR b7A=c[addr+1];
+  UCHAR b79=ctkv[addr];
+  UCHAR b7A=ctkv[addr+1];
   UCHAR  nwords=b7A&0x1F;
   int i,linepos=0;
   for(i=0;i<nwords;i++){
-    UCHAR l =c[addr+2+i];
+    UCHAR l =ctkv[addr+2+i];
     linepos+=getwordforaddress(name+linepos,getcommandaddress(l));
     if(i<nwords-1)
       name[linepos-1]=' ';
@@ -75,7 +75,7 @@ void incodeexits(char *ss, UCHAR b){
 //Gets the address for a code >=128 which corresponds to the word table
 long getcommandaddress(UCHAR code){
   long add=5* (long) code; //Convert to long to avoid overflow
-  long offset = (long) c[offsettable+code];
+  long offset = (long) ctkv[offsettable+code];
  
   add += strtol("3500",NULL,16)+offset+128;
   //printf("Address is %04x and offset was %d\n",add,offset);
@@ -92,7 +92,7 @@ void getword(char *w, UCHAR code){
 long getwordforaddress(char *w, long address){
   long i=0;
   do {
-    w[i]=c[address+i];
+    w[i]=ctkv[address+i];
     if(w[i]<0){
       w[i]+=128;
       break;

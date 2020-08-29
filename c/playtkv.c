@@ -256,10 +256,10 @@ void load_location(struct location *l, UCHAR id){
   //Set up the description
   namelocation(desc,addr);
   l->description=copytolower(desc);
-  UCHAR b79=c[addr];
+  UCHAR b79=ctkv[addr];
   l->locationtype=b79&0x07; //Used for describing exits to this place, see $2038
   //Work out number of exits
-  UCHAR b7A=c[addr+1];
+  UCHAR b7A=ctkv[addr+1];
   UCHAR  nwords=b7A&0x1F;
   l->nexits=b7A>>5;
   l->exits = (struct exit *) malloc(l->nexits*sizeof(struct exit));
@@ -270,7 +270,7 @@ void load_location(struct location *l, UCHAR id){
 }
 
 long load_exit(struct exit *e, long addr){
-    UCHAR  first = c[addr],second = c[addr+1],third = c[addr+2]; //For two or three bytes
+    UCHAR  first = ctkv[addr],second = ctkv[addr+1],third = ctkv[addr+2]; //For two or three bytes
     if(first <0x80) // Positive byte, two bytes follow
       addr+=2;
     else // Negative byte, three bytes follow
@@ -350,7 +350,7 @@ char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte){//$2220
    Print nothing if byte==0: pos is returned unchanged.
    See $2275 */
 int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte){
-  byte=c[addr+byte];
+  byte=ctkv[addr+byte];
   if(byte!=0){//if zero print nothing, see $1FD0
     addr=getcommandaddress(byte);
     pos+=getwordforaddress(ss+pos,addr);
@@ -366,7 +366,7 @@ char * get_dirtext(UCHAR dirbyte){
   char word[16]; //Max it needs to hold is "NOT A DIRECTION"
   char *s;
   for(di=0;di<0x0E;di++){//Corresponds to index of direction commands
-    UCHAR dd=c[dirtable+di];
+    UCHAR dd=ctkv[dirtable+di];
     if(dd==searchdir)
       break;
   }
