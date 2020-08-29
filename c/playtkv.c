@@ -40,6 +40,7 @@ struct exit {
   UCHAR islocked;
 };
 
+void process_output(char *s);
 int process_input();
 UCHAR parse_and_process(char *line, int len);
 UCHAR process(UCHAR *matches, int nmatches);
@@ -90,13 +91,17 @@ int main(int argc, char *argv[]) {
   do {
     if(input!=EMPTY && input!=INVALID_MOVE)
       print_long_description(get_player_location_code());
-    printf("?");
+    process_output("?");
     input=process_input();
   } while(input!=QUIT);
 
   for(i=0;i<NLOCATIONS;i++)
     free_location(locations+i);
   free(locations);
+}
+
+void process_output(char *s){
+  printf("%s",s);
 }
 
 int process_input(){
@@ -124,7 +129,7 @@ UCHAR parse_and_process(char *line, int len){
   int nmatches=0;
   for(i=0;i<len-1;i++){//$230D loop
     if(line[i]=='*'){//$2310
-      printf("The * commands are not implemented yet.\n");
+      process_output("The * commands are not implemented yet.\n");
       return EMPTY;
     }
     char word[100];
@@ -201,18 +206,20 @@ UCHAR move(UCHAR dir, UCHAR dirindex){
 
 UCHAR report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type){
   char w[100];
+  char line[1000];
   getword(w, dirindex);
   //These are given in order they appear in code from $247A
   switch(type){ //type is 0-7
-    case 1: printf("Steep lag heaps block your way.\n"); break;
-    case 2: printf("The cliff is too steep.\n"); break;
-    case 3: printf("The mountains are too steep.\n"); break;
-    case 4: printf("There are bushes in your way.\n"); break;
-    case 5: printf("Dense undergrowth blocks your way.\n"); break;
-    case 6: printf("No passage leads %s.\n",stolower(w)); break;
-    case 7: printf("The dunes are too steep.\n"); break;
-    case 0: printf("You can't go %s.\n",stolower(w)); break;
+    case 1: sprintf(line,"Steep lag heaps block your way.\n"); break;
+    case 2: sprintf(line,"The cliff is too steep.\n"); break;
+    case 3: sprintf(line,"The mountains are too steep.\n"); break;
+    case 4: sprintf(line,"There are bushes in your way.\n"); break;
+    case 5: sprintf(line,"Dense undergrowth blocks your way.\n"); break;
+    case 6: sprintf(line,"No passage leads %s.\n",stolower(w)); break;
+    case 7: sprintf(line,"The dunes are too steep.\n"); break;
+    case 0: sprintf(line,"You can't go %s.\n",stolower(w)); break;
   }
+  process_output(line);
   return type;
 }
 
@@ -381,7 +388,9 @@ char * get_dirtext(UCHAR dirbyte){
 
 void print_short_description(UCHAR i){
   struct location *l = get_location(i);
-  printf("You are %s.\n",l->description);
+  char line[5000];
+  sprintf(line,"You are %s.\n",l->description);
+  process_output(line);
 }
 
 void print_long_description(UCHAR i){
@@ -391,34 +400,36 @@ void print_long_description(UCHAR i){
   for(i=0;i<l->nexits;i++){
     struct exit e=(l->exits)[i];
     struct location *dest=get_location(e.destination);
-    printf("%s ",e.dirtext);
+    char line[5000];
+    sprintf(line,"%s ",e.dirtext);
+    process_output(line);
     if(e.exittype==NORMAL) {
       you_can_see(text,*dest);
-      printf("%s",text);
+      process_output(text);
     }
     else {//door or grate or fence or something else?
-      printf("is ");
+      process_output("is ");
       if(e.exittype==NONDOOR || e.exittype==NONDOOR_SEETHRU){//eg fence
-	printf("%s",e.exittext);
+	process_output(e.exittext);
 	if(e.exittype==NONDOOR_SEETHRU){//If dir byte bit 6 set, $2243
 	  sprintf(text," through which ");//15 chars
 	  you_can_see(text+15,*dest);
-	  printf("%s",text);	  
+	  process_output(text);	  
 	}
       } else {//it's a door or grate
 	if(e.islocked=LOCKED)
-	  printf("a locked ");
+	  process_output("a locked ");
 	else
-	  printf("an open ");
-	printf("%s",e.exittext);
+	  process_output("an open ");
+	process_output(e.exittext);
 	if(strstr(e.exittext,"grate")!=NULL){
 	  sprintf(text," through which ");//15 chars
 	  you_can_see(text+15,*dest);
-	  printf("%s",text);
+	  process_output(text);
 	}
       }
     }
-    printf(".\n");
+    process_output(".\n");
   }
 }
 
