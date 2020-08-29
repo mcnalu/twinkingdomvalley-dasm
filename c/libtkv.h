@@ -26,6 +26,9 @@ long offsettable;
 unsigned char ctkv[FILESIZE];
 
 void init_tkv();
+UCHAR getbyte(char *addrs, UCHAR  y);
+UCHAR getnumberofobjects();
+void printobjectdescription(char *w, UCHAR code);
 long getlocationaddress(unsigned char code);
 long getaddressfromtable(long tablelb, long tablehb,unsigned char code);
 void namelocation(char *name, long addr);

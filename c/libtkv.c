@@ -15,6 +15,32 @@ void init_tkv(){
   hbloctable = strtol("2B00",NULL,16)-start; 
 }
 
+UCHAR getbyte(char *tableaddr, UCHAR y){
+  long table = strtol(tableaddr,NULL,16)-start;
+  return ctkv[table+y];
+}
+
+UCHAR getnumberofobjects(){
+  return ctkv[strtol("27FC",NULL,16)-start]; //This is $34
+}
+
+void printobjectdescription(char *line, UCHAR code){
+  char addrs[NOBJWORDS][5]={"2750","277A","27A4","27CE"};
+  UCHAR  lu = getbyte("2580",code);
+  int  i;
+  int linepos=0;
+  for(i=0;i<NOBJWORDS;i++){
+    UCHAR  w = getbyte(addrs[i],lu);
+    if(w==0){
+      line[linepos-1]='\0';
+      break;
+    }
+    linepos+=getwordforaddress(line+linepos,getcommandaddress(w));
+    if(i<NOBJWORDS-1)
+      line[linepos-1]=' ';
+  }
+}
+
 //Gets the address for a code <128 which corresponds to the command table via 14CE
 long getlocationaddress(unsigned char code){
   return getaddressfromtable(lbloctable,hbloctable,code);

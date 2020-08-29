@@ -40,6 +40,11 @@ struct exit {
   UCHAR islocked;
 };
 
+struct object {
+  char *description;
+  UCHAR location_code;
+};
+
 void process_output(char *s);
 int process_input();
 UCHAR parse_and_process(char *line, int len);
@@ -52,11 +57,17 @@ char * copytolower(char *from);
 char * stolower(char *s);
 
 void load_location(struct location *l, UCHAR id);
+void load_object(struct object *o, UCHAR id);
 long load_exit(struct exit *e, long addr);
-char * get_dirtext(UCHAR dirbyte);
 void free_location(struct location *l);
+void free_object(struct object *l);
+void cleanup();
+
+char * get_dirtext(UCHAR dirbyte);
 void print_short_description(UCHAR i);
 void print_long_description(UCHAR i);
+void print_description(UCHAR i);
+void print_objects(UCHAR i);
 char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte);
 char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte);
 int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte);
@@ -66,23 +77,26 @@ struct location * get_location(UCHAR i);
 struct location * get_player_location();
 void set_player_location_code(UCHAR i);
 UCHAR get_player_location_code();
+struct object * get_object(UCHAR i);
 
 //Never access these global variables directly - use get/set methods
 //Exception is during loading data and freeing location info
 struct location *locations;
 UCHAR player_location_code;
+struct object *objects;
 
 int main(int argc, char *argv[]) {
   init_tkv();
   int i;
   locations = (struct location *) malloc(NLOCATIONS*sizeof(struct location));
-  for(i=0;i<NLOCATIONS;i++){
+  for(i=0;i<NLOCATIONS;i++)
     load_location(locations+i,i);
-    //print_short_description(locations,i);
-  }
+  objects = (struct object *) malloc(getnumberofobjects()*sizeof(struct location));
+  for(i=0;i<getnumberofobjects();i++)
+    load_object(objects+i,i);  
 
   if(argc>1){
-    print_long_description(strtol(argv[1],NULL,16));
+    print_description(strtol(argv[1],NULL,16));
     return 0;
   }
   
@@ -90,14 +104,13 @@ int main(int argc, char *argv[]) {
   int input=1;
   do {
     if(input!=EMPTY && input!=INVALID_MOVE)
-      print_long_description(get_player_location_code());
+      print_description(get_player_location_code());
     process_output("?");
     input=process_input();
   } while(input!=QUIT);
 
-  for(i=0;i<NLOCATIONS;i++)
-    free_location(locations+i);
-  free(locations);
+  cleanup();
+  return 0;
 }
 
 void process_output(char *s){
@@ -255,6 +268,14 @@ char * stolower(char *s){
   return s;
 }
 
+void load_object(struct object *o, UCHAR id){
+  long addr=strtol("25C0",NULL,16)-start;//see $21AC
+  char desc[MAXLINE];
+  o->location_code=ctkv[addr+id];
+  printobjectdescription(desc, id);
+  o->description=copytolower(desc);
+}
+
 void load_location(struct location *l, UCHAR id){
   long addr=getlocationaddress(id);
   char desc[MAXLINE];
@@ -386,17 +407,35 @@ char * get_dirtext(UCHAR dirbyte){
   return s;
 }
 
-void print_short_description(UCHAR i){
-  struct location *l = get_location(i);
+void print_description(UCHAR id){
+  print_short_description(id);
+  print_long_description(id); //Need to make this conditional
+  print_objects(id);
+}
+
+void print_objects(UCHAR id){
+  int i;
+  for(i=0;i<getnumberofobjects();i++){
+    char w[1000];
+    struct object *obj=get_object(i);
+    if(obj->location_code==get_player_location_code()){
+      sprintf(w,"There is %s here.\n",obj->description);
+      process_output(w);
+    }
+  }
+}
+
+void print_short_description(UCHAR id){
+  struct location *l = get_location(id);
   char line[5000];
   sprintf(line,"You are %s.\n",l->description);
   process_output(line);
 }
 
-void print_long_description(UCHAR i){
-  char text[1000];
-  struct location *l = get_location(i);
-  print_short_description(i);
+void print_long_description(UCHAR id){
+  char text[5000];
+  struct location *l = get_location(id);
+  int i;
   for(i=0;i<l->nexits;i++){
     struct exit e=(l->exits)[i];
     struct location *dest=get_location(e.destination);
@@ -444,19 +483,12 @@ void you_can_see(char *text, struct location dest){
   sprintf(text,"you can see %s",stolower(ss));
 }
 
-void free_location(struct location *l){
-  int i;
-  free(l->description);
-  for(i=0;i<l->nexits;i++){
-    free((l->exits)[i].dirtext);
-    if((l->exits)[i].exittext != NULL )
-      free((l->exits)[i].exittext);
-  }
-  free(l->exits);
-}
-
 struct location * get_location(UCHAR i){
   return locations+i;
+}
+
+struct object * get_object(UCHAR i){
+  return objects+i;
 }
 
 struct location * get_player_location(){
@@ -469,4 +501,29 @@ UCHAR get_player_location_code(){
 
 void set_player_location_code(UCHAR i){
   player_location_code=i;
+}
+
+void cleanup(){
+  int i;
+  for(i=0;i<NLOCATIONS;i++)
+    free_location(locations+i);
+  for(i=0;i<getnumberofobjects();i++)
+    free_object(objects+i);
+  free(locations);
+  free(objects);
+}
+
+void free_location(struct location *l){
+  int i;
+  free(l->description);
+  for(i=0;i<l->nexits;i++){
+    free((l->exits)[i].dirtext);
+    if((l->exits)[i].exittext != NULL )
+      free((l->exits)[i].exittext);
+  }
+  free(l->exits);
+}
+
+void free_object(struct object *o){
+  free(o->description);
 }

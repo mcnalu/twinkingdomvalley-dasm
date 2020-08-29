@@ -9,7 +9,6 @@ long printwords(char *line, char *s, int type);
 void createbytelines(UCHAR b1, UCHAR b2, UCHAR b3);
 void processdasm();
 int processline(char *line, int found);
-UCHAR getbyte(char *addrs,UCHAR  y);
 
 void printdirection(char *word, char dirbyte);
 void convertcodes2words(int argc, char *argv[]);
@@ -124,8 +123,6 @@ void describelocation(int argc, char *argv[]){
   }
 }
 
-
-
 void describeobject(char *scode){
   UCHAR code=(UCHAR) strtol(scode+1,NULL,16);
   UCHAR  loc = getbyte("25C0",code);
@@ -137,9 +134,6 @@ void describeobject(char *scode){
   UCHAR  thrdamagernd = getbyte("26D2",code);
   UCHAR  thrdamagemax = getbyte("26A8",code);
   UCHAR  size = getbyte("2600",lu);
-  char addrs[NOBJWORDS][5]={"2750","277A","27A4","27CE"};
-  int  i;
-  int linepos=0;
   char line[MAXLINE];
   
   //printf("%s\n",scode);
@@ -148,16 +142,8 @@ void describeobject(char *scode){
     return;
   }
   
-  for(i=0;i<NOBJWORDS;i++){
-    UCHAR  w = getbyte(addrs[i],lu);
-    if(w==0){
-      line[linepos-1]='\0';
-      break;
-    }
-    linepos+=getwordforaddress(line+linepos,getcommandaddress(w));
-    if(i<NOBJWORDS-1)
-      line[linepos-1]=' ';
-  }
+  printobjectdescription(line,code);
+  
   printf("Object %02x\nLookup code %02x\nLocation %02x\nSize %02x\n",code,lu,loc,size);
   printf("Required strength %02x\n",requiredstr);
   printf("Weapon durability %02x\n",weapondur);
@@ -208,12 +194,6 @@ void describenpcclass(char *scode){
       line[linepos-1]=' ';
   }
   printf("NPC %02x\n|%s|\n",code,line);
-}
-
-
-UCHAR getbyte(char *tableaddr, UCHAR y){
-  long table = strtol(tableaddr,NULL,16)-start;
-  return ctkv[table+y];
 }
 
 //Performs some tests
