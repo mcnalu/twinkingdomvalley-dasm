@@ -9,6 +9,8 @@
 #define INVALID_MOVE 0xFF
 #define MOVED 1
 #define SUCCESS 0
+#define LOOK 2
+#define DRAW 3
 
 #define NOMATCH 0xFF
 
@@ -68,16 +70,17 @@ struct character {
 
 void process_output(char *s);
 int process_input();
-UCHAR parse_and_process(char *line, int len);
-UCHAR process(UCHAR *matches, int nmatches);
+int parse_and_process(char *line, int len);
+int process(UCHAR *matches, int nmatches);
 UCHAR get_match(UCHAR *word);
-UCHAR report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type);
+void report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type);
 
-UCHAR noncombat_action(UCHAR code, UCHAR *matches, int nmatches);
-UCHAR drop(UCHAR *matches, int nmatches);
-UCHAR take(UCHAR *matches, int nmatches);
+int noncombat_action(UCHAR code, UCHAR *matches, int nmatches);
+int drop(UCHAR *matches, int nmatches);
+int take(UCHAR *matches, int nmatches);
+struct object * match_object(UCHAR location_id,UCHAR *matches, int nmatches);
 int count_matched_words(char *desc, UCHAR *matches, int nmatches);
-UCHAR move(UCHAR dir, UCHAR dirindex);
+int move(UCHAR dir, UCHAR dirindex);
 
 char * copytolower(char *from);
 char * stolower(char *s);
@@ -134,10 +137,11 @@ int main(int argc, char *argv[]) {
   set_player_location_id(1);
   int input=1;
   do {
-    if(input==MOVED)
+    if(input==MOVED || input==LOOK)
       print_description(get_player_location_id());
     process_output("?");
     input=process_input();
+    //printf("input: |%d|.\n");
   } while(input!=QUIT);
 
   cleanup();
@@ -159,15 +163,13 @@ int process_input(){
   line[i-1]='\0';
   
   //printf("|%s|\n",line);
-  if(strstr(line,"quit")!=NULL)
-    return QUIT;
-  else if(i==1)
+  if(i==1)
     return EMPTY;
   stolower(line);//Drop to lower case
   return parse_and_process(line,i);
 }
 
-UCHAR parse_and_process(char *line, int len){
+int parse_and_process(char *line, int len){
   UCHAR matches[10];
   int i;
   int nmatches=0;
@@ -190,7 +192,7 @@ UCHAR parse_and_process(char *line, int len){
   return process(matches, nmatches);
 }
 
-UCHAR process(UCHAR *matches, int nmatches){
+int process(UCHAR *matches, int nmatches){
   //These dirbytes are in $23B5-C3
   //Correspond to: N  S  E  W  U  D  NE NW NE NW SE SW SE SW
   UCHAR dirbytes[]={0x20, 0x10, 0x08, 0x04, 0x02, 0x01,
@@ -205,7 +207,11 @@ UCHAR process(UCHAR *matches, int nmatches){
       return EMPTY;
     } else if(matches[i]>=0x11 && matches[i]<=0x2E){
       return noncombat_action(matches[i],matches,nmatches);
+    } else {
+      process_output("I don't understand.\n");
+      return EMPTY;
     }
+
   }
   for(i=0;i<0x0E;i++)   //Find index of commanded direction
     if(dir==dirbytes[i])
@@ -214,25 +220,26 @@ UCHAR process(UCHAR *matches, int nmatches){
 }
 
 //Called with code between 0x11 and 0x2E
-UCHAR noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
-  switch(code){ //type is 0-7
-    case 0x11: return drop(matches,nmatches);
-    case 0x12: return take(matches,nmatches);
-    default: process_output("I don't understand.\n"); break;
+int noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
+  //printf("noncombat_action: %02x.\n",code);
+  switch(code){ //code is 0x11 to 0x2E
+    case 0x11: return drop(matches,nmatches); //DROP
+    case 0x12: case 0x13: return take(matches,nmatches); //TAKE,GET
+    case 0x25: case 0x26: return QUIT; //QUIT,END
+    case 0x27: case 0x28: return LOOK; //LOOK,VIEW
+    case 0x29: case 0x2A: process_output("Apologies, graphics not implemented yet.\n"); return DRAW; //PICTURE,DRAW
   }
-  return EMPTY;
+  fprintf(stderr,"This should never be printed.\n");
+  return EMPTY; //Should never get here
 }
 
-UCHAR drop(UCHAR *matches, int nmatches){
-}
-
-UCHAR take(UCHAR *matches, int nmatches){
+struct object * match_object(UCHAR location_id,UCHAR *matches, int nmatches){
   UCHAR id;
   int best_count=0;
   struct object *best_object=NULL;
   for(id=0;id<getnumberofobjects();id++){
     struct object *o = get_object(id);
-    if(o->location_id==get_player_location_id()){
+    if(o->location_id==location_id){
       //printf("Object is here: %s.\n",o->description);
       int count=count_matched_words(o->description,matches,nmatches);
       if(count>best_count){
@@ -241,11 +248,28 @@ UCHAR take(UCHAR *matches, int nmatches){
       }
     }
   }
-  if(best_object!=NULL){
-    best_object->location_id=0xC8; //Location is player's possession
+  return best_object;
+}
+
+int drop(UCHAR *matches, int nmatches){
+  struct object *obj=match_object(0xC8,matches,nmatches);
+  if(obj!=NULL){//Need to add in check on carried amount, see $156F
+    obj->location_id=get_player_location_id();; //Location is player's position
+    process_output("OK.\n");
+    return SUCCESS;
+  } else {//To do: In game it asks "Drop what?" and gives second chance for input, see just before $15D2
+    process_output("You haven't got that.\n");
+    return EMPTY;
+  }
+}
+
+int take(UCHAR *matches, int nmatches){
+  struct object *obj=match_object(get_player_location_id(),matches,nmatches);
+  if(obj!=NULL){//Need to add in check on carried amount, see $156F
+    obj->location_id=0xC8; //Location is player's possession
     process_output("I have it now.\n");
     return SUCCESS;
-  } else {//To do: In game it asks "Take what?" and gives second chance for input
+  } else {//To do: In game it asks "Take what?" and gives second chance for input, see $15D2
     process_output("I can't see any here.\n");
     return EMPTY;
   }
@@ -265,7 +289,7 @@ int count_matched_words(char *desc, UCHAR *matches, int nmatches){
 
 //Returns the new player location code if move happened.
 //INVALID_MOVE if not.
-UCHAR move(UCHAR dir, UCHAR dirindex){
+int move(UCHAR dir, UCHAR dirindex){
   int i;
   if(dir==0)
     return INVALID_MOVE;
@@ -303,7 +327,7 @@ UCHAR move(UCHAR dir, UCHAR dirindex){
   }
 }
 
-UCHAR report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type){
+void report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type){
   char w[100];
   char line[1000];
   getword(w, dirindex);
@@ -319,7 +343,7 @@ UCHAR report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type){
     case 0: sprintf(line,"You can't go %s.\n",stolower(w)); break;
   }
   process_output(line);
-  return type;
+  return;
 }
 
 UCHAR get_match(UCHAR *word){
