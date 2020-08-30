@@ -7,10 +7,11 @@
 #define QUIT -1
 #define EMPTY -2
 #define INVALID_MOVE 0xFF
-#define MOVED 1
 #define SUCCESS 0
-#define LOOK 2
-#define DRAW 3
+#define CONTINUE 1
+#define MOVED 2
+#define LOOK 3
+#define DRAW 4
 
 #define NOMATCH 0xFF
 
@@ -107,6 +108,7 @@ int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte);
 void you_can_see(char *text, struct location dest);
 
 struct location * get_location(UCHAR i);
+struct character * get_player();
 struct location * get_player_location();
 void set_player_location_id(UCHAR i);
 UCHAR get_player_location_id();
@@ -137,12 +139,14 @@ int main(int argc, char *argv[]) {
   }
   
   set_player_location_id(1);
-  int input=1;
+  int input=LOOK;
   do {
     if(input==MOVED || input==LOOK)
       print_description(get_player_location_id());
     process_output("?");
     input=process_input();
+    if(input==MOVED || input==SUCCESS || input==CONTINUE) //A new turn
+      printf("--------------%02x\n",get_player()->amount_carried);
     //printf("input: |%d|.\n");
   } while(input!=QUIT);
 
@@ -257,7 +261,7 @@ int inventory(){
   }
   if(nitems==0)
     process_output("nothing.\n");
-    
+  
   return EMPTY;
 }
 
@@ -283,6 +287,7 @@ int drop(UCHAR *matches, int nmatches){
   struct object *obj=match_object(0xC8,matches,nmatches);
   if(obj!=NULL){//Need to add in check on carried amount, see $156F
     obj->location_id=get_player_location_id();; //Location is player's position
+    get_player()->amount_carried-=obj->size;
     process_output("OK.\n");
     return SUCCESS;
   } else {//To do: In game it asks "Drop what?" and gives second chance for input, see just before $15D2
@@ -294,9 +299,16 @@ int drop(UCHAR *matches, int nmatches){
 int take(UCHAR *matches, int nmatches){
   struct object *obj=match_object(get_player_location_id(),matches,nmatches);
   if(obj!=NULL){//Need to add in check on carried amount, see $156F
-    obj->location_id=0xC8; //Location is player's possession
-    process_output("I have it now.\n");
-    return SUCCESS;
+    struct character *player=get_player();
+    if(player->amount_carried+obj->size<player->max_carried){
+      get_player()->amount_carried+=obj->size;
+      obj->location_id=0xC8; //Location is player's possession
+      process_output("I have it now.\n");
+      return SUCCESS;
+    } else {
+      process_output("You can carry any more.\n");
+      return CONTINUE; //Check in original if turn is indeed missed in this case.
+    }
   } else {//To do: In game it asks "Take what?" and gives second chance for input, see $15D2
     process_output("I can't see any here.\n");
     return EMPTY;
@@ -439,7 +451,8 @@ void load_character(struct character *c, UCHAR id){
   if( (classcode&0x80) != 0 ){
     c->ishostile=HOSTILE;
   }
-  c->max_carried=0xFF;//tmp until I figure out which table this is stored in
+  c->amount_carried=getbyte("29DA",classcode);//Check what NPCs start carrying against this
+  c->max_carried=getbyte("28E0",classcode);
   //Also need stuff in $2880 and 28A0
 }
 
@@ -648,6 +661,10 @@ void you_can_see(char *text, struct location dest){
   else
     incodeexits(ss,dest.locationtype);
   sprintf(text,"you can see %s",stolower(ss));
+}
+
+struct character * get_player(){
+  return characters;
 }
 
 struct location * get_location(UCHAR i){

@@ -131,7 +131,7 @@ $2A is the text print out speed as set by *TEXT
 
 $0380 - Low byte of word starts in $0500 look up table
 $0400 - High byte of word starts in $0500 look up table
-For example, if byte $98 is given to routine $14CE then:
+For example, if byte $98  is given to routine $14CE then:
 Location $380+98=418 contains low byte 7C
 Location $400+98=498 vontains high byte 05
 So $057C contains first letter of word SELECT
@@ -210,6 +210,7 @@ x$2840 Table with second NPC word
 x$2860 Table with third NPC word
 x$2880 Dunno but indexed by character class like $2820 see $0D01, fight or flee maybe, see $0D79?
 x$28A0 Dunno but indexed by character class like $2820 see $0D01
+x$28E0 Table of max carry limits. Char can carry LESS than the limit.
 
 $28EB is loaded in $20BD but I don't know what it means
 

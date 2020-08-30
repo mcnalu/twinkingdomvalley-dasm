@@ -664,8 +664,8 @@ L19E4 = L19E3+1
 
 .L1BA8                  
         STA     L0022   ; Store new amount carried in $22
-        LDA     L28A0,Y ; Load something from $2968 about NPC Y - a lookup index?
-        AND     #$1F    ; Wipe bits 5,6,7
+        LDA     L28A0,Y ; Load from $2968, the char class table
+        AND     #$1F    ; A will contain char class after wiping bits 5,6,7 
         STY     L0023   ; Store Y in $23
         TAY             ; Y=A will be zero for player
         LDA     L0022   ; Load new amount carried
@@ -683,7 +683,7 @@ L19E4 = L19E3+1
 
 .L1BC1                  ; Handle transfer of an object updating amount carried
         STA     L2912,Y ; Store new amount carried in $29DA onwards
-.L1BC4                  ; Code arrives here after new holdall weight checked out as OK
+.L1BC4                  ; Code arrives here after new held/holdall weight checked out as OK
                         ; or if destination was not a character.
         TYA             ; A=Y ie destination
         LDX     L0070   ; Object index

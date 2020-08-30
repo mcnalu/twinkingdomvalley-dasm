@@ -83,40 +83,40 @@ OSBYTE  = $FFF4
 OSCLI   = $FFF7
 
         org     $1548
-.BeebDisStartAddr
-        LDA     L0089
-        JSR     L14EF
+.L1548                  ; TAKE command called via lookup table from $14A7
+        LDA     L0089   ; Player location
+        JSR     L14EF   ; Searches for object at player's location that best matches player input
 
-        LDA     L0060
-        BNE     L156F
+        LDA     L0060   ; Load number of matches
+        BNE     L156F   ; Branch if not zero to see if we can take it
 
         JSR     L14CE
         TAKE WHAT
 
 .L1557
-        JSR     L229F
+        JSR     L229F   ; Get input
 
-        LDA     L0089
-        JSR     L14EF
+        LDA     L0089   
+        JSR     L14EF   ; Check again
 
         LDA     L0060
-        BNE     L156F
-
+        BNE     L156F   ; Branch if user specifed something that's there
+                        ; or if not...
         JSR     L14CE
         I CAN'T SEE ANY HERE
 
 .L156C
         JMP     L1E6A
 
-.L156F
-        LDX     L0063
+.L156F                  ; User wants to take present object index specified in  $63 
+        LDX     L0063   ; X+1
         DEX
-        LDY     #$C8
+        LDY     #$C8    ; User's position
         TYA
         JSR     L1B6C
 
-        BCC     L157D
-
+        BCC     L157D   ; Branch if carry clear to take object
+                        ; Amount carried exceeded
         JMP     L1597
 
 .L157D
@@ -223,16 +223,16 @@ OSCLI   = $FFF7
 .L160C
         JMP     L1E6A
 
-.L160F                 ;DROP command
+.L160F                 ; DROP command called via lookup table from $14A7
         JSR     L15D2  ; Put index of object to drop in $63 or tells user and aborts if no match.
 
         LDX     L0063  ; Index of object to drop PLUS 1
         DEX            ; Decrement
         LDY     L0089  ; The player's current location
         LDA     #$FF
-        JSR     L1B6C
+        JSR     L1B6C  ; Transfer object from player to player's location
 
-        LDA     #$8C
+        LDA     #$8C  ; OK
 .L161E                ; Print word and newline
         JSR     L14B8 ; Print word in A 
 
@@ -245,17 +245,17 @@ OSCLI   = $FFF7
 .L162A
         LDA     #$C8
         JMP     L164C
+.L162F                ; INVENTORY command called via lookup table from $14A7
+        JSR     L1624 ; This prints out the inventory.
 
-        JSR     L1624
-
-        LDA     L25C0
-        CMP     #$C8
-        BNE     L163C
-
-        JSR     L163F
+        LDA     L25C0 ; Load location of holdall
+        CMP     #$C8 
+        BNE     L163C ; Branch if not held by player
+                      ; Player has holdall
+        JSR     L163F ; Print out contents of holdall
 
 .L163C
-        JMP     L3B51
+        JMP     L3B51 ; Print newline, reset colour and RTS
 
 .L163F
         LDA     #$02  ; Colour green
