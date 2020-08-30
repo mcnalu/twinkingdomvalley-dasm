@@ -1169,11 +1169,11 @@ L1E19 = L1E17+2
         JSR     L14CE
         YOU ARE TOO WEAK
 
-.L1E6A
-        JSR     L20FA
+.L1E6A                
+        JSR     L20FA  ; Full stop and newline
 
         LDX     L0069
-        TXS
+        TXS            ; Transfer ?$69 to stack pointer
         RTS
 
 .L1E71

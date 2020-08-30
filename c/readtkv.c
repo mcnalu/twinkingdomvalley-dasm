@@ -12,6 +12,7 @@ int processline(char *line, int found);
 
 void printdirection(char *word, char dirbyte);
 void convertcodes2words(int argc, char *argv[]);
+void describecommand(char *scode);
 void describelocation(int argc, char *argv[]);
 void describeobject(char *scode);
 void describenpcclass(char *scode);
@@ -24,6 +25,8 @@ int main(int argc, char *argv[]) {
   if(argc>1){
     if(strstr(argv[1],"words")!=NULL){
       convertcodes2words(argc,argv);
+    } else if(strstr(argv[1],"command")!=NULL){
+      describecommand(argv[2]);
     } else if(strstr(argv[1],"location")!=NULL){
       describelocation(argc,argv);
     } else if(strstr(argv[1],"object")!=NULL){
@@ -123,28 +126,38 @@ void describelocation(int argc, char *argv[]){
   }
 }
 
+void describecommand(char *scode){
+  UCHAR id=(UCHAR) strtol(scode+1,NULL,16);
+  char word[100];
+  getword(word,id);
+  printf("Command %02x is %s\n",id,word);
+  if(id>=0x11 && id<=0x2E){//non-direction and non-combat
+    printf("Address of this command is %02x%02x.\n",getbyte("1ECF",id),getbyte("1EB1",id));
+  }
+}
+
 void describeobject(char *scode){
-  UCHAR code=(UCHAR) strtol(scode+1,NULL,16);
-  UCHAR  loc = getbyte("25C0",code);
-  UCHAR  lu = getbyte("2580",code);
+  UCHAR id=(UCHAR) strtol(scode+1,NULL,16);
+  UCHAR  loc = getbyte("25C0",id);
+  UCHAR  code = getbyte("2580",id);
   UCHAR  requiredstr = getbyte("262A",code);
   UCHAR  weapondur = getbyte("267E",code);
   UCHAR  meldamagernd = getbyte("2726",code);
   UCHAR  meldamagemax = getbyte("26FC",code);
   UCHAR  thrdamagernd = getbyte("26D2",code);
   UCHAR  thrdamagemax = getbyte("26A8",code);
-  UCHAR  size = getbyte("2600",lu);
+  UCHAR  size = getbyte("2600",code);
   char line[MAXLINE];
   
   //printf("%s\n",scode);
-  if(code<0 || code>=42){
+  if(id<0 || id>=42){
     printf("There are only 42 objects so index must be 0-41 or $0-29.\n");
     return;
   }
   
-  printobjectdescription(line,code);
+  printobjectdescription(line,id);
   
-  printf("Object %02x\nLookup code %02x\nLocation %02x\nSize %02x\n",code,lu,loc,size);
+  printf("Object %02x\nLookup code %02x\nLocation %02x\nSize %02x\n",id,code,loc,size);
   printf("Required strength %02x\n",requiredstr);
   printf("Weapon durability %02x\n",weapondur);
   printf("Throw damage: max %02x, rnd sub %02x\n",thrdamagemax,thrdamagernd);  
@@ -170,30 +183,17 @@ void describenpc(char *scode){
 }
 
 void describenpcclass(char *scode){
-  UCHAR code= (UCHAR) strtol(scode+1,NULL,16);
+  UCHAR classcode= (UCHAR) strtol(scode+1,NULL,16);
   //long lu = getbyte("28A0",code)&0x1F; This lookup is used in $1BEA but dunno why
-  char addrs[NNPCWORDS][5]={"2820","2840","2860"};
-  int  i;
-  int linepos=0;
   char line[MAXLINE];
   
   //printf("%s\n",scode);
-  if(code<0 || code>=15){
+  if(classcode<0 || classcode>=15){
     printf("There are only 15 things in this table so index must be $00 to $0E.\n");
     return;
   }
-  
-  for(i=0;i<NNPCWORDS;i++){
-    UCHAR w = getbyte(addrs[i],code);
-    if(w==0){
-      line[linepos-1]='\0';
-      break;
-    }
-    linepos+=getwordforaddress(line+linepos,getcommandaddress(w));
-    if(i<NNPCWORDS-1)
-      line[linepos-1]=' ';
-  }
-  printf("NPC %02x\n|%s|\n",code,line);
+  printcharacterdescription(line,classcode);
+  printf("NPC %02x\n|%s|\n",classcode,line);
 }
 
 //Performs some tests

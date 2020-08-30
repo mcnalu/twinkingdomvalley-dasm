@@ -146,66 +146,72 @@ OSCLI   = $FFF7
 .L15A4
         JMP     L1E6A
 
-.L15A7
-        LDA     L006E
-        JSR     L14EF
+.L15A7                ; Finds object that best matches player input at specified location.
+                      ; On entry:
+                      ; $6E contains location of interest
+                      ; On exit:
+                      ; $63 contains index of matched object PLUS 1
+                      ; A=?$60 is number of matched words
+        LDA     L006E ; Location
+        JSR     L14EF ; Find object at $6E best matching player's input, store index in $63
+        LDA     L0060 ; Load number of matchs
+        STA     L006C ; Store it in $6C
+        LDA     L0063 ; Load index of matched object
+        STA     L006D ; Store in $6D
+        LDA     L25C0 ; Load location of holdall
+        CMP     L006E ; Is it at location of interest?
+        BNE     L15C9 ; Branch if not the holdall
 
-        LDA     L0060
-        STA     L006C
-        LDA     L0063
-        STA     L006D
-        LDA     L25C0
-        CMP     L006E
-        BNE     L15C9
+        LDA     #$FF  ; Location of an object if it's in the holdall
+        JSR     L14EF ; Find an object in the holdall that best matches player's input
 
-        LDA     #$FF
-        JSR     L14EF
-
-        LDA     L006C
+        LDA     L006C ; Load number of matches from above
         CMP     L0060
-        BCS     L15C9
-
-        LDA     L0060
+        BCS     L15C9 ; Branch if number of matches from above >= one for holdall
+                       
+        LDA     L0060 ; A=number of matches for holdall
 .L15C8
         RTS
 
-.L15C9
-        LDA     L006D
-        STA     L0063
-        LDA     L006C
-        STA     L0060
+.L15C9                ; Object not in holdall
+        LDA     L006D 
+        STA     L0063 ; Index of matched object
+        LDA     L006C 
+        STA     L0060 ; Number of matches
         RTS
 
-.L15D2
+.L15D2                  ; Called from drop command routine $160F
+                        ; Looks for object in player's possession that matches player input.
+                        ; If not found tells user and RTSes back to more than one JSR ago, I think.
+                        ; Index of found object is in $63
         LDA     #$01
         CLC
         ADC     #$C7
-        STA     L006E
-        JSR     L15A7
+        STA     L006E   ; Store $C8 in $6E - means object in player's possession
+        JSR     L15A7   ; $63 will contain index PLUS 1 of object that matches player input
+        BNE     L15C8   ; Branch if not zero to RTS
+                        ; If zero which means there were no matches
+        LDA     L0083   ; Code of first matched verb in user input
+        JSR     L14B8   ; Print word
 
-        BNE     L15C8
+        LDA     #$80    ; WHAT
+        JSR     L14B8   ; Print
 
-        LDA     L0083
-        JSR     L14B8
+        JSR     L229F   ; Print ? and get input
 
-        LDA     #$80
-        JSR     L14B8
+        JSR     L15A7   ; Look for matches again
 
-        JSR     L229F
-
-        JSR     L15A7
-
-        BNE     L15C8
-
-        LDA     L006E
+        BNE     L15C8   ; Branch if not zero to RTS
+                        ; Still zero
+        LDA     L006E   
         CMP     #$C8
-        BNE     L1601
-
-        JSR     L14CE
+        BNE     L1601   ; Branch if we're not dealing with an object in player's possession.
+                        
+        JSR     L14CE   
         YOU HAVEN'T GOT THAT
 
 .L15FE
-        JMP     L1E6A
+        JMP     L1E6A  ; Set stack pointer to what's saved in $69 and return
 
 .L1601
         TAX
@@ -217,11 +223,12 @@ OSCLI   = $FFF7
 .L160C
         JMP     L1E6A
 
-        JSR     L15D2
+.L160F                 ;DROP command
+        JSR     L15D2  ; Put index of object to drop in $63 or tells user and aborts if no match.
 
-        LDX     L0063
-        DEX
-        LDY     L0089
+        LDX     L0063  ; Index of object to drop PLUS 1
+        DEX            ; Decrement
+        LDY     L0089  ; The player's current location
         LDA     #$FF
         JSR     L1B6C
 

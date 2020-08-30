@@ -24,6 +24,10 @@ UCHAR getnumberofobjects(){
   return ctkv[strtol("27FC",NULL,16)-start]; //This is $34
 }
 
+UCHAR getnumberofcharacters(){
+  return ctkv[strtol("27FE",NULL,16)-start]; //This is $34
+}
+
 void printobjectdescription(char *line, UCHAR code){
   char addrs[NOBJWORDS][5]={"2750","277A","27A4","27CE"};
   UCHAR  lu = getbyte("2580",code);
@@ -37,6 +41,22 @@ void printobjectdescription(char *line, UCHAR code){
     }
     linepos+=getwordforaddress(line+linepos,getcommandaddress(w));
     if(i<NOBJWORDS-1)
+      line[linepos-1]=' ';
+  }
+}
+
+void printcharacterdescription(UCHAR *line, UCHAR classcode){
+  char addrs[NNPCWORDS][5]={"2820","2840","2860"};
+  int  i;
+  int linepos=0;
+  for(i=0;i<NNPCWORDS;i++){
+    UCHAR w = getbyte(addrs[i],classcode);
+    if(w==0){
+      line[linepos-1]='\0';
+      break;
+    }
+    linepos+=getwordforaddress(line+linepos,getcommandaddress(w));
+    if(i<NNPCWORDS-1)
       line[linepos-1]=' ';
   }
 }

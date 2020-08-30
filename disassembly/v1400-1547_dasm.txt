@@ -257,47 +257,51 @@ OSCLI   = $FFF7
 .L14EC
         JMP     (L0060)   ; JMP to address in &60-1 which is a bit like an RTS for this JSR
 
-.L14EF        
-        STA     L0061
+.L14EF                    ; Searches for objects at a location which best matches player command words
+                          ; On entry A=location code
+                          ; On exit
+                          ; $63 contains index of match object PLUS 1
+                          ; $60 contains number of matched words
+        STA     L0061     ; Stores a location
         LDA     #$00
         STA     L0060
-        LDX     L27FC
-.L14F8
-        LDA     L25BF,X
-        CMP     L0061
-        BNE     L152B
+        LDX     L27FC     ; Number of objects
+.L14F8                    ; Looping down from last object to first
+        LDA     L25BF,X   ; Load location of object X
+        CMP     L0061     ; Does this object's location match that stored in $61?
+        BNE     L152B     ; If not branch ahead to continue loop to next object
 
-        LDA     #$00
+        LDA     #$00      
         STA     L0062
-        LDA     L257F,X
-        TAY
-        LDA     L2750,Y
+        LDA     L257F,X   ; Load object code
+        TAY               ; Y=object code
+        LDA     L2750,Y   ; Load first word code of this object
+        JSR     L152F     ; Increment $62 if match is found in commands player entered
+
+        LDA     L277A,Y   ; Second word
         JSR     L152F
 
-        LDA     L277A,Y
+        LDA     L27A4,Y   ; Third word
         JSR     L152F
 
-        LDA     L27A4,Y
+        LDA     L27CE,Y   ; Final word
         JSR     L152F
 
-        LDA     L27CE,Y
-        JSR     L152F
+        LDA     L0060     ; A=?$60
+        CMP     L0062     ; Number of matches
+        BCS     L152B     ; Branch if ?$60>=?$62 ie not mathces
+                          ; ?$60 < ?$62 ie matched
+        LDA     L0062     
 
-        LDA     L0060
-        CMP     L0062
-        BCS     L152B
-
-        LDA     L0062
-
-        STA     L0060
-        STX     L0063
+        STA     L0060     ; ?$60 = number of matches
+        STX     L0063     ; ?$63 = matched object index
 .L152B
         DEX
-        BNE     L14F8
-
+        BNE     L14F8  ; Continue loop to check next object
+                       ; Always returns with Z flag set.
         RTS
 
-.L152F                ; Based on A and $84 loop through table $0A80 counting matchs in $62
+.L152F                ; Based on A and $84, loop through table $0A80 counting matchs in $62
         BEQ     L1547 ; Branch if A=0 to RTS
 
         STA     L0064 ; ?64=A

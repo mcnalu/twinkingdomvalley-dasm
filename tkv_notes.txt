@@ -173,26 +173,29 @@ E bit 3
 S bit 4
 N bit 5
 
-$2580 ; Table of object codes. Eg $2580 is $14 for holdall, used for $2600 lookup
-$25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other places.
+      ; Objects have an id and a code.
+      ; # indicats they are indexed by id.
+#$2580 ; Table of object codes. Eg $2580 is $14 for holdall, used for $2600 lookup
+#$25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other places.
       ; Not all locations correspond to a index in the location table
       ; $C8 means the player has it
       ; Does $C8+X mean NPC X has it for X>0?
       ; $FF means it is in holdall
       ; $C7 is the initial location of the silver key
       ; $C7 means the object doesn't exist eg after a weapon breaks, see $1D87
-    
+#$2750 ; First word of object description eg A NOTE: A zero for any word=>no more words.
+#$277A ; Second word eg SMALL
+#$27A4 ; Third word eg HOLDALL
+#$27CE ; Final word
+      
       ; + indicates indexed by object code
-+$2600 ; Table of object sizes? - NOTE use object code as index
++$2600 ; Table of object weights/sizes? - NOTE use object code as index
 +$262A ; Table of required strengths see $1C9E.
 +$267E ; Table of weapon durability see $1D71
 +$26A8 ; Max throw damage of weapon see $1D62 
 +$26D2 ; Max throw rnd subtraction from max weapon damage, see $1D62
 +$26FC ; Max melee damage of weapon see $1CEB
 +$2726 ; Max melee rnd subtraction from max weapon damage, see $1CEB
-$2750 ; First word of object description eg A
-$277A ; Second word eg SMALL
-$27A4 ; Final word eg HOLDALL. NOTE: A zero for any word=>no more words.
 
 
 $27FA ; Records weight inside holdall. Object location $FF means in holdall.

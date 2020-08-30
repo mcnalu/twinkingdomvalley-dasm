@@ -94,7 +94,7 @@ OSCLI   = $FFF7
         BIT     L0028
         BIT     L0018
         CLC
-.L23C3                ; Act on user commands.
+.L23C3                ; Act on user direction command.
                       ; Search for direction commands in user input and act on them.
         LDA     L008C ; This is direction set in the $3500 implied from, eg, GO IN CABIN  
         STA     L0086 ; $86=$8C
@@ -319,6 +319,7 @@ OSCLI   = $FFF7
         JMP     L3B51 ; Prints newline and sets text colour then RTS.
         
 .L24DD                  ; Print info about objects
+                        ; On entry X is object id
         LDA     L2580,X ; Lookup code for object X eg X=0=>$14
         TAX             ; X=code for the object now to look up follow words.
         LDA     L2750,X ; eg $2764=>$3A is A

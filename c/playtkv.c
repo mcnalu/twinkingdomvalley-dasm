@@ -7,6 +7,8 @@
 #define QUIT -1
 #define EMPTY -2
 #define INVALID_MOVE 0xFF
+#define MOVED 1
+#define SUCCESS 0
 
 #define NOMATCH 0xFF
 
@@ -18,6 +20,9 @@
 #define DOOR 3
 #define UNLOCKED 0
 #define LOCKED 1
+
+#define NONHOSTILE 0
+#define HOSTILE 1
 
 struct location {
   UCHAR id;
@@ -42,25 +47,48 @@ struct exit {
 
 struct object {
   char *description;
-  UCHAR location_code;
+  UCHAR location_id;
+  UCHAR size;
+  UCHAR strength_required;
+  UCHAR durability;
+  UCHAR max_throw_damage;
+  UCHAR rnd_throw_damage;
+  UCHAR max_melee_damage;
+  UCHAR rnd_melee_damage;
+};
+
+struct character {
+  char *description;
+  UCHAR location_id;
+  UCHAR ishostile;
+  UCHAR strength;
+  UCHAR max_carried;
+  UCHAR amount_carried;
 };
 
 void process_output(char *s);
 int process_input();
 UCHAR parse_and_process(char *line, int len);
 UCHAR process(UCHAR *matches, int nmatches);
-UCHAR move(UCHAR dir, UCHAR dirindex);
 UCHAR get_match(UCHAR *word);
 UCHAR report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type);
+
+UCHAR noncombat_action(UCHAR code, UCHAR *matches, int nmatches);
+UCHAR drop(UCHAR *matches, int nmatches);
+UCHAR take(UCHAR *matches, int nmatches);
+int count_matched_words(char *desc, UCHAR *matches, int nmatches);
+UCHAR move(UCHAR dir, UCHAR dirindex);
 
 char * copytolower(char *from);
 char * stolower(char *s);
 
 void load_location(struct location *l, UCHAR id);
 void load_object(struct object *o, UCHAR id);
+void load_character(struct character *c, UCHAR id);
 long load_exit(struct exit *e, long addr);
 void free_location(struct location *l);
 void free_object(struct object *l);
+void free_character(struct character *c);
 void cleanup();
 
 char * get_dirtext(UCHAR dirbyte);
@@ -75,15 +103,15 @@ void you_can_see(char *text, struct location dest);
 
 struct location * get_location(UCHAR i);
 struct location * get_player_location();
-void set_player_location_code(UCHAR i);
-UCHAR get_player_location_code();
+void set_player_location_id(UCHAR i);
+UCHAR get_player_location_id();
 struct object * get_object(UCHAR i);
 
 //Never access these global variables directly - use get/set methods
 //Exception is during loading data and freeing location info
 struct location *locations;
-UCHAR player_location_code;
 struct object *objects;
+struct character *characters;
 
 int main(int argc, char *argv[]) {
   init_tkv();
@@ -91,20 +119,23 @@ int main(int argc, char *argv[]) {
   locations = (struct location *) malloc(NLOCATIONS*sizeof(struct location));
   for(i=0;i<NLOCATIONS;i++)
     load_location(locations+i,i);
-  objects = (struct object *) malloc(getnumberofobjects()*sizeof(struct location));
+  objects = (struct object *) malloc(getnumberofobjects()*sizeof(struct object));
   for(i=0;i<getnumberofobjects();i++)
-    load_object(objects+i,i);  
+    load_object(objects+i,i);
+  characters = (struct character *) malloc(getnumberofcharacters()*sizeof(struct character));
+  for(i=0;i<getnumberofcharacters();i++)
+    load_character(characters+i,i);
 
   if(argc>1){
     print_description(strtol(argv[1],NULL,16));
     return 0;
   }
   
-  set_player_location_code(1);
+  set_player_location_id(1);
   int input=1;
   do {
-    if(input!=EMPTY && input!=INVALID_MOVE)
-      print_description(get_player_location_code());
+    if(input==MOVED)
+      print_description(get_player_location_id());
     process_output("?");
     input=process_input();
   } while(input!=QUIT);
@@ -169,12 +200,67 @@ UCHAR process(UCHAR *matches, int nmatches){
   for(i=0;i<nmatches;i++){//See $23CA
     if(matches[i]<0x0E){//A direction
       dir=dir|dirbytes[matches[i]]; //Set bits for commanded direction
+    } else if(matches[i]>=0x0E && matches[i]<=0x10){
+      process_output("Naughty! You are a pacifist.\n");
+      return EMPTY;
+    } else if(matches[i]>=0x11 && matches[i]<=0x2E){
+      return noncombat_action(matches[i],matches,nmatches);
     }
   }
   for(i=0;i<0x0E;i++)   //Find index of commanded direction
     if(dir==dirbytes[i])
       break;
   return move(dir,i);
+}
+
+//Called with code between 0x11 and 0x2E
+UCHAR noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
+  switch(code){ //type is 0-7
+    case 0x11: return drop(matches,nmatches);
+    case 0x12: return take(matches,nmatches);
+    default: process_output("I don't understand.\n"); break;
+  }
+  return EMPTY;
+}
+
+UCHAR drop(UCHAR *matches, int nmatches){
+}
+
+UCHAR take(UCHAR *matches, int nmatches){
+  UCHAR id;
+  int best_count=0;
+  struct object *best_object=NULL;
+  for(id=0;id<getnumberofobjects();id++){
+    struct object *o = get_object(id);
+    if(o->location_id==get_player_location_id()){
+      //printf("Object is here: %s.\n",o->description);
+      int count=count_matched_words(o->description,matches,nmatches);
+      if(count>best_count){
+	best_count=count;
+	best_object=o;
+      }
+    }
+  }
+  if(best_object!=NULL){
+    best_object->location_id=0xC8; //Location is player's possession
+    process_output("I have it now.\n");
+    return SUCCESS;
+  } else {//To do: In game it asks "Take what?" and gives second chance for input
+    process_output("I can't see any here.\n");
+    return EMPTY;
+  }
+}
+
+int count_matched_words(char *desc, UCHAR *matches, int nmatches){
+  int i, count=0;
+  for(i=0;i<nmatches;i++){
+    char word[100];
+    getword(word,matches[i]);
+    stolower(word);
+    if(strstr(desc,word)!=NULL)
+      count++;
+  }
+  return count;
 }
 
 //Returns the new player location code if move happened.
@@ -212,8 +298,8 @@ UCHAR move(UCHAR dir, UCHAR dirindex){
       report_invalid_move(ematch,dirindex,0);
       return INVALID_MOVE;
     } 
-    set_player_location_code(ematch->destination);
-    return ematch->destination;
+    set_player_location_id(ematch->destination);
+    return MOVED;
   }
 }
 
@@ -269,11 +355,35 @@ char * stolower(char *s){
 }
 
 void load_object(struct object *o, UCHAR id){
-  long addr=strtol("25C0",NULL,16)-start;//see $21AC
   char desc[MAXLINE];
-  o->location_code=ctkv[addr+id];
+  UCHAR  code = getbyte("2580",id);
+
+  o->location_id=getbyte("25C0",id);
   printobjectdescription(desc, id);
   o->description=copytolower(desc);
+  o->size = getbyte("2600",code);
+  o->strength_required = getbyte("262A",code);
+  o->durability = getbyte("267E",code);
+  o->max_throw_damage = getbyte("26A8",code);
+  o->rnd_throw_damage = getbyte("26D2",code);
+  o->max_melee_damage = getbyte("26FC",code);
+  o->rnd_melee_damage = getbyte("2726",code);
+}
+
+void load_character(struct character *c, UCHAR id){
+  char desc[MAXLINE];
+  UCHAR  classcode = getbyte("2968",id);
+
+  c->location_id=getbyte("29B4",id);
+  c->strength=getbyte("298E",id);
+  printcharacterdescription(desc, classcode);
+  c->description=copytolower(desc);
+  c->ishostile=NONHOSTILE;
+  if( (classcode&0x80) != 0 ){
+    c->ishostile=HOSTILE;
+  }
+  c->max_carried=0xFF;//tmp until I figure out which table this is stored in
+  //Also need stuff in $2880 and 28A0
 }
 
 void load_location(struct location *l, UCHAR id){
@@ -418,7 +528,7 @@ void print_objects(UCHAR id){
   for(i=0;i<getnumberofobjects();i++){
     char w[1000];
     struct object *obj=get_object(i);
-    if(obj->location_code==get_player_location_code()){
+    if(obj->location_id==get_player_location_id()){
       sprintf(w,"There is %s here.\n",obj->description);
       process_output(w);
     }
@@ -492,15 +602,15 @@ struct object * get_object(UCHAR i){
 }
 
 struct location * get_player_location(){
-  return locations+player_location_code;
+  return locations+get_player_location_id();
 }
 
-UCHAR get_player_location_code(){
-  return player_location_code;
+UCHAR get_player_location_id(){
+  return characters->location_id;
 }
 
-void set_player_location_code(UCHAR i){
-  player_location_code=i;
+void set_player_location_id(UCHAR id){
+  characters->location_id=id;
 }
 
 void cleanup(){
@@ -509,6 +619,8 @@ void cleanup(){
     free_location(locations+i);
   for(i=0;i<getnumberofobjects();i++)
     free_object(objects+i);
+  for(i=0;i<getnumberofcharacters();i++)
+    free_character(characters+i);
   free(locations);
   free(objects);
 }
@@ -526,4 +638,8 @@ void free_location(struct location *l){
 
 void free_object(struct object *o){
   free(o->description);
+}
+
+void free_character(struct character *c){
+  free(c->description);
 }
