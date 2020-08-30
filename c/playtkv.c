@@ -78,12 +78,14 @@ void report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type);
 int noncombat_action(UCHAR code, UCHAR *matches, int nmatches);
 int drop(UCHAR *matches, int nmatches);
 int take(UCHAR *matches, int nmatches);
+int inventory();
 struct object * match_object(UCHAR location_id,UCHAR *matches, int nmatches);
 int count_matched_words(char *desc, UCHAR *matches, int nmatches);
 int move(UCHAR dir, UCHAR dirindex);
 
 char * copytolower(char *from);
 char * stolower(char *s);
+char * sfirstcaps(char *s);
 
 void load_location(struct location *l, UCHAR id);
 void load_object(struct object *o, UCHAR id);
@@ -228,9 +230,35 @@ int noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
     case 0x25: case 0x26: return QUIT; //QUIT,END
     case 0x27: case 0x28: return LOOK; //LOOK,VIEW
     case 0x29: case 0x2A: process_output("Apologies, graphics not implemented yet.\n"); return DRAW; //PICTURE,DRAW
+    case 0x2B: process_output("Not implemented yet.\n"); return EMPTY; //SCORE
+    case 0x2C: return inventory();
+    case 0x2D: process_output("Not implemented yet.\n"); return EMPTY; //OPTION;
+    case 0x2E: process_output("Not implemented yet.\n"); return EMPTY; //HELP;
   }
   fprintf(stderr,"This should never be printed.\n");
   return EMPTY; //Should never get here
+}
+
+int inventory(){
+  int id;
+  int nitems=0;
+  process_output("You have ");
+  //NOTE: Holdall not implemented yet.
+  for(id=1;id<getnumberofobjects();id++){
+    struct object *obj=get_object(id);
+    if(obj->location_id==0xC8){
+      char line[1000];
+      if(nitems==0)
+        process_output("the following\n");
+      sprintf(line,"  %c%s\n",toupper(obj->description[0]),obj->description+1); //First letter caps
+      process_output(line);
+      nitems++;
+    }
+  }
+  if(nitems==0)
+    process_output("nothing.\n");
+    
+  return EMPTY;
 }
 
 struct object * match_object(UCHAR location_id,UCHAR *matches, int nmatches){
@@ -375,6 +403,11 @@ char * stolower(char *s){
     s[len]=tolower(s[len]);
     len--;
   }
+  return s;
+}
+
+char * sfirstcaps(char *s){
+  s[0]=toupper(s[0]);
   return s;
 }
 
