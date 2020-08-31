@@ -66,22 +66,13 @@ void convertcodes2words(int argc, char *argv[]){
 
 void printdirection(char *word, char dirbyte){
   char searchdir=dirbyte&0x3F;
-  char di;
-  long dirtable = strtol("23B5",NULL,16)-start;
-  
-  for(di=0;di<0x0E;di++){//Corresponds to index of direction commands
-    char dd=ctkv[dirtable+di];
-    if(dd==searchdir)
-      break;
-  }
+
   if( (dirbyte&0x40)==0 ){//if bit 6 is NOT set
     sprintf(word,"IMPASSABLE:");
     word=word+11;
   }
-  if(di<0x0E)
-    getwordforaddress(word,getcommandaddress(di));
-  else
-    sprintf(word,"NOT A DIRECTION");
+  printdirectiondescription(word,dirbyte);
+
   return;
 }
 

@@ -24,6 +24,9 @@
 #define UNLOCKED 0
 #define LOCKED 1
 
+#define UNLOCK 0
+#define LOCK 1
+
 #define NONHOSTILE 0
 #define HOSTILE 1
 
@@ -41,7 +44,7 @@ struct location {
 struct exit {
   UCHAR direction; //first&0x3F - bits 6 and 7 info in ispassable etc
   char *dirtext;
-  char *exittext;
+  char *exittext; //This will be null for normal exits
   UCHAR destination;
   UCHAR ispassable;
   UCHAR exittype;
@@ -77,6 +80,9 @@ UCHAR get_match(UCHAR *word);
 void report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type);
 
 int noncombat_action(UCHAR code, UCHAR *matches, int nmatches);
+int use_key(UCHAR code, UCHAR *matches, int nmatches);
+void use_key_on_doors(struct exit *e);
+int player_has_key(char *doortext);
 int drop(UCHAR *matches, int nmatches);
 int take(UCHAR *matches, int nmatches);
 int inventory();
@@ -231,6 +237,8 @@ int noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
   switch(code){ //code is 0x11 to 0x2E
     case 0x11: return drop(matches,nmatches); //DROP
     case 0x12: case 0x13: return take(matches,nmatches); //TAKE,GET
+    case 0x14: case 0x15: case 0x16: return use_key(LOCK,matches,nmatches); //LOCK,SHUT,CLOSE
+    case 0x17: case 0x18: return use_key(UNLOCK,matches,nmatches); //OPEN,UNLOCK
     case 0x25: case 0x26: return QUIT; //QUIT,END
     case 0x27: case 0x28: return LOOK; //LOOK,VIEW
     case 0x29: case 0x2A: process_output("Apologies, graphics not implemented yet.\n"); return DRAW; //PICTURE,DRAW
@@ -241,6 +249,86 @@ int noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
   }
   fprintf(stderr,"This should never be printed.\n");
   return EMPTY; //Should never get here
+}
+
+int use_key(UCHAR action, UCHAR *matches, int nmatches){
+  struct location *pl = get_player_location();
+  int i;
+  for(i=0;i<pl->nexits;i++){
+    struct exit *e = pl->exits+i;
+    if(e->exittype==DOOR){//The grate is classed as a DOOR
+      if(action==UNLOCK && e->islocked==UNLOCKED){//$17AD
+	process_output("It's already open.\n");
+	return CONTINUE;
+      } else if(action==LOCK && e->islocked==LOCKED){//$17C6
+	process_output("It's already locked.\n");
+	return CONTINUE;
+      } else if(player_has_key(e->exittext)==0){//$1790
+	process_output("You don't have the key.\n");
+	return CONTINUE;
+      } else  {//Player has the right key for the exit
+	use_key_on_doors(e);
+	return SUCCESS;
+      }
+    }
+  }
+  //Will only get here if no lockable exit (DOOR) is found in loop
+  process_output("Nothing here locks.\n"); //$1733
+  return CONTINUE;
+}
+
+//Unlocks a d
+void use_key_on_doors(struct exit *e){
+  struct location *dest = get_location(e->destination);
+  struct exit *otherside=NULL;
+  int i;
+  
+  //printf("otherside: %s\n",dest->description);
+  for(i=0;i<dest->nexits;i++){
+    otherside=dest->exits+i;
+    //printf("|%s| |%s|\n",otherside->exittext, e->exittext);
+    if( otherside->exittext!=NULL && strcmp(otherside->exittext, e->exittext)==0 )
+      break;
+  }
+  if(otherside==NULL)
+    fprintf(stderr,"SERIOUS ERROR: %s is one sided at location id %02x.\n",e->exittext,e->destination);
+  if(e->islocked==LOCKED){ //NEED TO ALTER DESCRIPTION TEXT AND PASSABLE
+    e->islocked=UNLOCKED;
+    e->ispassable=PASSABLE;
+    otherside->islocked=UNLOCKED;
+    otherside->ispassable=PASSABLE;
+    process_output("It is now opened.\n"); //Just before $178D
+  } else {
+    e->islocked=LOCKED;
+    e->ispassable=IMPASSABLE;
+    otherside->islocked=LOCKED;
+    otherside->ispassable=IMPASSABLE;
+    process_output("It is now locked.\n");
+  }
+}
+
+int player_has_key(char *doortext){
+  UCHAR id;
+  for(id=0;id<getnumberofobjects();id++){
+    struct object *o=get_object(id);
+    if(o->location_id==0xC8){//Player has this object
+      char desc[100];
+      char *key;
+      strcpy(desc,o->description);
+      key= strstr(desc,"key");
+      //printf("|%s| |%s|\n",key,doortext);
+      if(key!=NULL){
+	char *keytype=desc+2;//Skip "A " to point to "brass" etc
+	(key-1)[0]='\0'; //Overwrite space before "key";
+	if(keytype[0]=='m' //Must be the master key
+	    || strstr(doortext,"metal")!=NULL //Any key matches the metal door
+	    || strstr(doortext,keytype)!=NULL){ //Key type matches door eg brass, bronze etc
+	  return 1;
+	}
+      }
+    }
+  }
+  return 0;//Player doesn't have key
 }
 
 int inventory(){
@@ -536,7 +624,7 @@ char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as p
 char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte){//$2220
   char text[1000], *ret;
   UCHAR byte=thirdbyte&0x07;
-  long addr=strtol("295F",NULL,16)-start;
+  long addr=strtol("295F",NULL,16)-start; //BRASS, BRONZE etc
   int pos=0;
   if(byte!=0)
     pos=print_word_or_zero(text, pos, addr, byte);
@@ -568,20 +656,9 @@ int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte){
 }
 
 char * get_dirtext(UCHAR dirbyte){
-  UCHAR searchdir=dirbyte&0x3F;
-  UCHAR di;
-  long dirtable = strtol("23B5",NULL,16)-start;
-  char word[16]; //Max it needs to hold is "NOT A DIRECTION"
+  char word[100];
   char *s;
-  for(di=0;di<0x0E;di++){//Corresponds to index of direction commands
-    UCHAR dd=ctkv[dirtable+di];
-    if(dd==searchdir)
-      break;
-  }
-  if(di<0x0E)
-    getwordforaddress(word,getcommandaddress(di));
-  else
-    sprintf(word,"NOT A DIRECTION");
+  printdirectiondescription(word,dirbyte);
   s=copytolower(word);
   s[0]=toupper(s[0]);
   return s;
@@ -636,7 +713,7 @@ void print_long_description(UCHAR id){
 	  process_output(text);	  
 	}
       } else {//it's a door or grate
-	if(e.islocked=LOCKED)
+	if(e.islocked==LOCKED)
 	  process_output("a locked ");
 	else
 	  process_output("an open ");

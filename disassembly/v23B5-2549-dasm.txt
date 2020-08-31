@@ -342,7 +342,7 @@ OSCLI   = $FFF7
                       ; On exit:
                       ; $87 is second byte from location block
                       ; $7A has bit 0-2 copied from bits 5-7 of second byte, bits 3-7 are zero,
-                      ;    ie number of directions out of this location.
+                      ;    ie number of exits for this location.
                       ; $7B is 2nd byte from location block with bits 5-7 wiped +2, index of first byte after desc
                       ; A=?$7A
         LDY     L0089 

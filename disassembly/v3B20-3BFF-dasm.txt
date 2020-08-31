@@ -154,17 +154,21 @@ OSCLI   = $FFF7
         INC     L0073
 .L3B8A
         JMP     (L0072)
-.L3B8D                  ; Checks if object's X location is special I think
+.L3B8D                  ; Checks if player has object X. Z=1 if player has this item, Z=0 if not.
+                        ; On entry:
+                        ; X is index of object X
+                        ; On exit:
+                        ; Z=1 if player has this item, Z=0 if not
         LDA     L25C0,X ; Load location of object X
-        CMP     #$C8    ; This isn't a valid location
-        BEQ     L3BA0   ; RTS
-
+        CMP     #$C8    ; 
+        BEQ     L3BA0   ; Branch with Z=1 if player holds this object to RTS
+                        ; But is it in the holdall?
         LDA     L25C0   ; Load location of X=0 ie holdall
-        CMP     #$C8
-        BNE     L3BA0   ; RTS
-
-        LDA     L25C0,X 
-        CMP     #$FF    ; Not a valid location, destroyed?
+        CMP     #$C8    
+        BNE     L3BA0   ; Branch with Z=0 if player doesn't have object X or holdall
+                        ; Player has holdall
+        LDA     L25C0,X ; Load location of object X
+        CMP     #$FF    ; Set Z=1 if object is on holdall which is held by player
 .L3BA0
         RTS
 

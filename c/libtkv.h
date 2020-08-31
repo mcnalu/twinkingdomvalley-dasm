@@ -29,6 +29,7 @@ void init_tkv();
 UCHAR getbyte(char *addrs, UCHAR  y);
 UCHAR getnumberofobjects();
 UCHAR getnumberofcharacters();
+void printdirectiondescription(char *word, UCHAR dirbyte);
 void printobjectdescription(char *w, UCHAR code);
 void printcharacterdescription(UCHAR *line, UCHAR classcode);
 long getlocationaddress(unsigned char code);

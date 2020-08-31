@@ -155,6 +155,9 @@ $0A80+X ; Index of matched command X, see $236C
 $1283   ; Lookup table used in $0F14
 $1289   ; Lookup table used in $0F14
         
+$173D   ; Some lookup table related to key/door type, indexed by bits 0-2 of third byte for a door exit
+; 173D 01 11 09 19 05 03 01 01
+        
 $17CA-F ; Codes for options 1-6 for draw/desc: 60 20 C0 80 40 00
         
 $L1EB1,X ; This a table of low bytes for each command index
@@ -261,7 +264,7 @@ exits      : For each exit there is either a pair or triplet of bytes, first byt
                                      which causes code prints THROUGH WHICH...
                                For following, see $2220
                                bits 0-2 of third byte specify BRASS, BRONZE etc see $2220
-                               bits 3-6 of third byte specify GRATE or DOOR
+                               bits 3-5 of third byte specify GRATE or DOOR
  
                                
 $2A08 is really $2AD0 cos of +$C8

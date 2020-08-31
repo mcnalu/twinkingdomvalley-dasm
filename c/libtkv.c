@@ -28,6 +28,32 @@ UCHAR getnumberofcharacters(){
   return ctkv[strtol("27FE",NULL,16)-start]; //This is $34
 }
 
+void printdirectiondescription(char *word, UCHAR dirbyte){
+  UCHAR searchdir=dirbyte&0x3F;
+  UCHAR di;
+  long dirtable = strtol("23B5",NULL,16)-start;
+  for(di=0;di<0x0E;di++){//Corresponds to index of direction commands
+    UCHAR dd=ctkv[dirtable+di];
+    if(dd==searchdir)
+      break;
+  }
+  if(di<0x0E)
+    getwordforaddress(word,getcommandaddress(di));
+  else {//Must be a compound direction
+    int pos=0;
+    for(di=0;di<0x06;di++){//Corresponds to index of N,S,E,W,U,D
+      UCHAR dd=ctkv[dirtable+di];
+      if( (dd&searchdir) !=0 )//Is the relevant bit set of dd: each one has only one bit set
+	if(pos==0)
+	  pos=getwordforaddress(word,getcommandaddress(di));
+	else {
+	  sprintf(word+pos-1," and ");
+	  getwordforaddress(word+pos+4,getcommandaddress(di));
+	}
+    }    
+  }
+}
+
 void printobjectdescription(char *line, UCHAR code){
   char addrs[NOBJWORDS][5]={"2750","277A","27A4","27CE"};
   UCHAR  lu = getbyte("2580",code);

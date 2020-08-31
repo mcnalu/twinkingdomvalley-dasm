@@ -399,27 +399,32 @@ OSCLI   = $FFF7
         LDA     #$1B
         BNE     L16EB
 
-.L1712
-        JSR     L24FB
+.L1712                ; Checks player's location for lockable exits and RTS to calling routine if found.
+                      ; Prints NOTHING HERE LOCKS and RTSes back to main code if no lockable exits.
+                      ; On exit:
+                      ; Z=0 if exit is locked, Z=1 if unlocked.
+                      ; $62 the direction byte of the exit
+                      ; $63 contains third byte which contains info on door type
+        JSR     L24FB ; Processes and puts bytes from location block specified by $89 in &7A-7B
 
-        LDX     L007A
-        BEQ     L1733
-
-        LDY     L007B
+        LDX     L007A ; X=Number of exits
+        BEQ     L1733 ; Branch if there are none
+                      ; There are exits
+        LDY     L007B ; Y=index for start of location block
 .L171B
-        LDA     (L0077),Y
-        STA     L0062
-        BPL     L172E
-
+        LDA     (L0077),Y ; A=first exit direction
+        STA     L0062     ; ?62=first exit direction
+        BPL     L172E     ; Branch if bit 7 not set, not a door, so move on to next exit
+                          ; Bit 7 set, might be a door
+        INY               ; Skip destination byte
         INY
-        INY
-        LDA     (L0077),Y
-        STA     L0063
-        BPL     L172F
-
-        LDA     L0062
-        AND     #$40
-        RTS
+        LDA     (L0077),Y ; A=third byte
+        STA     L0063     ; ?$63=third byte
+        BPL     L172F     ; Branch if bit 7 not set, not lockable, so move on to next exit
+                          ; It's lockable
+        LDA     L0062     ;
+        AND     #$40      ; A=0 if locked, and A=$40 is unlocked.
+        RTS               ; So returns with Z=1 
 
 .L172E
         INY
@@ -440,45 +445,47 @@ OSCLI   = $FFF7
         ORA     #$19
         ORA     L0003
         ORA     (L0001,X)
-.L1745
-        STA     L0064
-        LDA     L0063
-        AND     #$07
-        TAX
-        LDA     L173D,X
-        STA     L0065
+.L1745                ; Unlocks or locks a locked door or the grate
+        STA     L0064 ; Code for the word OPEN or LOCKED
+        LDA     L0063 ; Third byte of the door
+        AND     #$07  ; Wipe bits 3-7
+        TAX           ; X=A
+        LDA     L173D,X ; Load a byte related to key/door type
+        STA     L0065   ; ?$65=byte related to key/door type
         LDA     #$01
-        STA     L0060
-        LDX     #$02
-.L1757
-        JSR     L3B8D
+        STA     L0060   ; ?$60=1
+        LDX     #$02    ; X=2 which is the master key
+.L1757                  ; Loop through keys
+        JSR     L3B8D   ; Sets Z=1 if player has item X otherwise Z=0
 
-        BNE     L1790
-
-        LDA     L0060
-        AND     L0065
-        BEQ     L1790
-
+        BNE     L1790   ; Branch if player doesn't have item to continue this loop
+                        ; Player has this item
+        LDA     L0060   ; 
+        AND     L0065   ;
+        BEQ     L1790   ; Branch if $60 and $65 have no bits in common to continue loop (wrong key)
+                        ; We have an appropriate key
+                        ; Y is currrently at third byte for this exit, see $1712
+        DEY             
+        DEY             ; Y now at direction byte
+        LDA     L0062   ; A=?$62 contains the direction byte
+        EOR     #$40    ; Toggle bit 6 of A, switching un/locked
+        STA     (L0077),Y ; Store in the direction byte
+                        ; The following unlocks the door from the other side.
+        INY             ; Move to second byte
+        LDA     L0089   
+        PHA             ; Save player location on stack
+        LDA     (L0077),Y ; Load the destination byte
+        STA     L0089   ; Temporarily present player is at destination
+        JSR     L1712   ; Load stuff for the destination location
+                        ; Now repeat above but to unlock door from the other side
         DEY
         DEY
-        LDA     L0062
+        LDA     L0062   
         EOR     #$40
         STA     (L0077),Y
-        INY
-        LDA     L0089
-        PHA
-        LDA     (L0077),Y
+        PLA             ; Put player location back the way it was
         STA     L0089
-        JSR     L1712
-
-        DEY
-        DEY
-        LDA     L0062
-        EOR     #$40
-        STA     (L0077),Y
-        PLA
-        STA     L0089
-        LDA     L0064
+        LDA     L0064   ; Store whether we are locking or unlocking it below
         STA     L178B
         JSR     L14CE
         IT IS NOW
@@ -498,35 +505,35 @@ OSCLI   = $FFF7
 
 .L17A0
         JMP     L20FA
-
-        JSR     L1712
-
-        BNE     L17AD
-
-        LDA     #$17
+.L17A3                ; UNLOCK command called via lookup table from $14A7
+        JSR     L1712 ; Checks player's location for lockable exits, $63 contains third byte.
+                      ; $62 has bit 6 set if unlocked, unset if locked
+        BNE     L17AD ; Branch if exit unlocked
+                      ; Exit is locked
+        LDA     #$17  ; code for word OPEN
         JMP     L1745
 
 .L17AD
-        LDA     #$17
+        LDA     #$17  ; code for word OPEN
 .L17AF
-        STA     L17B7
+        STA     L17B7 ; store code for appropriate below
         JSR     L14CE
         IT'S ALREADY
         OPEN
 
 .L17B9
         JMP     L20FA
-
-        JSR     L1712
-
-        BEQ     L17C6
-
-        LDA     #$3F
-        JMP     L1745
+.L17BC                ; LOCK command called via lookup table from $14A7
+        JSR     L1712 ; Checks player's location for lockable exits, $63 contains third byte.
+                      ; $62 has bit 6 set if unlocked, unset if locked
+        BEQ     L17C6 ; Branch if it's already locked
+                      ; It's unlocked
+        LDA     #$3F  ; LOCKED
+        JMP     L1745 ; Lock it
 
 .L17C6
-        LDA     #$3F
-        BNE     L17AF
+        LDA     #$3F  ; LOCKED
+        BNE     L17AF ; Always branch
 
         RTS
 

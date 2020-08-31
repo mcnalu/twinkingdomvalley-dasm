@@ -54,4 +54,5 @@ $3B51 Prints newline and sets text colour based on $6F
 $3B6C Like 14CE but prints out messges related to moving.
 $3BA1 Prints A and then waits for $2A centiseconds
 $3BC4 Looks up address for command word Y i.e. <0 in $3600 table and stores it in $70-1
+$3B8D Checks if player has object X. Z=1 if player has this item, Z=0 if not.
 $42A0 Handles special stuff for small cave then calls $0F03 to set player location
