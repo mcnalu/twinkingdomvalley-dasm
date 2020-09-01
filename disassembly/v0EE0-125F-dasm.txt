@@ -172,43 +172,43 @@ OSCLI   = $FFF7
         JSR     L245A
 
 .L0F4A                  ; Arrives here if location doesn't match any CMPs above
-        LDX     L27FE
-.L0F4D
-        LDA     L2967,X
-        AND     #$1F
-        TAY
-        LDA     L298D,X
-        BEQ     L0F67
+        LDX     L27FE   ; Number of characters
+.L0F4D                  ; Loop through characters
+        LDA     L2967,X ; Char class
+        AND     #$1F    ; Blank its 5,6,7
+        TAY             ; Y=A
+        LDA     L298D,X ; A=Health
+        BEQ     L0F67   ; Branch if char is dead
 
-        CLC
-        ADC     L28C0,Y
-        CMP     L2800,Y
-        BCC     L0F64
-
-        LDA     L2800,Y
+        CLC             
+        ADC     L28C0,Y ; Add to health 
+        CMP     L2800,Y ; Max health for character class Y
+        BCC     L0F64   ; Branch if less than max health 
+                        ; >=max health
+        LDA     L2800,Y ; store max health
 .L0F64
-        STA     L298D,X
+        STA     L298D,X ; Store new health
 .L0F67
         DEX
-        BNE     L0F4D
+        BNE     L0F4D   ; Continue loop to next character
 
-        LDA     L2581
-        BNE     L0FAE
+        LDA     L2581   ; A=code for lamp
+        BNE     L0FAE   ; Branch if lamp unlit
 
-        DEC     L27FB
-        LDA     L27FB
-        BEQ     L0F9F
-
-        CMP     #$14
-        BNE     L0FAE
-
-        LDA     L25C1 ; The lamp
+        DEC     L27FB   ; Decrement lamp oil
+        LDA     L27FB   ; A=remaining oil
+        BEQ     L0F9F   ; Branch if empty
+                        ; Lamp not empty
+        CMP     #$14    ; 20
+        BNE     L0FAE   ; Branch if lamp has plenty of oil remaining
+                        ; Oil lamp reached low value of $14
+        LDA     L25C1 ; A = lamp's location
         CMP     #$C8  ; C8 means the player has it.
-        BEQ     L0F86 
-
+        BEQ     L0F86 ; Branch if player has it
+                      ; Player hasn't got it
         CMP     L0089 ; The lamp is where the player is
-        BNE     L0FAE
-
+        BNE     L0FAE ; Branch if lamp is not where player is
+                      ; Lamp with player
 .L0F86
         JSR     L14CE
         YOUR LAMP
@@ -220,7 +220,7 @@ OSCLI   = $FFF7
         LDA     #$BE   ; Print out flickers
         JSR     L14B8 
 
-        JMP     L0FAB
+        JMP     L0FAB  
 
         JSR     L20FA
 
@@ -233,35 +233,35 @@ OSCLI   = $FFF7
         YOUR LAMP DIES
 
 .L0FAB
-        JSR     L20FA
+        JSR     L20FA ; Print . and newline
 
 .L0FAE
-        LDA     L0089
-        BPL     L0FB6
-
-        CMP     #$85
-        BCC     L0FBE
-
-.L0FB6
-        CMP     #$20
-        BCC     L0FC2
-
-        CMP     #$30
-        BCS     L0FC2
-
+        LDA     L0089 ; A= player location
+        BPL     L0FB6 ; Branch if <$80
+                      ; >=$80
+        CMP     #$85  ; Cliff top
+        BCC     L0FBE ; Branch if <$85
+                      ; >=$85
+.L0FB6                ;
+        CMP     #$20  
+        BCC     L0FC2 ; Branch if <$20
+                      ; >=$20
+        CMP     #$30  
+        BCS     L0FC2 ; Branch if >=$30
+                      ; <$30
 .L0FBE
-        LDA     #$07
-        BNE     L0FC4
+        LDA     #$07  
+        BNE     L0FC4 ; Always branch to $FC4
 
 .L0FC2
         LDA     #$01
 .L0FC4
-        STA     L0062
-        CMP     L0002
-        BCS     L0FE3
-
-        LDA     L0002
-        SEC
+        STA     L0062 ; ?$62=A
+        CMP     L0002 
+        BCS     L0FE3 ; Branch if A>=$02
+                      ; A<$02 
+        LDA     L0002 ; A=$02
+        SEC             
         SBC     L0062
         STA     L0002
         CMP     #$28

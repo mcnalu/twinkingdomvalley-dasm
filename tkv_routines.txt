@@ -1,15 +1,15 @@
 TKV subroutines
 
 $0BCA deal with * commands
-$0C00 Draws magenta dashes for turn start and calls $229F for input +?
+$0C00 Draws magenta dashes for turn start, print NPC info and calls $229F for input +?
 $0CEE  Check, perform and print combat and picking up for character X
 $0D8D Inner loop through characters to find any hostiles at same location.
 $0E5B Handle combat and picking up of weapons
-$0F03 Handles special events eg falls, witch spell and calls 245A to set player location
+$0F03 Handles special events eg health inc, lamp flickers, thirst witch spell and calls 245A to set player location
 $124E Loads info on location Y using $24FB by temporarily setting ?$89=Y
 $12EE Prints out score and strength
 $1303 Prints out score
-$1400 Main entry point
+$1400 Main entry point ; 
 $14A7 Handles non-direction and non-combat commands.
 $14CE Prints output sequence related to actions encoded as bytes immediately after JSR $14CE
 $149C zeroes $6F (implies text colour) and $82 (char count) and prints newline

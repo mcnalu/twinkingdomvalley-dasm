@@ -179,6 +179,7 @@ N bit 5
       ; Objects have an id and a code.
       ; # indicats they are indexed by id.
 #$2580 ; Table of object codes. Eg $2580 is $14 for holdall, used for $2600 lookup
+       ; Note code for unlit lamp is 0, for lit lamp it is 1
 #$25C0 ; Table of object locations. Used at $21AC and JSR $3B8D and many other places.
       ; Not all locations correspond to a index in the location table
       ; $C8 means the player has it
@@ -202,17 +203,19 @@ N bit 5
 
 
 $27FA ; Records weight inside holdall. Object location $FF means in holdall.
-$27FB
+$27FB ; Remaining oil in lamp, see just before $0F86
 $27FC ; Number of objects
 
 $27FE is number of characters
 
 xThese tables are indexed by character class index which goes from $0 to $0F
+x$2800 Max health see $0F4D
 x$2820 Table with first NPC word, see $1BEA
 x$2840 Table with second NPC word
 x$2860 Table with third NPC word
 x$2880 Dunno but indexed by character class like $2820 see $0D01, fight or flee maybe, see $0D79?
 x$28A0 Dunno but indexed by character class like $2820 see $0D01
+x$28C0 Health increment see $0F4D
 x$28E0 Table of max carry limits. Char can carry LESS than the limit.
 
 $28EB is loaded in $20BD but I don't know what it means
@@ -269,6 +272,7 @@ exits      : For each exit there is either a pair or triplet of bytes, first byt
                                
 $2A08 is really $2AD0 cos of +$C8
 *$2AD0 Bit 7 is set when this character done an attack. Bits 0-6 of these bytes are zeroed in $0C1E
+       Bit 6 is tested in $0C37 loop over characters
 *$2BD0 Stores where character X has decided to move, I think
 
 

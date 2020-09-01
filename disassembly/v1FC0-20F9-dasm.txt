@@ -163,6 +163,7 @@ OSCLI   = $FFF7
                        ; It's probably a letter
         ORA     #$20   ; OR with 32 ie set bit 5 so char is lower case
         BIT     L0026  ; Set N=1 if $80 (this is first char printed) or we just found . (174)
+                       ; Or $1FD9 was called with $FF (eg The Sword Inn)
         BPL     L2032  ; If N=0 then lower case is good.
                        ; N=1 so it's either first letter of first word or final .
         AND     #$5F   ; Set bits 5 and 7 to zero ie make upper case (no effect on .)

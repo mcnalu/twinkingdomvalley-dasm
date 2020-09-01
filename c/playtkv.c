@@ -85,7 +85,7 @@ void use_key_on_doors(struct exit *e);
 int player_has_key(char *doortext);
 int drop(UCHAR *matches, int nmatches);
 int take(UCHAR *matches, int nmatches);
-int inventory();
+int inventory(UCHAR character_id);
 struct object * match_object(UCHAR location_id,UCHAR *matches, int nmatches);
 int count_matched_words(char *desc, UCHAR *matches, int nmatches);
 int move(UCHAR dir, UCHAR dirindex);
@@ -108,11 +108,13 @@ void print_short_description(UCHAR i);
 void print_long_description(UCHAR i);
 void print_description(UCHAR i);
 void print_objects(UCHAR i);
+void print_npc_info();
 char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte);
 char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte);
 int print_word_or_zero(char *ss, int pos, long addr, UCHAR byte);
 void you_can_see(char *text, struct location dest);
 
+struct character * get_npc(UCHAR id);
 struct location * get_location(UCHAR i);
 struct character * get_player();
 struct location * get_player_location();
@@ -147,12 +149,15 @@ int main(int argc, char *argv[]) {
   set_player_location_id(1);
   int input=LOOK;
   do {
-    if(input==MOVED || input==LOOK)
+    if(input==MOVED || input==LOOK) {
       print_description(get_player_location_id());
+    }
+    if(input==MOVED || input==SUCCESS || input==CONTINUE) {//A new turn
+      printf("          ---------------%02x\n",get_player()->location_id);
+      print_npc_info();
+    }
     process_output("?");
     input=process_input();
-    if(input==MOVED || input==SUCCESS || input==CONTINUE) //A new turn
-      printf("--------------%02x\n",get_player()->amount_carried);
     //printf("input: |%d|.\n");
   } while(input!=QUIT);
 
@@ -243,7 +248,7 @@ int noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
     case 0x27: case 0x28: return LOOK; //LOOK,VIEW
     case 0x29: case 0x2A: process_output("Apologies, graphics not implemented yet.\n"); return DRAW; //PICTURE,DRAW
     case 0x2B: process_output("Not implemented yet.\n"); return EMPTY; //SCORE
-    case 0x2C: return inventory();
+    case 0x2C: return inventory(0);
     case 0x2D: process_output("Not implemented yet.\n"); return EMPTY; //OPTION;
     case 0x2E: process_output("Not implemented yet.\n"); return EMPTY; //HELP;
   }
@@ -331,14 +336,17 @@ int player_has_key(char *doortext){
   return 0;//Player doesn't have key
 }
 
-int inventory(){
+int inventory(UCHAR character_id){
   int id;
   int nitems=0;
-  process_output("You have ");
+  if(character_id==0)
+    process_output("You have ");
+  else
+    process_output(" is here with ");
   //NOTE: Holdall not implemented yet.
   for(id=1;id<getnumberofobjects();id++){
     struct object *obj=get_object(id);
-    if(obj->location_id==0xC8){
+    if(obj->location_id==(0xC8+character_id)){
       char line[1000];
       if(nitems==0)
         process_output("the following\n");
@@ -740,8 +748,27 @@ void you_can_see(char *text, struct location dest){
   sprintf(text,"you can see %s",stolower(ss));
 }
 
+void print_npc_info(){
+  UCHAR id;
+  
+  for(id=1;id<getnumberofcharacters();id++){
+    struct character *npc = get_npc(id);
+    if(npc->location_id==get_player()->location_id){
+      char desc[100];
+      sprintf(desc,"%s is here with ",npc->description);
+      process_output(sfirstcaps(desc));
+      inventory(id);
+    }
+  }
+}
+
 struct character * get_player(){
   return characters;
+}
+
+//id=0 is player
+struct character * get_npc(UCHAR id){
+  return characters+id;
 }
 
 struct location * get_location(UCHAR i){

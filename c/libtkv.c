@@ -109,9 +109,11 @@ void namelocation(char *name, long addr){
   int i,linepos=0;
   for(i=0;i<nwords;i++){
     UCHAR l =ctkv[addr+2+i];
-    linepos+=getwordforaddress(name+linepos,getcommandaddress(l));
-    if(i<nwords-1)
-      name[linepos-1]=' ';
+    if(l!=0xFF){//TBD This indicates the next word should have caps first letter
+      linepos+=getwordforaddress(name+linepos,getcommandaddress(l));
+      if(i<nwords-1)
+	name[linepos-1]=' ';
+    }
   }
   if(nwords==0){
     //printf("NOTE: This is an in code description\n");
