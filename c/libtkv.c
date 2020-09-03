@@ -106,11 +106,17 @@ void namelocation(char *name, long addr){
   UCHAR b79=ctkv[addr];
   UCHAR b7A=ctkv[addr+1];
   UCHAR  nwords=b7A&0x1F;
-  int i,linepos=0;
+  int i,linepos=0,capspos=-1;
   for(i=0;i<nwords;i++){
     UCHAR l =ctkv[addr+2+i];
-    if(l!=0xFF){//TBD This indicates the next word should have caps first letter
+    if(l==0xFF)//This indicates the next word should have caps first letter
+      capspos=linepos;
+    else {
       linepos+=getwordforaddress(name+linepos,getcommandaddress(l));
+      if(capspos>=0){
+	name[capspos]=toupper(name[capspos]);
+	capspos = -1;
+      }
       if(i<nwords-1)
 	name[linepos-1]=' ';
     }
@@ -166,9 +172,9 @@ void getword(char *w, UCHAR code){
 long getwordforaddress(char *w, long address){
   long i=0;
   do {
-    w[i]=ctkv[address+i];
+    w[i]=tolower(ctkv[address+i]);
     if(w[i]<0){
-      w[i]+=128;
+      w[i]=tolower(w[i]+128);
       break;
     }
     //printf("Char: %x or %d or [%c]\n",word[i],word[i],word[i]);  

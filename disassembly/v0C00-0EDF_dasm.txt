@@ -191,7 +191,7 @@ OSCLI   = $FFF7
         LDX     L0010 ; $10 also contains index of the character
 .L0C75
         DEX           ; Decrement
-        BNE     L0C37 ; Branch back to continue loop
+        BNE     L0C37 ; Branch back to continue loop for next NPC
 
 .L0C78                ; User input loop
         LDA     #$00

@@ -90,8 +90,7 @@ struct object * match_object(UCHAR location_id,UCHAR *matches, int nmatches);
 int count_matched_words(char *desc, UCHAR *matches, int nmatches);
 int move(UCHAR dir, UCHAR dirindex);
 
-char * copytolower(char *from);
-char * stolower(char *s);
+char * create_copy_string(char *from);
 char * sfirstcaps(char *s);
 
 void load_location(struct location *l, UCHAR id);
@@ -182,7 +181,6 @@ int process_input(){
   //printf("|%s|\n",line);
   if(i==1)
     return EMPTY;
-  stolower(line);//Drop to lower case
   return parse_and_process(line,i);
 }
 
@@ -416,7 +414,6 @@ int count_matched_words(char *desc, UCHAR *matches, int nmatches){
   for(i=0;i<nmatches;i++){
     char word[100];
     getword(word,matches[i]);
-    stolower(word);
     if(strstr(desc,word)!=NULL)
       count++;
   }
@@ -474,9 +471,9 @@ void report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type){
     case 3: sprintf(line,"The mountains are too steep.\n"); break;
     case 4: sprintf(line,"There are bushes in your way.\n"); break;
     case 5: sprintf(line,"Dense undergrowth blocks your way.\n"); break;
-    case 6: sprintf(line,"No passage leads %s.\n",stolower(w)); break;
+    case 6: sprintf(line,"No passage leads %s.\n",w); break;
     case 7: sprintf(line,"The dunes are too steep.\n"); break;
-    case 0: sprintf(line,"You can't go %s.\n",stolower(w)); break;
+    case 0: sprintf(line,"You can't go %s.\n",w); break;
   }
   process_output(line);
   return;
@@ -487,31 +484,21 @@ UCHAR get_match(UCHAR *word){
   UCHAR code;
   for(code=0;code<0xFD;code++){//$FE is *** marking end of $3600 word table
     getword(w,code);
-    stolower(w);
     if(strstr(w,word)==w)//Is seach term match for first part of w?
       return code;
   }
   return NOMATCH;
 }
 
-//Copys string, dropping case and creating memory for to string - remember to free it!
-char * copytolower(char *from){
+//Copys string, creating memory for to string - remember to free it!
+char * create_copy_string(char *from){
   int len=strlen(from);
   char *to=(char *) malloc(len+1);
   while(len>=0){//Copy string and drop to lower case
-    to[len]=tolower(from[len]);
+    to[len]=from[len];
     len--;
   }
   return to;
-}
-
-char * stolower(char *s){
-  int len=strlen(s);
-  while(len>=0){//Copy string and drop to lower case
-    s[len]=tolower(s[len]);
-    len--;
-  }
-  return s;
 }
 
 char * sfirstcaps(char *s){
@@ -525,7 +512,7 @@ void load_object(struct object *o, UCHAR id){
 
   o->location_id=getbyte("25C0",id);
   printobjectdescription(desc, id);
-  o->description=copytolower(desc);
+  o->description=create_copy_string(desc);
   o->size = getbyte("2600",code);
   o->strength_required = getbyte("262A",code);
   o->durability = getbyte("267E",code);
@@ -542,7 +529,7 @@ void load_character(struct character *c, UCHAR id){
   c->location_id=getbyte("29B4",id);
   c->strength=getbyte("298E",id);
   printcharacterdescription(desc, classcode);
-  c->description=copytolower(desc);
+  c->description=create_copy_string(desc);
   c->ishostile=NONHOSTILE;
   if( (classcode&0x80) != 0 ){
     c->ishostile=HOSTILE;
@@ -559,7 +546,7 @@ void load_location(struct location *l, UCHAR id){
   l->id=id;
   //Set up the description
   namelocation(desc,addr);
-  l->description=copytolower(desc);
+  l->description=create_copy_string(desc);
   UCHAR b79=ctkv[addr];
   l->locationtype=b79&0x07; //Used for describing exits to this place, see $2038
   //Work out number of exits
@@ -626,7 +613,7 @@ char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte){//$2255 Load text as p
   //The "through which" bit is handled in-game as dest structs not all loaded here
   
   text[pos-1]='\0';//Last char will be space, overwrite.
-  return copytolower(text);
+  return create_copy_string(text);
 }
 
 char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte){//$2220
@@ -646,7 +633,7 @@ char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte){//$2220
   //The "through which" bit is handled in-game as dest structs not all loaded here
   
   text[pos-1]='\0';//Last char will be space, overwrite.
-  return copytolower(text);
+  return create_copy_string(text);
 }
 
 /* If byte!=0, print word specified by address addr+byte into pos in ss.
@@ -667,7 +654,7 @@ char * get_dirtext(UCHAR dirbyte){
   char word[100];
   char *s;
   printdirectiondescription(word,dirbyte);
-  s=copytolower(word);
+  s=create_copy_string(word);
   s[0]=toupper(s[0]);
   return s;
 }
@@ -745,7 +732,7 @@ void you_can_see(char *text, struct location dest){
     ss=strchr(dest.description,' ')+1; //Skip first word
   else
     incodeexits(ss,dest.locationtype);
-  sprintf(text,"you can see %s",stolower(ss));
+  sprintf(text,"you can see %s",ss);
 }
 
 void print_npc_info(){
