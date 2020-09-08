@@ -130,25 +130,25 @@ void namelocation(char *name, long addr){
 void incodedescription(char *ss, UCHAR b){
   //These are given in order they appear in code from $2122
   switch(b){
-    case 6: sprintf(ss,"IN A SLOPING MAZE"); return;
-    case 2: sprintf(ss,"ON THE CANYON FLOOR"); return;
-    case 7: sprintf(ss,"IN AN ARID DESERT"); return;
-    case 3: sprintf(ss,"WANDERING THROUGH HIGH MOUNTAINS, PATHS LEAD"); return;
-    case 4: sprintf(ss,"WANDERING THROUGH THE WOODS, PATHS LEAD"); return;
-    default: sprintf(ss,"WANDERING THROUGH DENSE FOREST, PATHS LEAD"); return;
+    case 6: sprintf(ss,"in a sloping maze"); return;
+    case 2: sprintf(ss,"on the canyon floor"); return;
+    case 7: sprintf(ss,"in an arid desert"); return;
+    case 3: sprintf(ss,"wandering through high mountains, paths lead"); return;
+    case 4: sprintf(ss,"wandering through the woods, paths lead"); return;
+    default: sprintf(ss,"wandering through dense forest, paths lead"); return;
   }
 }
 
 void incodeexits(char *ss, UCHAR b){
   //These are given in order they appear in code from $2038
   switch(b){
-    case 1: sprintf(ss,"A DISUSED QUARRY"); return;
-    case 2: sprintf(ss,"THE CANYON FLOOR"); return;
-    case 3: sprintf(ss,"A MOUNTAIN RANGE"); return;
-    case 4: sprintf(ss,"FOREST"); return;
-    case 5: sprintf(ss,"FOREST"); return;
-    case 6: sprintf(ss,"A PASSAGE"); return;
-    default: sprintf(ss,"DESERT"); return;
+    case 1: sprintf(ss,"a disused quarry"); return;
+    case 2: sprintf(ss,"the canyon floor"); return;
+    case 3: sprintf(ss,"a mountain range"); return;
+    case 4: sprintf(ss,"forest"); return;
+    case 5: sprintf(ss,"forest"); return;
+    case 6: sprintf(ss,"a passage"); return;
+    default: sprintf(ss,"desert"); return;
   }  
 }
 

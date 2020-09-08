@@ -91,6 +91,9 @@ vvv Inserted manually.
         BPL     L2102 ; If A>=0 the location is lit
                       ; The location is dark so can't print out a description.
 
+        JSR     L3B6C
+        IT IS DARK HERE
+                      
         org     $20FA
 .L20FA                ; Prints a . followed by newline and text colour
         LDA     #$2F  ; $2F corresponds to word address $36DE ie byte code $AE=128+'.' 

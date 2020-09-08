@@ -30,6 +30,14 @@
 #define NONHOSTILE 0
 #define HOSTILE 1
 
+#define LAMP 1
+
+#define DARK 1
+#define LIGHT 0
+
+//Object at location CARRED+id is carried by character id
+#define CARRIED 0xC8 
+
 struct location {
   UCHAR id;
   char *description;
@@ -314,7 +322,7 @@ int player_has_key(char *doortext){
   UCHAR id;
   for(id=0;id<getnumberofobjects();id++){
     struct object *o=get_object(id);
-    if(o->location_id==0xC8){//Player has this object
+    if(o->location_id==CARRIED){//Player has this object
       char desc[100];
       char *key;
       strcpy(desc,o->description);
@@ -344,7 +352,7 @@ int inventory(UCHAR character_id){
   //NOTE: Holdall not implemented yet.
   for(id=1;id<getnumberofobjects();id++){
     struct object *obj=get_object(id);
-    if(obj->location_id==(0xC8+character_id)){
+    if(obj->location_id==(CARRIED+character_id)){
       char line[1000];
       if(nitems==0)
         process_output("the following\n");
@@ -378,7 +386,7 @@ struct object * match_object(UCHAR location_id,UCHAR *matches, int nmatches){
 }
 
 int drop(UCHAR *matches, int nmatches){
-  struct object *obj=match_object(0xC8,matches,nmatches);
+  struct object *obj=match_object(CARRIED,matches,nmatches);
   if(obj!=NULL){//Need to add in check on carried amount, see $156F
     obj->location_id=get_player_location_id();; //Location is player's position
     get_player()->amount_carried-=obj->size;
@@ -396,7 +404,7 @@ int take(UCHAR *matches, int nmatches){
     struct character *player=get_player();
     if(player->amount_carried+obj->size<player->max_carried){
       get_player()->amount_carried+=obj->size;
-      obj->location_id=0xC8; //Location is player's possession
+      obj->location_id=CARRIED; //Location is player's possession
       process_output("I have it now.\n");
       return SUCCESS;
     } else {
@@ -548,6 +556,10 @@ void load_location(struct location *l, UCHAR id){
   namelocation(desc,addr);
   l->description=create_copy_string(desc);
   UCHAR b79=ctkv[addr];
+  if(b79>=0x80)
+    l->isdark=DARK;
+  else
+    l->isdark=LIGHT;
   l->locationtype=b79&0x07; //Used for describing exits to this place, see $2038
   //Work out number of exits
   UCHAR b7A=ctkv[addr+1];
@@ -659,10 +671,26 @@ char * get_dirtext(UCHAR dirbyte){
   return s;
 }
 
+UCHAR is_dark(UCHAR id){
+  struct location *l = get_location(id);
+  if(l->isdark==LIGHT)
+    return LIGHT;
+  struct object *lamp = get_object(LAMP);
+  if( (lamp->location_id==CARRIED || lamp->location_id==get_player_location_id())
+    && strstr(lamp->description,"unlit")==NULL )
+    return LIGHT;
+  
+  return DARK;
+}
+
 void print_description(UCHAR id){
-  print_short_description(id);
-  print_long_description(id); //Need to make this conditional
-  print_objects(id);
+  if(is_dark(id)==DARK){
+    process_output("It is dark here.\n");
+  } else {
+    print_short_description(id);
+    print_long_description(id); //Need to make this conditional
+    print_objects(id);
+  }
 }
 
 void print_objects(UCHAR id){
