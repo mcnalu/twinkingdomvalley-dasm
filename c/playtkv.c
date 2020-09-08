@@ -30,7 +30,8 @@
 #define NONHOSTILE 0
 #define HOSTILE 1
 
-#define LAMP 1
+#define LAMP 0x01
+#define FLINT 0x0A
 
 #define DARK 1
 #define LIGHT 0
@@ -80,6 +81,8 @@ struct character {
   UCHAR amount_carried;
 };
 
+void init_game();
+
 void process_output(char *s);
 int process_input();
 int parse_and_process(char *line, int len);
@@ -88,7 +91,8 @@ UCHAR get_match(UCHAR *word);
 void report_invalid_move(struct exit *e, UCHAR dirindex, UCHAR type);
 
 int noncombat_action(UCHAR code, UCHAR *matches, int nmatches);
-int use_key(UCHAR code, UCHAR *matches, int nmatches);
+int use_lamp(UCHAR action);
+int use_key(UCHAR action, UCHAR *matches, int nmatches);
 void use_key_on_doors(struct exit *e);
 int player_has_key(char *doortext);
 int drop(UCHAR *matches, int nmatches);
@@ -115,6 +119,7 @@ void print_short_description(UCHAR i);
 void print_long_description(UCHAR i);
 void print_description(UCHAR i);
 void print_objects(UCHAR i);
+void update();
 void print_npc_info();
 char * get_nondoor_text(UCHAR firstbyte, UCHAR thirdbyte);
 char * get_door_text(UCHAR firstbyte, UCHAR thirdbyte);
@@ -135,9 +140,13 @@ struct location *locations;
 struct object *objects;
 struct character *characters;
 
+char *lampdescsave;
+UCHAR lampoil; //Stored in $27FB
+
 int main(int argc, char *argv[]) {
-  init_tkv();
   int i;
+  init_tkv(); //Loads original TKV binary and sets up lookup addresses
+  init_game();
   locations = (struct location *) malloc(NLOCATIONS*sizeof(struct location));
   for(i=0;i<NLOCATIONS;i++)
     load_location(locations+i,i);
@@ -160,7 +169,8 @@ int main(int argc, char *argv[]) {
       print_description(get_player_location_id());
     }
     if(input==MOVED || input==SUCCESS || input==CONTINUE) {//A new turn
-      printf("          ---------------%02x\n",get_player()->location_id);
+      printf("          ---------------%02x,%02x\n",get_player()->location_id,lampoil);
+      update();
       print_npc_info();
     }
     process_output("?");
@@ -170,6 +180,21 @@ int main(int argc, char *argv[]) {
 
   cleanup();
   return 0;
+}
+
+void init_game(){
+  lampoil=0x80; //See code just after $1400
+}
+
+void update(){
+  //See code around $0F86 for lamp stuff
+  if(lampoil>0 && strstr(get_object(LAMP)->description,"unlit")==NULL){
+    lampoil--;
+    if(lampoil==0x14)
+      process_output("Your lamp flickers.\n");
+    else if(lampoil==0)
+      process_output("Your lamp dies.\n");
+  }
 }
 
 void process_output(char *s){
@@ -250,6 +275,9 @@ int noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
     case 0x12: case 0x13: return take(matches,nmatches); //TAKE,GET
     case 0x14: case 0x15: case 0x16: return use_key(LOCK,matches,nmatches); //LOCK,SHUT,CLOSE
     case 0x17: case 0x18: return use_key(UNLOCK,matches,nmatches); //OPEN,UNLOCK
+    case 0x19: case 0x1a: return use_lamp(LIGHT); //LIGHT,ON
+    case 0x1b:            return use_lamp(DARK);  //OFF    
+    case 0x21:            process_output("You wait here.\n"); return CONTINUE; //PICTURE,DRAW    
     case 0x25: case 0x26: return QUIT; //QUIT,END
     case 0x27: case 0x28: return LOOK; //LOOK,VIEW
     case 0x29: case 0x2A: process_output("Apologies, graphics not implemented yet.\n"); return DRAW; //PICTURE,DRAW
@@ -260,6 +288,35 @@ int noncombat_action(UCHAR code, UCHAR *matches, int nmatches){
   }
   fprintf(stderr,"This should never be printed.\n");
   return EMPTY; //Should never get here
+}
+
+int use_lamp(UCHAR action){
+  struct object *lamp = get_object(LAMP);
+  if(lamp->location_id!=CARRIED){
+    process_output("You don't have a lamp.\n");
+    return CONTINUE;
+  }
+  if(action==LIGHT && strstr(lamp->description,"unlit")==NULL){
+    process_output("The lamp is already on.\n");
+    return CONTINUE;
+  }
+  if(action==DARK && strstr(lamp->description,"unlit")!=NULL){
+    process_output("The lamp is already off.\n");
+    return CONTINUE;
+  }
+  if(action==LIGHT && get_object(FLINT)->location_id!=CARRIED){
+    process_output("You don't have the flint.\n");
+    return CONTINUE;    
+  }
+  //All good so turn the lamp on or off
+  char *tmp=lamp->description;
+  lamp->description=lampdescsave;
+  lampdescsave=tmp;
+  if(action==LIGHT)
+    process_output("The lamp is now on.\n");
+  else
+    process_output("The lamp is now off.\n");
+  return SUCCESS;
 }
 
 int use_key(UCHAR action, UCHAR *matches, int nmatches){
@@ -528,6 +585,10 @@ void load_object(struct object *o, UCHAR id){
   o->rnd_throw_damage = getbyte("26D2",code);
   o->max_melee_damage = getbyte("26FC",code);
   o->rnd_melee_damage = getbyte("2726",code);
+  if(id==LAMP){
+    char tmpdesc[]="a lit oil lamp";
+    lampdescsave=create_copy_string(tmpdesc);
+  }
 }
 
 void load_character(struct character *c, UCHAR id){
@@ -831,6 +892,7 @@ void free_location(struct location *l){
 
 void free_object(struct object *o){
   free(o->description);
+  free(lampdescsave);
 }
 
 void free_character(struct character *c){

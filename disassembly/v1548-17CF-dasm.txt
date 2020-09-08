@@ -328,11 +328,11 @@ OSCLI   = $FFF7
 .L16A4
         JMP     L20FA
 
-        LDX     #$01
-        JSR     L3B8D
-
-        BNE     L16D4
-
+.L16A7                      ; LIGHT or ON command called via lookup table from $14A7
+        LDX     #$01        ; X=1, The lamp
+        JSR     L3B8D       ; Does player have the lamp?                             
+        BNE     L16D4       ; Branch if not
+                            ; Player has lamp
         LDA     L2581
         BEQ     L16E9
 
@@ -356,10 +356,10 @@ OSCLI   = $FFF7
 .L16D2
         BNE     L16E2
 
-.L16D4
-        LDA     #$5A
+.L16D4          
+        LDA     #$5A     ; Code for lamp
 .L16D6
-        STA     L16E0
+        STA     L16E0    ; Ensures correct word is used in following message.
         JSR     L14CE
         YOU DON'T HAVE A
         LAMP
